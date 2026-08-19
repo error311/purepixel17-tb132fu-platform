@@ -1,0 +1,92 @@
+diff --git a/Android.bp b/Android.bp
+index 6e10c77f5b8d3f0bf4835450112e436e243fb978..de77eab0602467d16cb7488279e48622b0d29cbb 100644
+--- a/Android.bp
++++ b/Android.bp
+@@ -38,6 +38,20 @@ libbpf_prog {
+     relative_install_path: "cputimeinstate",
+ }
+ 
++// Compatibility object for pre-BTF kernels. CPU frequency and sched-switch
++// accounting do not require CO-RE; only the tracked-process cleanup program
++// is omitted.
++libbpf_prog {
++    name: "timeInStateLegacy.bpf",
++    srcs: ["timeInStateLegacy.c"],
++    header_libs: [
++        "bpf_prog_headers",
++        "libcutils_headers",
++        "android_bpf_defs",
++    ],
++    relative_install_path: "cputimeinstate",
++}
++
+ libbpf_prog {
+     name: "fuseMedia.bpf",
+     srcs: ["fuseMedia.c"],
+diff --git a/timeInState.c b/timeInState.c
+index 1d35b11814266c474b87276f903147162ba7c310..957f3ce1e67df6c63cd2a24aa07090161b47be72 100644
+--- a/timeInState.c
++++ b/timeInState.c
+@@ -254,6 +254,7 @@ DEFINE_BPF_PROG("tracepoint/power/cpu_frequency", AID_ROOT, AID_SYSTEM,
+     return ALLOW;
+ }
+ 
++#ifndef BPF_LEGACY_NO_CORE_TASK
+ struct task_struct {
+     pid_t pid;
+ } __attribute__((preserve_access_index));
+@@ -289,5 +290,40 @@ DEFINE_BPF_PROG("raw_tp/sched_process_free", AID_ROOT, AID_SYSTEM,
+     bpf_pid_task_aggregation_map_delete_elem(&pid);
+     return ALLOW;
+ }
++#else
++// Android 12L used the stable sched_process_free tracepoint payload directly.
++// Preserve that pre-BTF path for the TB132FU compatibility object.
++struct sched_process_free_args {
++    unsigned long long ignore;
++    char comm[16];
++    pid_t pid;
++    int prio;
++};
++
++DEFINE_BPF_PROG("tracepoint/sched/sched_process_free", AID_ROOT, AID_SYSTEM,
++                tracepoint_sched_sched_process_free)
++(struct sched_process_free_args* args) {
++    const int ALLOW = 1;
++    int pid = args->pid;
++    bool is_last = true;
++
++#pragma unroll
++    for (uint32_t index = 0; index < MAX_TRACKED_PIDS; index++) {
++        const uint32_t key = MAX_TRACKED_PIDS - index - 1;
++        tracked_pid_t* tracked_pid = bpf_pid_tracked_map_lookup_elem(&key);
++        if (!tracked_pid) continue;
++        if (tracked_pid->pid == pid) {
++            tracked_pid->pid = 0;
++            tracked_pid->state = is_last ? TRACKED_PID_STATE_UNUSED : TRACKED_PID_STATE_EXITED;
++            bpf_pid_tracked_hash_map_delete_elem(&key);
++            break;
++        }
++        if (tracked_pid->state == TRACKED_PID_STATE_ACTIVE) is_last = false;
++    }
++
++    bpf_pid_task_aggregation_map_delete_elem(&pid);
++    return ALLOW;
++}
++#endif
+ 
+ LICENSE("GPL");
+diff --git a/timeInStateLegacy.c b/timeInStateLegacy.c
+new file mode 100644
+index 0000000000000000000000000000000000000000..2e56ec9ef4ffacd5f26795bfea25d0f66d73d005
+--- /dev/null
++++ b/timeInStateLegacy.c
+@@ -0,0 +1,8 @@
++/*
++ * Compatibility build of timeInState for pre-BTF kernels.
++ *
++ * Keep the accounting implementation shared with timeInState.c; only omit
++ * the CO-RE task_struct cleanup program that cannot load without kernel BTF.
++ */
++#define BPF_LEGACY_NO_CORE_TASK
++#include "timeInState.c"

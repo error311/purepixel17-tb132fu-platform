@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+  <extend-project name="platform/build/soong" path="build/soong" revision="6722dd8833db7482df1a2543ca3fcf67ddf0f7b1" />
+  <extend-project name="platform/frameworks/base" path="frameworks/base" revision="94b4c163b7dfe5ce3607f7bb8456f9573f7de57d" />
+  <extend-project name="platform/frameworks/native" path="frameworks/native" revision="ae266dcb706d083868578cfedce381ef44488a07" />
+  <extend-project name="platform/hardware/interfaces" path="hardware/interfaces" revision="0162af698935100a590b7359581ac8b1b80693e5" />
+  <extend-project name="kernel/configs" path="kernel/configs" revision="553fd8d034110b4a63834e676533f5cc4c5e0089" />
+  <extend-project name="platform/packages/apps/Settings" path="packages/apps/Settings" revision="213829fb67f5e070029e0513a088f31bc8f5c1ed" />
+  <extend-project name="platform/packages/modules/Bluetooth" path="packages/modules/Bluetooth" revision="c77db469de80f86660bc053bec4dee0c5d4b947c" />
+  <extend-project name="platform/packages/modules/Connectivity" path="packages/modules/Connectivity" revision="347fbd34b368d19f0d87e908ea101eed3601a731" />
+  <extend-project name="platform/system/apex" path="system/apex" revision="ce2bb9f710183c864040401d859874b5723e44d8" />
+  <extend-project name="platform/system/bpf" path="system/bpf" revision="d68a263039127dc709114802395e57537a02babf" />
+  <extend-project name="platform/system/bpfprogs" path="system/bpfprogs" revision="60f086effe11d1afb248ff3c9a2a780b66a34506" />
+  <extend-project name="platform/system/core" path="system/core" revision="545d2487e38192a2ce25040897ced877cf6b4f53" />
+  <extend-project name="platform/system/memory/libion" path="system/memory/libion" revision="2f9196be89b3851049b565b6c338f707e50440ba" />
+  <extend-project name="platform/system/sepolicy" path="system/sepolicy" revision="e066568e98d86db31a9346d30977f3632fa7073c" />
+</manifest>

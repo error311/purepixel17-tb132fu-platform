@@ -1,0 +1,58 @@
+diff --git a/system/gd/hci/hci_layer.cc b/system/gd/hci/hci_layer.cc
+index fd85769d455daf7b76a5c258d16dded1df0e7310..fd1c5bacd855945cebcc763fc1e1e68cfccb7841 100644
+--- a/system/gd/hci/hci_layer.cc
++++ b/system/gd/hci/hci_layer.cc
+@@ -253,8 +253,15 @@ struct HciLayer::impl {
+       common::StopWatch::DumpStopWatchLog();
+       return;
+     }
+-    log::assert_that(waiting_command_ == op_code, "Waiting for {}, got {}",
+-                     OpCodeText(waiting_command_), OpCodeText(op_code));
++    if (waiting_command_ != op_code) {
++      // Some controllers can deliver a stale Command Complete after the next command has
++      // already been sent. Keep waiting for the outstanding command instead of aborting the
++      // Bluetooth process. The matching response or the existing HCI timeout will resolve the
++      // queue without invoking a callback for the stale event.
++      log::warn("Ignoring unexpected {} response while waiting for {} (got {})", logging_id,
++                OpCodeText(waiting_command_), OpCodeText(op_code));
++      return;
++    }
+ 
+     bool is_vendor_specific = (static_cast<int>(op_code) & (0x3f << 10)) == (0x3f << 10);
+     using WaitingFor = CommandQueueEntry::WaitingFor;
+diff --git a/system/gd/hci/hci_layer_unittest.cc b/system/gd/hci/hci_layer_unittest.cc
+index 27effddd739224520e3685095fccf27e9e966286..23de9e83f24996a5c383d9ff5c869dfb205da7f3 100644
+--- a/system/gd/hci/hci_layer_unittest.cc
++++ b/system/gd/hci/hci_layer_unittest.cc
+@@ -500,5 +500,31 @@ TEST_F(HciLayerTest, command_status_callback_is_invoked_with_failure_status) {
+   sync_handler();
+ }
+ 
++TEST_F(HciLayerTest, stale_command_response_is_ignored_while_waiting_for_current_command) {
++  std::promise<OpCode> callback_promise;
++  auto callback_future = callback_promise.get_future();
++
++  FailIfResetNotSent();
++  hal_->InjectEvent(ResetCompleteBuilder::Create(1, ErrorCode::SUCCESS));
++  hci_->EnqueueCommand(
++          ReadClockOffsetBuilder::Create(0x001),
++          client_handler_->BindOnce(
++                  [](std::promise<OpCode> promise, CommandStatusView view) {
++                    ASSERT_TRUE(view.IsValid());
++                    promise.set_value(view.GetCommandOpCode());
++                  },
++                  std::move(callback_promise)));
++
++  hal_->InjectEvent(CommandStatusBuilder::Create(ErrorCode::SUCCESS, 1,
++                                                 OpCode::LE_SET_EXTENDED_SCAN_ENABLE,
++                                                 std::make_unique<RawBuilder>()));
++  sync_handler();
++  ASSERT_EQ(std::future_status::timeout, callback_future.wait_for(10ms));
++
++  hal_->InjectEvent(ReadClockOffsetStatusBuilder::Create(ErrorCode::SUCCESS, 1));
++  ASSERT_EQ(std::future_status::ready, callback_future.wait_for(1s));
++  ASSERT_EQ(OpCode::READ_CLOCK_OFFSET, callback_future.get());
++}
++
+ }  // namespace hci
+ }  // namespace bluetooth

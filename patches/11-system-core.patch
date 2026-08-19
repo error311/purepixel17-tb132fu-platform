@@ -1,0 +1,76 @@
+diff --git a/healthd/healthd_mode_charger.cpp b/healthd/healthd_mode_charger.cpp
+index b8b77fb76d1cb3b2d18bf2151b4e71ae9aa12357..c8cf8108267aae682e9dea97ce121b7967924ffd 100644
+--- a/healthd/healthd_mode_charger.cpp
++++ b/healthd/healthd_mode_charger.cpp
+@@ -90,6 +90,7 @@ char* locale;
+ #define UNPLUGGED_DISPLAY_TIME (3 * MSEC_PER_SEC)
+ #define MAX_BATT_LEVEL_WAIT_TIME (5 * MSEC_PER_SEC)
+ #define UNPLUGGED_SHUTDOWN_TIME_PROP "ro.product.charger.unplugged_shutdown_time"
++#define BOOT_MIN_CAP_PROP "ro.product.charger.boot_min_cap"
+ 
+ #define LAST_KMSG_MAX_SZ (32 * 1024)
+ 
+@@ -495,19 +496,17 @@ void Charger::ProcessKey(int code, int64_t now) {
+                 /* We do not currently support booting from charger mode on
+                    all devices. Check the property and continue booting or reboot
+                    accordingly. */
+-                if (property_get_bool("ro.enable_boot_charger_mode", false)) {
++                if (batt_anim_.cur_level < boot_min_cap_) {
++                    LOGV("[%" PRId64
++                         "] ignore power-button press, battery level "
++                         "less than minimum\n",
++                         now);
++                } else if (property_get_bool("ro.enable_boot_charger_mode", false)) {
+                     LOGW("[%" PRId64 "] booting from charger mode\n", now);
+                     property_set("sys.boot_from_charger_mode", "1");
+                 } else {
+-                    if (batt_anim_.cur_level >= boot_min_cap_) {
+-                        LOGW("[%" PRId64 "] rebooting\n", now);
+-                        reboot(RB_AUTOBOOT);
+-                    } else {
+-                        LOGV("[%" PRId64
+-                             "] ignore power-button press, battery level "
+-                             "less than minimum\n",
+-                             now);
+-                    }
++                    LOGW("[%" PRId64 "] rebooting\n", now);
++                    reboot(RB_AUTOBOOT);
+                 }
+             } else {
+                 /* if the key is pressed but timeout hasn't expired,
+@@ -854,7 +853,9 @@ void Charger::OnInit(struct healthd_config* config) {
+     // Retrieve healthd_config from the existing health HAL.
+     configuration_->ChargerInitConfig(config);
+ 
+-    boot_min_cap_ = config->boot_min_cap;
++    // A device may raise the default/HAL minimum without replacing its frozen
++    // health HAL. Never let the product property lower a HAL-provided limit.
++    boot_min_cap_ = max(config->boot_min_cap, property_get_int32(BOOT_MIN_CAP_PROP, 0));
+ }
+ 
+ int Charger::CreateDisplaySurface(const std::string& name, GRSurface** surface) {
+diff --git a/libprocessgroup/setup/cgroup_map_write.cpp b/libprocessgroup/setup/cgroup_map_write.cpp
+index 0b26e9568e9d2cb6d94ae2287592069cf79ef95d..281b115d8207e1483dea665f466ea402e1bc4538 100644
+--- a/libprocessgroup/setup/cgroup_map_write.cpp
++++ b/libprocessgroup/setup/cgroup_map_write.cpp
+@@ -290,7 +290,19 @@ bool CgroupSetup() {
+         }
+ 
+         if (!SetupCgroup(descriptor)) {
+-            LOG(ERROR) << "Failed to setup " << name << " cgroup";
++            // Android 16 and older continued when a legacy cgroup-v1
++            // controller could not be mounted.  Some vendor 4.19 kernels rely
++            // on that behavior because not every controller described by the
++            // platform cgroups.json is independently mountable.  Android 17
++            // still needs the unified hierarchy below for per-UID system/app
++            // isolation, so a cgroup-v2 failure remains fatal.
++            if (descriptor.controller()->version() == 1) {
++                LOG(WARNING) << "Failed to setup legacy " << name
++                             << " cgroup; continuing with cgroup-v2 isolation";
++                continue;
++            }
++
++            LOG(ERROR) << "Failed to setup required " << name << " cgroup";
+             return false;
+         }
+     }

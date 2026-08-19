@@ -1,0 +1,933 @@
+diff --git a/res/drawable/ic_settings_tb132fu.xml b/res/drawable/ic_settings_tb132fu.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..20c7fb1fca0e63d07d9039cf5c16d9d0feb7859c
+--- /dev/null
++++ b/res/drawable/ic_settings_tb132fu.xml
+@@ -0,0 +1,11 @@
++<?xml version="1.0" encoding="utf-8"?>
++<vector xmlns:android="http://schemas.android.com/apk/res/android"
++    android:width="24dp"
++    android:height="24dp"
++    android:viewportWidth="24"
++    android:viewportHeight="24"
++    android:tint="?android:attr/colorControlNormal">
++    <path
++        android:fillColor="@android:color/white"
++        android:pathData="M19,1L5,1C3.34,1 2,2.34 2,4v16c0,1.66 1.34,3 3,3h14c1.66,0 3,-1.34 3,-3L22,4c0,-1.66 -1.34,-3 -3,-3zM12,21c-0.83,0 -1.5,-0.67 -1.5,-1.5S11.17,18 12,18s1.5,0.67 1.5,1.5S12.83,21 12,21zM20,16L4,16L4,4h16v12z" />
++</vector>
+diff --git a/res/values/arrays.xml b/res/values/arrays.xml
+index e8ce91ab5b570eea26fd2ac17c28d5a817a4c2b5..8080a1c190442f64e7eae992c4d0fa22440ab5dc 100644
+--- a/res/values/arrays.xml
++++ b/res/values/arrays.xml
+@@ -1796,4 +1796,16 @@
+         <item>Quick settings</item>
+         <item>Lockscreen</item>
+     </string-array>
++
++    <!-- TB132FU display refresh policy. -->
++    <string-array name="tb132fu_refresh_rate_entries">
++        <item>Standard (60 Hz)</item>
++        <item>Fluid (60–120 Hz)</item>
++        <item>Force 120 Hz</item>
++    </string-array>
++    <string-array name="tb132fu_refresh_rate_values" translatable="false">
++        <item>standard</item>
++        <item>fluid</item>
++        <item>force_120</item>
++    </string-array>
+ </resources>
+diff --git a/res/values/strings.xml b/res/values/strings.xml
+index 8246f5be5ae9a85b48e5ee7896bb912562d843fb..680b4f7174169a86a3dd57092472e81fd48df2e8 100644
+--- a/res/values/strings.xml
++++ b/res/values/strings.xml
+@@ -3658,6 +3658,12 @@
+     <string name="kernel_version">Kernel version</string>
+     <!-- About phone screen,  setting option name  [CHAR LIMIT=40] -->
+     <string name="build_number">Build number</string>
++    <!-- Pure Pixel ROM identity shown on the Android version screen. -->
++    <string name="pure_pixel_rom_title">ROM</string>
++    <string name="pure_pixel_rom_summary" translatable="false">Pure Pixel</string>
++    <string name="pure_pixel_maintainer_title">Maintainer</string>
++    <string name="pure_pixel_maintainer_summary" translatable="false">error311</string>
++    <string name="pure_pixel_identity_purpose">ROM identity information</string>
+     <!-- About phone screen, tapping this button will take user to a seperate UI to check Google Play system update [CHAR LIMIT=60] -->
+     <string name="module_version">Google Play system update</string>
+     <!-- About phone screen, show a list of battery information  [CHAR LIMIT=60] -->
+@@ -15590,4 +15596,27 @@
+     <!-- Search keywords for Human interface device access setting -->
+     <string name="keywords_access_hid">hid, human, access, device</string>
+     <!-- Access HID end -->
++
++    <!-- Lenovo TB132FU device controls. -->
++    <string name="tb132fu_settings_title">TB132FU settings</string>
++    <string name="tb132fu_settings_summary">Display, wake, pen, and keyboard controls</string>
++    <string name="tb132fu_display_and_wake">Display and wake</string>
++    <string name="tb132fu_aod_title">Always-on display</string>
++    <string name="tb132fu_aod_summary">Show time and notifications while the tablet is idle</string>
++    <string name="tb132fu_dt2w_title">Double-tap to wake</string>
++    <string name="tb132fu_dt2w_summary">Wake the screen by tapping it twice</string>
++    <string name="tb132fu_aod_schedule_title">Show AOD during the day</string>
++    <string name="tb132fu_aod_schedule_summary">Show AOD from sunrise to sunset and hide it overnight</string>
++    <string name="tb132fu_refresh_rate_title">Refresh rate</string>
++    <string name="tb132fu_accessories">Accessories</string>
++    <string name="tb132fu_pen_settings_title">Precision Pen settings</string>
++    <string name="tb132fu_pen_settings_summary">Configure the Lenovo Precision Pen</string>
++    <string name="tb132fu_pen_settings_unavailable_summary">Connect or install the Lenovo pen service to configure the pen</string>
++    <string name="tb132fu_pen_settings_unavailable">Pen settings are not available</string>
++    <string name="tb132fu_pogo_title">Pogo keyboard</string>
++    <string name="tb132fu_pogo_attached">Connected</string>
++    <string name="tb132fu_pogo_detached">Not connected</string>
++    <string name="tb132fu_device_category">Device</string>
++    <string name="tb132fu_build_info_title">Software</string>
++    <string name="tb132fu_build_info_summary">Android %1$s · Linux %2$s</string>
+ </resources>
+diff --git a/res/xml/credman_dashboard_settings.xml b/res/xml/credman_dashboard_settings.xml
+index 09a60595a978d5d0b67e4e15a35f2cf8fcfb0da1..592d37bf9b9fa0b899b07156585c5291759b2293 100644
+--- a/res/xml/credman_dashboard_settings.xml
++++ b/res/xml/credman_dashboard_settings.xml
+@@ -46,4 +46,19 @@
+         settings:controller="com.android.settings.applications.credentials.CredentialManagerPreferenceController"
+         settings:keywords="@string/credman_keywords" />
+ 
++    <!--
++         The accounts-and-backup flag can be enabled on a product whose
++         CredentialManager service is unavailable. AccountDashboardFragment
++         then uses the legacy password provider, which needs this container.
++         Leave it controller-free: the fragment constructs the legacy
++         controller only for that fallback, and an empty category is hidden on
++         CredentialManager-capable products.
++    -->
++    <PreferenceCategory
++        android:key="passwords_category"
++        android:order="30"
++        android:persistent="false"
++        android:title="@string/autofill_passwords"
++        settings:keywords="@string/autofill_keywords" />
++
+ </PreferenceScreen>
+diff --git a/res/xml/firmware_version.xml b/res/xml/firmware_version.xml
+index 41f7733cfb2bf33e2e3ac859789dca1ca63a26ae..1ae48b4f0d0f45fca11769bf14ed23764b474ef0 100644
+--- a/res/xml/firmware_version.xml
++++ b/res/xml/firmware_version.xml
+@@ -21,6 +21,23 @@
+     android:title="@string/firmware_version"
+     settings:keywords="@string/keywords_android_version">
+ 
++    <!-- Pure Pixel identity -->
++    <Preference
++        android:key="pure_pixel_rom"
++        android:title="@string/pure_pixel_rom_title"
++        android:summary="@string/pure_pixel_rom_summary"
++        android:selectable="false"
++        settings:enableCopying="true"
++        settings:searchable="false"/>
++
++    <Preference
++        android:key="pure_pixel_maintainer"
++        android:title="@string/pure_pixel_maintainer_title"
++        android:summary="@string/pure_pixel_maintainer_summary"
++        android:selectable="false"
++        settings:enableCopying="true"
++        settings:searchable="false"/>
++
+     <!-- Android version -->
+     <Preference
+         android:key="os_firmware_version"
+diff --git a/res/xml/system_dashboard_fragment.xml b/res/xml/system_dashboard_fragment.xml
+index 3dae93a4d867d32d3b54bc9c31158b86d480d648..c6144671f5da2d77dbafeddc088c187dcfa143fe 100644
+--- a/res/xml/system_dashboard_fragment.xml
++++ b/res/xml/system_dashboard_fragment.xml
+@@ -133,6 +133,14 @@
+         android:title="@string/system_management_category_title"
+         android:order="-360">
+ 
++        <Preference
++            android:key="tb132fu_device_settings"
++            android:title="@string/tb132fu_settings_title"
++            android:summary="@string/tb132fu_settings_summary"
++            android:icon="@drawable/ic_settings_tb132fu"
++            android:fragment="com.android.settings.tb132fu.Tb132fuSettingsFragment"
++            settings:controller="com.android.settings.tb132fu.Tb132fuEntryPreferenceController"/>
++
+         <Preference
+             android:key="date_time_settings"
+             android:title="@string/date_and_time"
+diff --git a/res/xml/system_dashboard_fragment_desktop.xml b/res/xml/system_dashboard_fragment_desktop.xml
+index e0cb8cf38135608304d450d706ee5eac62e28043..35d1512850b0b37c9c67032f87ab1427dae2b3a7 100644
+--- a/res/xml/system_dashboard_fragment_desktop.xml
++++ b/res/xml/system_dashboard_fragment_desktop.xml
+@@ -100,6 +100,14 @@
+         android:title="@string/system_management_category_title"
+         android:order="-360">
+ 
++        <Preference
++            android:key="tb132fu_device_settings"
++            android:title="@string/tb132fu_settings_title"
++            android:summary="@string/tb132fu_settings_summary"
++            android:icon="@drawable/ic_settings_tb132fu"
++            android:fragment="com.android.settings.tb132fu.Tb132fuSettingsFragment"
++            settings:controller="com.android.settings.tb132fu.Tb132fuEntryPreferenceController"/>
++
+         <Preference
+             android:key="date_time_settings"
+             android:title="@string/date_and_time"
+diff --git a/res/xml/tb132fu_settings.xml b/res/xml/tb132fu_settings.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..db62265d9363a97bb11aea7620212d7dd4c499aa
+--- /dev/null
++++ b/res/xml/tb132fu_settings.xml
+@@ -0,0 +1,41 @@
++<?xml version="1.0" encoding="utf-8"?>
++<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
++    <PreferenceCategory android:title="@string/tb132fu_display_and_wake">
++        <SwitchPreferenceCompat
++            android:key="tb132fu_aod"
++            android:title="@string/tb132fu_aod_title"
++            android:summary="@string/tb132fu_aod_summary" />
++        <SwitchPreferenceCompat
++            android:key="tb132fu_dt2w"
++            android:title="@string/tb132fu_dt2w_title"
++            android:summary="@string/tb132fu_dt2w_summary" />
++        <SwitchPreferenceCompat
++            android:key="tb132fu_aod_twilight_schedule"
++            android:dependency="tb132fu_aod"
++            android:title="@string/tb132fu_aod_schedule_title"
++            android:summary="@string/tb132fu_aod_schedule_summary" />
++        <ListPreference
++            android:key="tb132fu_refresh_rate"
++            android:title="@string/tb132fu_refresh_rate_title"
++            android:entries="@array/tb132fu_refresh_rate_entries"
++            android:entryValues="@array/tb132fu_refresh_rate_values"
++            android:defaultValue="fluid" />
++    </PreferenceCategory>
++
++    <PreferenceCategory android:title="@string/tb132fu_accessories">
++        <Preference
++            android:key="tb132fu_pen_settings"
++            android:title="@string/tb132fu_pen_settings_title" />
++        <Preference
++            android:key="tb132fu_pogo_status"
++            android:title="@string/tb132fu_pogo_title"
++            android:selectable="false" />
++    </PreferenceCategory>
++
++    <PreferenceCategory android:title="@string/tb132fu_device_category">
++        <Preference
++            android:key="tb132fu_build_info"
++            android:title="@string/tb132fu_build_info_title"
++            android:selectable="false" />
++    </PreferenceCategory>
++</PreferenceScreen>
+diff --git a/src/com/android/settings/accounts/AccountDashboardFragment.java b/src/com/android/settings/accounts/AccountDashboardFragment.java
+index 8f037ac2a6c6b0bf379a5bb426635a4dd43520e5..ef64920ba4c037525d97c8ec266bcec4fb93aff8 100644
+--- a/src/com/android/settings/accounts/AccountDashboardFragment.java
++++ b/src/com/android/settings/accounts/AccountDashboardFragment.java
+@@ -146,12 +146,18 @@ public class AccountDashboardFragment extends DashboardFragment {
+             controllers.add(new DefaultWorkCombinedPreferenceController(context));
+             controllers.add(new DefaultPrivateCombinedPreferenceController(context));
+         } else {
+-            controllers.add(new DefaultAutofillPreferenceController(context));
+-            controllers.add(new DefaultWorkAutofillPreferenceController(context));
+-            controllers.add(new DefaultPrivateAutofillPreferenceController(context));
++            buildLegacyAutofillPreferenceControllers(context, controllers);
+         }
+     }
+ 
++    static void buildLegacyAutofillPreferenceControllers(
++            Context context, List<AbstractPreferenceController> controllers) {
++        controllers.add(new PasswordsPreferenceController(context, "passwords_category"));
++        controllers.add(new DefaultAutofillPreferenceController(context));
++        controllers.add(new DefaultWorkAutofillPreferenceController(context));
++        controllers.add(new DefaultPrivateAutofillPreferenceController(context));
++    }
++
+     private static void buildAccountPreferenceControllers(
+             Context context,
+             DashboardFragment parent,
+diff --git a/src/com/android/settings/applications/autofill/PasswordsPreferenceController.java b/src/com/android/settings/applications/autofill/PasswordsPreferenceController.java
+index 73fef1bcedc0b7c1993d0471f46499b197806443..0c141b6bbfe025691927fdeacd2f907d15984266 100644
+--- a/src/com/android/settings/applications/autofill/PasswordsPreferenceController.java
++++ b/src/com/android/settings/applications/autofill/PasswordsPreferenceController.java
+@@ -117,7 +117,11 @@ public class PasswordsPreferenceController extends BasePreferenceController
+     public void displayPreference(PreferenceScreen screen) {
+         super.displayPreference(screen);
+         final PreferenceGroup group = screen.findPreference(getPreferenceKey());
+-        addPasswordPreferences(screen.getContext(), getUser(), group);
++        if (group != null) {
++            addPasswordPreferences(screen.getContext(), getUser(), group);
++        } else {
++            Log.w(TAG, "Missing password preference group: " + getPreferenceKey());
++        }
+ 
+         replaceEnterpriseStringTitle(screen, "auto_sync_personal_account_data",
+                 AUTO_SYNC_PERSONAL_DATA, R.string.account_settings_menu_auto_sync_personal);
+diff --git a/src/com/android/settings/core/gateway/SettingsGateway.java b/src/com/android/settings/core/gateway/SettingsGateway.java
+index 2a05a30620ce5852437602d2bf2370f645463f55..a1b297ef2c633f3173331628025f525b20504d90 100644
+--- a/src/com/android/settings/core/gateway/SettingsGateway.java
++++ b/src/com/android/settings/core/gateway/SettingsGateway.java
+@@ -206,6 +206,7 @@ import com.android.settings.support.SupportDashboardActivity;
+ import com.android.settings.system.ResetDashboardFragment;
+ import com.android.settings.system.ShadePanelsFragment;
+ import com.android.settings.system.SystemDashboardFragment;
++import com.android.settings.tb132fu.Tb132fuSettingsFragment;
+ import com.android.settings.tts.TextToSpeechSettings;
+ import com.android.settings.users.UserSettings;
+ import com.android.settings.vpn2.VpnSettings;
+@@ -364,6 +365,7 @@ public class SettingsGateway {
+             AutomaticStorageManagerSettings.class.getName(),
+             StorageDashboardFragment.class.getName(),
+             SystemDashboardFragment.class.getName(),
++            Tb132fuSettingsFragment.class.getName(),
+             NetworkDashboardFragment.class.getName(),
+             ConnectedDeviceDashboardFragment.class.getName(),
+             UsbDetailsFragment.class.getName(),
+diff --git a/src/com/android/settings/deviceinfo/firmwareversion/FirmwareVersionScreen.kt b/src/com/android/settings/deviceinfo/firmwareversion/FirmwareVersionScreen.kt
+index 8948b33174ce6666460b072fc84f6f431efad3a7..543269241a9caa9c1ae08359bea8da4a5ef18d72 100644
+--- a/src/com/android/settings/deviceinfo/firmwareversion/FirmwareVersionScreen.kt
++++ b/src/com/android/settings/deviceinfo/firmwareversion/FirmwareVersionScreen.kt
+@@ -70,6 +70,8 @@ open class FirmwareVersionScreen : PreferenceScreenMixin, PreferenceSummaryProvi
+ 
+     override fun getPreferenceHierarchy(context: Context, coroutineScope: CoroutineScope) =
+         preferenceHierarchy(context) {
++            +PurePixelRomPreference()
++            +PurePixelMaintainerPreference()
+             +FirmwareVersionDetailPreference()
+             +SecurityPatchLevelPreference()
+             +MainlineModuleVersionPreference()
+diff --git a/src/com/android/settings/deviceinfo/firmwareversion/PurePixelIdentityPreference.kt b/src/com/android/settings/deviceinfo/firmwareversion/PurePixelIdentityPreference.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..0558ad1c41a4a9a3f7d1db615c060ac12f94f612
+--- /dev/null
++++ b/src/com/android/settings/deviceinfo/firmwareversion/PurePixelIdentityPreference.kt
+@@ -0,0 +1,76 @@
++/*
++ * Copyright (C) 2026 The Pure Pixel Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.settings.deviceinfo.firmwareversion
++
++import android.content.Context
++import androidx.annotation.StringRes
++import androidx.preference.Preference
++import com.android.settings.R
++import com.android.settings.contract.TAG_DEVICE_STATE_PREFERENCE
++import com.android.settingslib.datastore.KeyValueStore
++import com.android.settingslib.metadata.PersistentPreference
++import com.android.settingslib.metadata.PreferenceMetadata
++import com.android.settingslib.metadata.PreferenceSummaryProvider
++import com.android.settingslib.metadata.SensitivityLevel
++import com.android.settingslib.preference.PreferenceBinding
++
++/** Static identity shown on the Android version screen for this ROM. */
++abstract class PurePixelIdentityPreference(
++    final override val key: String,
++    @StringRes final override val title: Int,
++    @StringRes private val summaryRes: Int,
++) : PersistentPreference<String>, PreferenceMetadata, PreferenceSummaryProvider, PreferenceBinding {
++
++    override val purpose: Int
++        get() = R.string.pure_pixel_identity_purpose
++
++    override val indexable
++        get() = false
++
++    override fun tags(context: Context) = arrayOf(TAG_DEVICE_STATE_PREFERENCE)
++
++    override val supportsWrite = false
++
++    override val valueType = String::class.javaObjectType
++
++    override fun storage(context: Context): KeyValueStore = createSummaryStorage(context, key)
++
++    override fun getSummary(context: Context): CharSequence = context.getText(summaryRes)
++
++    override fun bind(preference: Preference, metadata: PreferenceMetadata) {
++        super.bind(preference, metadata)
++        preference.isSelectable = false
++        preference.isCopyingEnabled = true
++    }
++
++    override val sensitivityLevel
++        get() = SensitivityLevel.NO_SENSITIVITY
++}
++
++class PurePixelRomPreference :
++    PurePixelIdentityPreference(
++        key = "pure_pixel_rom",
++        title = R.string.pure_pixel_rom_title,
++        summaryRes = R.string.pure_pixel_rom_summary,
++    )
++
++class PurePixelMaintainerPreference :
++    PurePixelIdentityPreference(
++        key = "pure_pixel_maintainer",
++        title = R.string.pure_pixel_maintainer_title,
++        summaryRes = R.string.pure_pixel_maintainer_summary,
++    )
+diff --git a/src/com/android/settings/display/ColorModeApiScreen.kt b/src/com/android/settings/display/ColorModeApiScreen.kt
+index a15b02d6357a37b040dbac95e661c6997a75539b..0ac435989016ace9f2515ddb5a47311ba78449f6 100644
+--- a/src/com/android/settings/display/ColorModeApiScreen.kt
++++ b/src/com/android/settings/display/ColorModeApiScreen.kt
+@@ -53,7 +53,9 @@ class ColorModeApiScreen :
+         }
+ 
+         preconditions(R.string.color_mode_preconditions) {
+-            if (!context.colorDisplayManager.isDeviceColorManaged) {
++            if (ColorModeUtils.getAvailableColorModes(context).size <= 1) {
++                HardwareUnsupported("The device does not expose multiple selectable color modes")
++            } else if (!context.colorDisplayManager.isDeviceColorManaged) {
+                 HardwareUnsupported("The device does not have a wide color gamut display")
+             } else if (ColorDisplayManager.areAccessibilityTransformsEnabled(context)) {
+                 Custom(R.string.color_mode_unsupported, stability = PreconditionStability.UNSTABLE)
+diff --git a/src/com/android/settings/display/ColorModePreferenceController.java b/src/com/android/settings/display/ColorModePreferenceController.java
+index 5d74948e8a91d88fdc3e83a57edb167b0c38e3dc..b34d4c40a1bc93247459ff7b105c7a44faad4137 100644
+--- a/src/com/android/settings/display/ColorModePreferenceController.java
++++ b/src/com/android/settings/display/ColorModePreferenceController.java
+@@ -53,10 +53,15 @@ public class ColorModePreferenceController extends BasePreferenceController
+ 
+     @Override
+     public int getAvailabilityStatus() {
+-        return mContext.getSystemService(ColorDisplayManager.class)
+-                .isDeviceColorManaged()
+-                && !ColorDisplayManager.areAccessibilityTransformsEnabled(mContext) ?
+-                AVAILABLE : DISABLED_FOR_USER;
++        // A managed display can still expose no selectable modes (or only its
++        // current native mode). In that case a Colors entry opens an empty
++        // page, so hide the entry instead of presenting a non-choice.
++        if (ColorModeUtils.getAvailableColorModes(mContext).length <= 1) {
++            return UNSUPPORTED_ON_DEVICE;
++        }
++        return mContext.getSystemService(ColorDisplayManager.class).isDeviceColorManaged()
++                && !ColorDisplayManager.areAccessibilityTransformsEnabled(mContext)
++                ? AVAILABLE : DISABLED_FOR_USER;
+     }
+ 
+     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
+diff --git a/src/com/android/settings/display/ColorModeScreen.kt b/src/com/android/settings/display/ColorModeScreen.kt
+index a430df86e16b4b23e5a037e87aba8e9c289c2af5..9fe83362efe5fd9c18caaf692b7334ee038e701c 100644
+--- a/src/com/android/settings/display/ColorModeScreen.kt
++++ b/src/com/android/settings/display/ColorModeScreen.kt
+@@ -80,13 +80,15 @@ open class ColorModeScreen :
+     private var settingsKeyedObserver: KeyedObserver<String>? = null
+ 
+     override val availabilityDescription =
+-        "The device must be color managed and not have accessibility transforms enabled."
++        "The device must expose multiple color modes, be color managed, and not have " +
++            "accessibility transforms enabled."
+ 
+     override fun getAvailabilityStability() = PreconditionStability.UNSTABLE
+ 
+     override fun isAvailable(context: Context): Boolean {
+         val colorManager = context.getSystemService(ColorDisplayManager::class.java) ?: return false
+-        return colorManager.isDeviceColorManaged &&
++        return ColorModeUtils.getAvailableColorModes(context).size > 1 &&
++            colorManager.isDeviceColorManaged &&
+             !ColorDisplayManager.areAccessibilityTransformsEnabled(context)
+     }
+ 
+diff --git a/src/com/android/settings/tb132fu/Tb132fuEntryPreferenceController.java b/src/com/android/settings/tb132fu/Tb132fuEntryPreferenceController.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..7fb0547ba74eff520b2d0433da432ce667fa4009
+--- /dev/null
++++ b/src/com/android/settings/tb132fu/Tb132fuEntryPreferenceController.java
+@@ -0,0 +1,29 @@
++/*
++ * Copyright (C) 2026 The Android Open Source Project
++ * SPDX-License-Identifier: Apache-2.0
++ */
++package com.android.settings.tb132fu;
++
++import android.content.Context;
++import android.os.Build;
++import android.os.SystemProperties;
++
++import com.android.settings.core.BasePreferenceController;
++
++/** Shows the device page only on the Lenovo TB132FU. */
++public final class Tb132fuEntryPreferenceController extends BasePreferenceController {
++    public Tb132fuEntryPreferenceController(Context context, String key) {
++        super(context, key);
++    }
++
++    @Override
++    public int getAvailabilityStatus() {
++        return isTb132fu() ? AVAILABLE : UNSUPPORTED_ON_DEVICE;
++    }
++
++    static boolean isTb132fu() {
++        return "tb132fu".equalsIgnoreCase(Build.DEVICE)
++                || "tb132fu".equalsIgnoreCase(
++                        SystemProperties.get("ro.product.vendor.device", ""));
++    }
++}
+diff --git a/src/com/android/settings/tb132fu/Tb132fuSettingsFragment.java b/src/com/android/settings/tb132fu/Tb132fuSettingsFragment.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..39c93e6fe129b5d8fd9c3c35531a4521b2b9e602
+--- /dev/null
++++ b/src/com/android/settings/tb132fu/Tb132fuSettingsFragment.java
+@@ -0,0 +1,263 @@
++/*
++ * Copyright (C) 2026 The Android Open Source Project
++ * SPDX-License-Identifier: Apache-2.0
++ */
++package com.android.settings.tb132fu;
++
++import android.app.settings.SettingsEnums;
++import android.content.ActivityNotFoundException;
++import android.content.ComponentName;
++import android.content.Context;
++import android.content.Intent;
++import android.content.pm.PackageManager;
++import android.hardware.display.AmbientDisplayConfiguration;
++import android.hardware.input.InputManager;
++import android.os.Build;
++import android.os.Bundle;
++import android.os.SystemProperties;
++import android.os.UserHandle;
++import android.provider.Settings;
++import android.system.Os;
++import android.util.Log;
++import android.view.InputDevice;
++import android.widget.Toast;
++
++import androidx.preference.ListPreference;
++import androidx.preference.Preference;
++import androidx.preference.SwitchPreferenceCompat;
++
++import com.android.settings.R;
++import com.android.settings.dashboard.DashboardFragment;
++import com.android.settings.search.BaseSearchIndexProvider;
++import com.android.settingslib.search.SearchIndexable;
++
++/** Native Settings surface for behavior owned by the Lenovo TB132FU. */
++@SearchIndexable
++public final class Tb132fuSettingsFragment extends DashboardFragment
++        implements Preference.OnPreferenceChangeListener,
++                Preference.OnPreferenceClickListener {
++    private static final String TAG = "Tb132fuSettings";
++
++    private static final String KEY_AOD = "tb132fu_aod";
++    private static final String KEY_DT2W = "tb132fu_dt2w";
++    private static final String KEY_AOD_SCHEDULE = "tb132fu_aod_twilight_schedule";
++    private static final String KEY_REFRESH_RATE = "tb132fu_refresh_rate";
++    private static final String KEY_PEN_SETTINGS = "tb132fu_pen_settings";
++    private static final String KEY_POGO_STATUS = "tb132fu_pogo_status";
++    private static final String KEY_BUILD_INFO = "tb132fu_build_info";
++
++    private static final String PROP_DT2W = "persist.sys.tb132fu.dt2w";
++    private static final String SETTING_AOD_SCHEDULE =
++            "tb132fu_aod_twilight_schedule";
++    private static final String SETTING_MIN_REFRESH_RATE = "min_refresh_rate";
++    private static final String SETTING_PEAK_REFRESH_RATE = "peak_refresh_rate";
++
++    private static final String REFRESH_STANDARD = "standard";
++    private static final String REFRESH_FLUID = "fluid";
++    private static final String REFRESH_FORCE_120 = "force_120";
++
++    private static final int POGO_VENDOR_ID = 0x17ef;
++    private static final int POGO_PRODUCT_ID = 0x613d;
++    private static final ComponentName LENOVO_PEN_SETTINGS = new ComponentName(
++            "com.lenovo.penservice", "com.lenovo.pen.bt.ui.BtSettingsActivity");
++
++    private SwitchPreferenceCompat mAod;
++    private SwitchPreferenceCompat mDt2w;
++    private SwitchPreferenceCompat mAodSchedule;
++    private ListPreference mRefreshRate;
++    private Preference mPenSettings;
++    private Preference mPogoStatus;
++
++    @Override
++    public void onCreate(Bundle savedInstanceState) {
++        super.onCreate(savedInstanceState);
++        mAod = findPreference(KEY_AOD);
++        mDt2w = findPreference(KEY_DT2W);
++        mAodSchedule = findPreference(KEY_AOD_SCHEDULE);
++        mRefreshRate = findPreference(KEY_REFRESH_RATE);
++        mPenSettings = findPreference(KEY_PEN_SETTINGS);
++        mPogoStatus = findPreference(KEY_POGO_STATUS);
++
++        mAod.setOnPreferenceChangeListener(this);
++        mDt2w.setOnPreferenceChangeListener(this);
++        mAodSchedule.setOnPreferenceChangeListener(this);
++        mRefreshRate.setOnPreferenceChangeListener(this);
++        mPenSettings.setOnPreferenceClickListener(this);
++
++        final boolean aodAvailable = new AmbientDisplayConfiguration(getContext())
++                .alwaysOnAvailableForUser(UserHandle.myUserId());
++        mAod.setVisible(aodAvailable);
++        mAodSchedule.setVisible(aodAvailable);
++
++        final Preference buildInfo = findPreference(KEY_BUILD_INFO);
++        buildInfo.setSummary(getString(R.string.tb132fu_build_info_summary,
++                Build.VERSION.RELEASE, getKernelRelease()));
++    }
++
++    @Override
++    public void onResume() {
++        super.onResume();
++        final int user = UserHandle.myUserId();
++        mAod.setChecked(Settings.Secure.getIntForUser(getContentResolver(),
++                Settings.Secure.DOZE_ALWAYS_ON, 0, user) != 0);
++        mDt2w.setChecked(SystemProperties.getBoolean(PROP_DT2W,
++                Settings.Secure.getIntForUser(getContentResolver(),
++                        Settings.Secure.DOUBLE_TAP_TO_WAKE, 1, user) != 0));
++        mAodSchedule.setChecked(Settings.Secure.getIntForUser(getContentResolver(),
++                SETTING_AOD_SCHEDULE, 1, user) != 0);
++
++        final String refreshMode = getRefreshRateMode();
++        mRefreshRate.setValue(refreshMode);
++        final int refreshIndex = mRefreshRate.findIndexOfValue(refreshMode);
++        if (refreshIndex >= 0) {
++            mRefreshRate.setSummary(mRefreshRate.getEntries()[refreshIndex]);
++        }
++
++        final boolean penAvailable = getContext().getPackageManager().resolveActivity(
++                new Intent().setComponent(LENOVO_PEN_SETTINGS),
++                PackageManager.MATCH_SYSTEM_ONLY) != null;
++        mPenSettings.setEnabled(penAvailable);
++        mPenSettings.setSummary(penAvailable
++                ? R.string.tb132fu_pen_settings_summary
++                : R.string.tb132fu_pen_settings_unavailable_summary);
++        mPogoStatus.setSummary(isPogoAttached()
++                ? R.string.tb132fu_pogo_attached
++                : R.string.tb132fu_pogo_detached);
++    }
++
++    @Override
++    public boolean onPreferenceChange(Preference preference, Object newValue) {
++        switch (preference.getKey()) {
++            case KEY_AOD:
++                return Settings.Secure.putIntForUser(getContentResolver(),
++                        Settings.Secure.DOZE_ALWAYS_ON, (Boolean) newValue ? 1 : 0,
++                        UserHandle.myUserId());
++            case KEY_DT2W:
++                return setDt2w((Boolean) newValue);
++            case KEY_AOD_SCHEDULE:
++                return Settings.Secure.putIntForUser(getContentResolver(),
++                        SETTING_AOD_SCHEDULE, (Boolean) newValue ? 1 : 0,
++                        UserHandle.myUserId());
++            case KEY_REFRESH_RATE:
++                return setRefreshRateMode((String) newValue);
++            default:
++                return false;
++        }
++    }
++
++    @Override
++    public boolean onPreferenceClick(Preference preference) {
++        if (!KEY_PEN_SETTINGS.equals(preference.getKey())) {
++            return false;
++        }
++        try {
++            startActivity(new Intent().setComponent(LENOVO_PEN_SETTINGS));
++        } catch (ActivityNotFoundException exception) {
++            Toast.makeText(getContext(), R.string.tb132fu_pen_settings_unavailable,
++                    Toast.LENGTH_LONG).show();
++        }
++        return true;
++    }
++
++    private boolean setDt2w(boolean enabled) {
++        final boolean stored = Settings.Secure.putIntForUser(getContentResolver(),
++                Settings.Secure.DOUBLE_TAP_TO_WAKE, enabled ? 1 : 0,
++                UserHandle.myUserId());
++        return stored && setPersistentBoolean(PROP_DT2W, enabled);
++    }
++
++    private boolean setPersistentBoolean(String property, boolean enabled) {
++        try {
++            SystemProperties.set(property, enabled ? "1" : "0");
++            return true;
++        } catch (RuntimeException exception) {
++            Log.e(TAG, "Unable to set " + property, exception);
++            return false;
++        }
++    }
++
++    private String getRefreshRateMode() {
++        final float minimum = Settings.System.getFloatForUser(getContentResolver(),
++                SETTING_MIN_REFRESH_RATE, 0.0f, UserHandle.myUserId());
++        final float peak = Settings.System.getFloatForUser(getContentResolver(),
++                SETTING_PEAK_REFRESH_RATE, 120.0f, UserHandle.myUserId());
++        if (minimum >= 119.0f) return REFRESH_FORCE_120;
++        return peak >= 119.0f ? REFRESH_FLUID : REFRESH_STANDARD;
++    }
++
++    private boolean setRefreshRateMode(String mode) {
++        final float minimum;
++        final float peak;
++        switch (mode) {
++            case REFRESH_STANDARD:
++                minimum = 0.0f;
++                peak = 60.0f;
++                break;
++            case REFRESH_FLUID:
++                minimum = 0.0f;
++                peak = 120.0f;
++                break;
++            case REFRESH_FORCE_120:
++                minimum = 120.0f;
++                peak = 120.0f;
++                break;
++            default:
++                return false;
++        }
++        final int user = UserHandle.myUserId();
++        final boolean minStored = Settings.System.putFloatForUser(getContentResolver(),
++                SETTING_MIN_REFRESH_RATE, minimum, user);
++        final boolean peakStored = Settings.System.putFloatForUser(getContentResolver(),
++                SETTING_PEAK_REFRESH_RATE, peak, user);
++        if (minStored && peakStored) {
++            final int index = mRefreshRate.findIndexOfValue(mode);
++            if (index >= 0) mRefreshRate.setSummary(mRefreshRate.getEntries()[index]);
++        }
++        return minStored && peakStored;
++    }
++
++    private boolean isPogoAttached() {
++        final InputManager inputManager = getContext().getSystemService(InputManager.class);
++        if (inputManager == null) return false;
++        for (int id : inputManager.getInputDeviceIds()) {
++            final InputDevice device = inputManager.getInputDevice(id);
++            if (device != null && device.isEnabled()
++                    && device.getVendorId() == POGO_VENDOR_ID
++                    && device.getProductId() == POGO_PRODUCT_ID) {
++                return true;
++            }
++        }
++        return false;
++    }
++
++    private static String getKernelRelease() {
++        try {
++            return Os.uname().release;
++        } catch (RuntimeException exception) {
++            return "4.19";
++        }
++    }
++
++    @Override
++    public int getMetricsCategory() {
++        return SettingsEnums.SETTINGS_SYSTEM_CATEGORY;
++    }
++
++    @Override
++    protected String getLogTag() {
++        return TAG;
++    }
++
++    @Override
++    protected int getPreferenceScreenResId() {
++        return R.xml.tb132fu_settings;
++    }
++
++    public static final BaseSearchIndexProvider SEARCH_INDEX_DATA_PROVIDER =
++            new BaseSearchIndexProvider(R.xml.tb132fu_settings) {
++                @Override
++                protected boolean isPageSearchEnabled(Context context) {
++                    return Tb132fuEntryPreferenceController.isTb132fu();
++                }
++            };
++}
+diff --git a/tests/robotests/src/com/android/settings/accounts/AccountDashboardFragmentTest.java b/tests/robotests/src/com/android/settings/accounts/AccountDashboardFragmentTest.java
+index d3c2536a9e9aedc17949620bc50cf070a10314da..85ec2d919e923430cf86e076f0e0ffeb477f98f4 100644
+--- a/tests/robotests/src/com/android/settings/accounts/AccountDashboardFragmentTest.java
++++ b/tests/robotests/src/com/android/settings/accounts/AccountDashboardFragmentTest.java
+@@ -28,10 +28,18 @@ import android.content.Context;
+ import android.content.pm.UserInfo;
+ import android.os.UserManager;
+ import android.platform.test.annotations.DisableFlags;
++import android.platform.test.annotations.EnableFlags;
+ import android.platform.test.flag.junit.SetFlagsRule;
+ import android.provider.SearchIndexableResource;
+ 
++import androidx.preference.Preference;
++import androidx.preference.PreferenceManager;
++import androidx.preference.PreferenceScreen;
++
++import com.android.settings.R;
++import com.android.settings.applications.autofill.PasswordsPreferenceController;
+ import com.android.settings.flags.Flags;
++import com.android.settingslib.core.AbstractPreferenceController;
+ import com.android.settingslib.drawer.CategoryKey;
+ import com.android.settingslib.search.SearchIndexableRaw;
+ 
+@@ -128,4 +136,26 @@ public class AccountDashboardFragmentTest {
+     public void shouldSkipForInitialSUW_returnTrue() {
+         assertThat(mFragment.shouldSkipForInitialSUW()).isTrue();
+     }
++
++    @Test
++    public void buildLegacyAutofillPreferenceControllers_includesPasswordsController() {
++        final List<AbstractPreferenceController> controllers = new ArrayList<>();
++
++        AccountDashboardFragment.buildLegacyAutofillPreferenceControllers(mContext, controllers);
++
++        assertThat(controllers.stream()
++                .anyMatch(controller -> controller instanceof PasswordsPreferenceController))
++                .isTrue();
++    }
++
++    @Test
++    @EnableFlags(Flags.FLAG_ENABLE_ACCOUNTS_AND_BACKUP_SCREEN)
++    public void accountsAndBackupLayout_containsLegacyPasswordsFallbackContainer() {
++        final PreferenceManager manager = new PreferenceManager(mContext);
++        final PreferenceScreen screen = manager.inflateFromResource(
++                mContext, R.xml.credman_dashboard_settings, null);
++        final Preference passwordsCategory = screen.findPreference("passwords_category");
++
++        assertThat(passwordsCategory).isNotNull();
++    }
+ }
+diff --git a/tests/robotests/src/com/android/settings/display/ColorModeApiScreenTest.kt b/tests/robotests/src/com/android/settings/display/ColorModeApiScreenTest.kt
+index 13eb866025748a58064ef3cab35ee9fd43a92ed7..4bf816ed1f7604be151127614214ea73b47993a5 100644
+--- a/tests/robotests/src/com/android/settings/display/ColorModeApiScreenTest.kt
++++ b/tests/robotests/src/com/android/settings/display/ColorModeApiScreenTest.kt
+@@ -97,6 +97,16 @@ class ColorModeApiScreenTest {
+         assertThrows(FailedPreconditionException::class.java) { tester.getLaunchIntent() }
+     }
+ 
++    @Test
++    fun getLaunchIntent_onlyOneColorMode_disallowed() {
++        SettingsShadowResources.overrideResource(
++            CONFIG_AVAILABLE_COLOR_MODES_RES_ID,
++            intArrayOf(ColorDisplayManager.COLOR_MODE_NATURAL),
++        )
++
++        assertThrows(FailedPreconditionException::class.java) { tester.getLaunchIntent() }
++    }
++
+     @Test
+     @EnableFlags(FLAG_CATALYST_MIGRATION_26Q2, FLAG_DISPLAY_SETTINGS_API_SCREEN_SUPPORT)
+     fun getScreen_isNotNull() {
+diff --git a/tests/robotests/src/com/android/settings/display/ColorModeScreenTest.kt b/tests/robotests/src/com/android/settings/display/ColorModeScreenTest.kt
+index 6602d4225e508e09c8a2267df8806b2c02c0be5e..933948073d6e06bb014171dfeee23ef5bc959478 100644
+--- a/tests/robotests/src/com/android/settings/display/ColorModeScreenTest.kt
++++ b/tests/robotests/src/com/android/settings/display/ColorModeScreenTest.kt
+@@ -23,16 +23,19 @@ import android.provider.Settings.Secure
+ import androidx.test.core.app.ApplicationProvider
+ import androidx.test.ext.junit.runners.AndroidJUnit4
+ import com.android.settings.Settings.ColorModeActivity
++import com.android.settings.testutils.shadow.SettingsShadowResources
+ import com.android.settingslib.datastore.SettingsSecureStore
+ import com.google.common.truth.Truth.assertThat
+ import org.junit.Before
+ import org.junit.Test
+ import org.junit.runner.RunWith
++import org.robolectric.annotation.Config
+ import org.mockito.kotlin.doReturn
+ import org.mockito.kotlin.mock
+ import org.mockito.kotlin.stub
+ 
+ @RunWith(AndroidJUnit4::class)
++@Config(shadows = [SettingsShadowResources::class])
+ class ColorModeScreenTest {
+     private val preferenceScreenCreator = ColorModeScreen()
+     private val mockColorDisplayManager = mock<ColorDisplayManager>()
+@@ -45,6 +48,13 @@ class ColorModeScreenTest {
+ 
+     @Before
+     fun setUp() {
++        SettingsShadowResources.overrideResource(
++            com.android.internal.R.array.config_availableColorModes,
++            intArrayOf(
++                ColorDisplayManager.COLOR_MODE_NATURAL,
++                ColorDisplayManager.COLOR_MODE_AUTOMATIC,
++            ),
++        )
+         SettingsSecureStore.get(context).setInt(Secure.ACCESSIBILITY_DISPLAY_INVERSION_ENABLED, 0)
+         SettingsSecureStore.get(context).setInt(Secure.ACCESSIBILITY_DISPLAY_DALTONIZER_ENABLED, 0)
+     }
+@@ -90,4 +100,15 @@ class ColorModeScreenTest {
+         mockColorDisplayManager.stub { on { isDeviceColorManaged } doReturn true }
+         assertThat(preferenceScreenCreator.isAvailable(context)).isEqualTo(true)
+     }
++
++    @Test
++    fun isAvailable_onlyOneColorMode_returnsFalse() {
++        SettingsShadowResources.overrideResource(
++            com.android.internal.R.array.config_availableColorModes,
++            intArrayOf(ColorDisplayManager.COLOR_MODE_NATURAL),
++        )
++        mockColorDisplayManager.stub { on { isDeviceColorManaged } doReturn true }
++
++        assertThat(preferenceScreenCreator.isAvailable(context)).isFalse()
++    }
+ }
+diff --git a/tests/robotests/src/com/android/settings/display/colors/ColorModePreferenceControllerTest.kt b/tests/robotests/src/com/android/settings/display/colors/ColorModePreferenceControllerTest.kt
+index 4371bae49105da08e791125d0841c356a8671cdc..a7f378c9a453aba71b3e1813613ba5882469d5c6 100644
+--- a/tests/robotests/src/com/android/settings/display/colors/ColorModePreferenceControllerTest.kt
++++ b/tests/robotests/src/com/android/settings/display/colors/ColorModePreferenceControllerTest.kt
+@@ -28,6 +28,7 @@ import androidx.test.core.app.ApplicationProvider
+ 
+ import com.android.settingslib.testutils.shadow.ShadowColorDisplayManager
+ import com.android.settings.R
++import com.android.settings.testutils.shadow.SettingsShadowResources
+ import com.google.common.truth.Truth.assertThat
+ 
+ import org.junit.Before
+@@ -39,7 +40,13 @@ import org.robolectric.shadow.api.Shadow
+ import org.robolectric.shadows.ShadowContentResolver
+ 
+ @RunWith(RobolectricTestRunner::class)
+-@Config(shadows = [ShadowColorDisplayManager::class, ShadowContentResolver::class])
++@Config(
++    shadows = [
++        ShadowColorDisplayManager::class,
++        ShadowContentResolver::class,
++        SettingsShadowResources::class,
++    ]
++)
+ class ColorModePreferenceControllerTest {
+     private lateinit var context: Context
+     private lateinit var preference: Preference
+@@ -50,6 +57,13 @@ class ColorModePreferenceControllerTest {
+     @Before
+     fun setup() {
+         context = ApplicationProvider.getApplicationContext()
++        SettingsShadowResources.overrideResource(
++            com.android.internal.R.array.config_availableColorModes,
++            intArrayOf(
++                ColorDisplayManager.COLOR_MODE_NATURAL,
++                ColorDisplayManager.COLOR_MODE_AUTOMATIC,
++            ),
++        )
+ 
+         controller = ColorModePreferenceController(context, "test")
+         preference = Preference(context)
+@@ -115,6 +129,16 @@ class ColorModePreferenceControllerTest {
+             .isEmpty()
+     }
+ 
++    @Test
++    fun isAvailable_onlyOneColorMode_returnsFalse() {
++        SettingsShadowResources.overrideResource(
++            com.android.internal.R.array.config_availableColorModes,
++            intArrayOf(ColorDisplayManager.COLOR_MODE_NATURAL),
++        )
++
++        assertThat(controller.isAvailable).isFalse()
++    }
++
+     @Test
+     fun contentObserver_onChange_updatesPreferenceSummary() {
+         controller.onResume()
+@@ -136,4 +160,4 @@ class ColorModePreferenceControllerTest {
+             Settings.System.getUriFor(Settings.System.DISPLAY_COLOR_MODE))
+             .forEach {it.onChange(false, null)};
+     }
+-}
+\ No newline at end of file
++}

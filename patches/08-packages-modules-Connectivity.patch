@@ -1,0 +1,448 @@
+diff --git a/bpf/headers/include/bpf/BpfUtils.h b/bpf/headers/include/bpf/BpfUtils.h
+index 5ca52c6c62591e72a70cefc939ce42a0876130b5..f5f147ff5e21cedeb1e79729595847cca735acbc 100644
+--- a/bpf/headers/include/bpf/BpfUtils.h
++++ b/bpf/headers/include/bpf/BpfUtils.h
+@@ -145,7 +145,13 @@ static inline int get_api_level_full() {
+     return rv;
+ }
+ 
++#ifdef NETBPFLOAD_TEST_API_LEVEL_FULL
++// A host-built bring-up probe can run on an older userspace whose property API
++// cannot report the target release. Shipping binaries never define this.
++const int api_level_full = NETBPFLOAD_TEST_API_LEVEL_FULL;
++#else
+ const int api_level_full = get_api_level_full();
++#endif
+ 
+ const bool isAtLeastS    = (api_level_full >= 3100);  // 31
+                                                       // 32 is Sv2
+diff --git a/bpf/headers/include/bpf/KernelUtils.h b/bpf/headers/include/bpf/KernelUtils.h
+index add20c539182d74b75a81e1ca7304eef4b256be9..3f16efe32a24952bea0fb91cd7732b3e55aead88 100644
+--- a/bpf/headers/include/bpf/KernelUtils.h
++++ b/bpf/headers/include/bpf/KernelUtils.h
+@@ -20,6 +20,7 @@
+ #include <stdlib.h>
+ #include <string.h>
+ #include <sys/personality.h>
++#include <sys/system_properties.h>
+ #include <sys/utsname.h>
+ 
+ namespace android {
+@@ -28,18 +29,44 @@ namespace bpf {
+ #define KVER(a, b, c) (((a) << 24) + ((b) << 16) + (c))
+ 
+ static inline unsigned uncachedKernelVersion() {
+-    struct utsname buf;
+-    if (uname(&buf)) abort();
+-
+     unsigned kver_major = 0;
+     unsigned kver_minor = 0;
+     unsigned kver_sub = 0;
++
++    struct utsname buf;
++    if (uname(&buf)) abort();
+     if (sscanf(buf.release, "%u.%u.%u", &kver_major, &kver_minor, &kver_sub) < 2) abort();
+     return KVER(kver_major, kver_minor, kver_sub);
+ }
+ 
+ static const unsigned kernelVer = uncachedKernelVersion();
+ 
++// Some vendor-launched devices remain on an older LTS base after the Android
++// platform's minimum-kernel policy advances. A product may use this narrowly
++// scoped value after verifying its required BPF ABI. It must not affect actual
++// feature detection or BPF object selection, both of which use kernelVer.
++static inline unsigned uncachedKernelPolicyVersion() {
++    unsigned kver_major = 0;
++    unsigned kver_minor = 0;
++    unsigned kver_sub = 0;
++    char kver_override[PROP_VALUE_MAX];
++    if (__system_property_get("ro.bpf.platform_kver_override", kver_override) > 0 &&
++        sscanf(kver_override, "%u.%u.%u", &kver_major, &kver_minor, &kver_sub) >= 2) {
++        return KVER(kver_major, kver_minor, kver_sub);
++    }
++    return kernelVer;
++}
++
++// Keep the policy-only property lookup lazy. KernelUtils.h is shared by many
++// processes which need truthful capability checks but never enforce the
++// Android minimum-kernel policy. Eager initialization made every such process
++// attempt the property read and, when SELinux correctly denied it, fall back
++// to the upstream minimum-kernel assumption below.
++static inline unsigned kernelPolicyVersion() {
++    static const unsigned version = uncachedKernelPolicyVersion();
++    return version;
++}
++
+ static inline unsigned __unused kernelVersion() {
+     return kernelVer;
+ }
+@@ -83,10 +110,22 @@ static constexpr unsigned minSupportedKernelVer =
+ 
+ static inline bool isAtLeastKernelVersion(unsigned major, unsigned minor, unsigned sub = 0) {
+     unsigned k = KVER(major, minor, sub);
+-    if (k <= minSupportedKernelVer) return true;
++    // Normal platform builds may assume their declared minimum kernel. A
++    // vendor-launched legacy device using the explicit policy override must
++    // instead perform every capability check against its truthful uname; the
++    // override acknowledges policy only and does not provide newer helpers,
++    // program types, attach types, or socket options.
++#ifndef __ANDROID_APEX__
++    if (kernelVer >= minSupportedKernelVer && k <= minSupportedKernelVer) return true;
++#endif
+     return kernelVer >= k;
+ }
+ 
++static inline bool isAtLeastKernelPolicyVersion(unsigned major, unsigned minor,
++                                                unsigned sub = 0) {
++    return kernelPolicyVersion() >= KVER(major, minor, sub);
++}
++
+ static inline bool isKernelVersion(unsigned major, unsigned minor) {
+     return isAtLeastKernelVersion(major, minor) && !isAtLeastKernelVersion(major, minor + 1);
+ }
+diff --git a/bpf/loader/Android.bp b/bpf/loader/Android.bp
+index bee2681b4cea5633d7bf343c1d10359950ef3afb..12eba0a17779ee25b87ebead8516124fb3d34b2c 100644
+--- a/bpf/loader/Android.bp
++++ b/bpf/loader/Android.bp
+@@ -77,6 +77,38 @@ cc_binary {
+     installable: false,
+ }
+ 
++// Non-installed TB132FU bring-up probe. It loads the same version-filtered
++// objects as netbpfload from /data/local/tmp. Test callers must unpin every
++// object afterward because bpffs pins are shared across mount namespaces.
++cc_binary {
++    name: "netbpfload_tb132fu_probe",
++    defaults: ["bpf_cc_defaults"],
++    srcs: ["NetBpfLoadTb132fuProbe.cpp"],
++    cflags: [
++        "-D__ANDROID_APEX__",
++        "-DNETBPFLOAD_TEST_API_LEVEL_FULL=3700",
++        "-Wformat",
++        "-Wformat-signedness",
++        "-Wno-unused-function",
++    ],
++    sanitize: {
++        integer_overflow: true,
++    },
++    header_libs: [
++        "bpf_headers",
++        "bpf_prog_mainline_headers",
++    ],
++    shared_libs: [
++        "libbase",
++        "liblog",
++        "libbpf",
++    ],
++    static_libs: ["libtetheringflags"],
++    compile_multilib: "64",
++    min_sdk_version: "31",
++    installable: false,
++}
++
+ // Versioned netbpfload init rc: init system will process it only on api R/30 S/31 Sv2/32 devices
+ // Note: R[30] S[31] Sv2[32] T[33] U[34] V[35])
+ //
+diff --git a/bpf/loader/NetBpfLoad.cpp b/bpf/loader/NetBpfLoad.cpp
+index 7ba3247dcc6f31ab9b612d410202067c821ab58a..c4c9b2a28e4c7782f1bae52db110278232ef3855 100644
+--- a/bpf/loader/NetBpfLoad.cpp
++++ b/bpf/loader/NetBpfLoad.cpp
+@@ -1345,7 +1345,9 @@ static bool loadObject(const char* const progPath, const bool useLibbpf = true)
+     return true;
+ }
+ 
++#ifndef APEXROOT
+ #define APEXROOT "/apex/com.android.tethering"
++#endif
+ #define BPFROOT APEXROOT "/etc/bpf/mainline/"
+ 
+ static bool loadAllObjects() {
+@@ -1521,9 +1523,10 @@ static int doLoad(char** argv, char * const envp[]) {
+     // first in U QPR2 beta~2
+     const bool has_platform_netbpfload_rc = exists("/system/etc/init/netbpfload.rc");
+ 
+-    ALOGI("%s api:%d/%d kver:%07x (%s:%uk) libbpf: v%u.%u uid:%u rc:%d%d user:%d%d%d",
++    ALOGI("%s api:%d/%d kver:%07x policy_kver:%07x (%s:%uk) libbpf: v%u.%u uid:%u "
++          "rc:%d%d user:%d%d%d",
+           argv[0], android_get_device_api_level(), api_level_full,
+-          kernelVer, describeArch(), page_size >> 10,
++          kernelVer, kernelPolicyVersion(), describeArch(), page_size >> 10,
+           libbpf_major_version(), libbpf_minor_version(), getuid(), has_platform_bpfloader_rc,
+           has_platform_netbpfload_rc, isUser, isUserdebug, isEng);
+ 
+@@ -1548,40 +1551,40 @@ static int doLoad(char** argv, char * const envp[]) {
+ 
+     // both S and T require kernel 4.9 (and eBpf support)
+     // (this also guarantees 'kernelVer' isn't an invalid uninitialized 0)
+-    if (!isAtLeastKernelVersion(4, 9)) {
++    if (!isAtLeastKernelPolicyVersion(4, 9)) {
+         ALOGE("Android S & T require kernel 4.9.");
+         return 3;
+     }
+ 
+     // U bumps the kernel requirement up to 4.14
+-    if (isAtLeastU && !isAtLeastKernelVersion(4, 14)) {
++    if (isAtLeastU && !isAtLeastKernelPolicyVersion(4, 14)) {
+         ALOGE("Android U requires kernel 4.14.");
+         return 4;
+     }
+ 
+     // V bumps the kernel requirement up to 4.19
+     // see also: //system/netd/tests/kernel_test.cpp TestKernel419
+-    if (isAtLeastV && !isAtLeastKernelVersion(4, 19)) {
++    if (isAtLeastV && !isAtLeastKernelPolicyVersion(4, 19)) {
+         ALOGE("Android V requires kernel 4.19.");
+         return 5;
+     }
+ 
+     // 25Q2 bumps the kernel requirement up to 5.4
+     // see also: //system/netd/tests/kernel_test.cpp TestKernel54
+-    if (isAtLeast25Q2 && !isAtLeastKernelVersion(5, 4)) {
++    if (isAtLeast25Q2 && !isAtLeastKernelPolicyVersion(5, 4)) {
+         ALOGE("Android 25Q2 requires kernel 5.4.");
+         return 6;
+     }
+ 
+     // 25Q4 bumps the kernel requirement up to 5.10
+     // see also: //system/netd/tests/kernel_test.cpp TestKernel510
+-    if (isAtLeast25Q4 && !isAtLeastKernelVersion(5, 10)) {
++    if (isAtLeast25Q4 && !isAtLeastKernelPolicyVersion(5, 10)) {
+         ALOGE("Android 25Q4 requires kernel 5.10.");
+         return 7;
+     }
+ 
+     // 26Q4 bumps the kernel requirement up to 5.15
+-    if (isAtLeast26Q4 && !isAtLeastKernelVersion(5, 15)) {
++    if (isAtLeast26Q4 && !isAtLeastKernelPolicyVersion(5, 15)) {
+         ALOGE("Android 26Q4 requires kernel 5.15.");
+         return 7;
+     }
+diff --git a/bpf/loader/NetBpfLoadTb132fuProbe.cpp b/bpf/loader/NetBpfLoadTb132fuProbe.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..4626712ef54b9edb86cffb1f341f8af170ce0920
+--- /dev/null
++++ b/bpf/loader/NetBpfLoadTb132fuProbe.cpp
+@@ -0,0 +1,29 @@
++/*
++ * Copyright (C) 2026 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++// This binary is an explicitly built, non-installed bring-up tool. Reusing the
++// production parser and loader here proves the exact version-filtered Android
++// 17 objects on the target kernel without changing the shipping executable.
++#define APEXROOT "/data/local/tmp/tb132fu-a17-connectivity"
++#define main netbpfload_production_main
++#include "NetBpfLoad.cpp"
++#undef main
++
++int main(int, char** argv) {
++    android::base::InitLogging(argv, android::base::StderrLogger);
++    libbpf_set_print(android::bpf::libbpfPrint);
++    return android::bpf::loadAllObjects() ? 0 : 1;
++}
+diff --git a/bpf/netd/BpfHandler.cpp b/bpf/netd/BpfHandler.cpp
+index 9b57548b54d055b1da43c800da88c1d37e168566..fea2bd5d73678ad01119159c10dd915292152d98 100644
+--- a/bpf/netd/BpfHandler.cpp
++++ b/bpf/netd/BpfHandler.cpp
+@@ -39,6 +39,7 @@ using base::Result;
+ using base::unique_fd;
+ using base::WaitForProperty;
+ using bpf::getSocketCookie;
++using bpf::isAtLeastKernelPolicyVersion;
+ using bpf::isAtLeastKernelVersion;
+ using bpf::isAtLeastT;
+ using bpf::isAtLeastU;
+@@ -115,12 +116,12 @@ static Result<void> initPrograms(const char* cg2_path) {
+     if (!isAtLeastT) return Error() << "S- platform is unsupported";
+ 
+     // S requires eBPF support which was only added in 4.9, so this should be satisfied.
+-    if (!isAtLeastKernelVersion(4, 9)) {
++    if (!isAtLeastKernelPolicyVersion(4, 9)) {
+         return Error() << "kernel version < 4.9.0 is unsupported";
+     }
+ 
+     // U bumps the kernel requirement up to 4.14
+-    if (isAtLeastU && !isAtLeastKernelVersion(4, 14)) {
++    if (isAtLeastU && !isAtLeastKernelPolicyVersion(4, 14)) {
+         return Error() << "U+ platform with kernel version < 4.14.0 is unsupported";
+     }
+ 
+@@ -130,12 +131,12 @@ static Result<void> initPrograms(const char* cg2_path) {
+     }
+ 
+     // V bumps the kernel requirement up to 4.19
+-    if (isAtLeastV && !isAtLeastKernelVersion(4, 19)) {
++    if (isAtLeastV && !isAtLeastKernelPolicyVersion(4, 19)) {
+         return Error() << "V+ platform with kernel version < 4.19.0 is unsupported";
+     }
+ 
+     // 25Q2 bumps the kernel requirement up to 5.4
+-    if (isAtLeast25Q2 && !isAtLeastKernelVersion(5, 4)) {
++    if (isAtLeast25Q2 && !isAtLeastKernelPolicyVersion(5, 4)) {
+         return Error() << "25Q2+ platform with kernel version < 5.4.0 is unsupported";
+     }
+ 
+diff --git a/bpf/progs/netd.c b/bpf/progs/netd.c
+index 05bdb33d882fd5076bb1df6d39991500b36f9779..650c321bfa550ccf769cfb9d7b1140a06b8af6d4 100644
+--- a/bpf/progs/netd.c
++++ b/bpf/progs/netd.c
+@@ -1004,10 +1004,12 @@ DEFINE_NETD_BPF_PROG_RANGES(ingress, stats, 5_4, INF, T, 25Q4)
+     return bpf_traffic_account(skb, INGRESS, KVER_5_4, API(T));
+ }
+ 
+-// Android T/U/V 4.19
+-DEFINE_NETD_BPF_PROG_RANGES(ingress, stats, 4_19, 5_4, T, 25Q2)
++// Android T+ compatibility path for legacy 4.19 launch kernels. Keep the
++// truthful KVER_4_19/API(T) feature set while allowing current userspace to
++// retain traffic accounting and owner/firewall enforcement.
++DEFINE_NETD_BPF_PROG_RANGES(ingress, stats, 4_19, 5_4, T, MAXAPI)
+ (struct __sk_buff* skb) {
+-return bpf_traffic_account(skb, INGRESS, KVER_4_19, API(T));
++    return bpf_traffic_account(skb, INGRESS, KVER_4_19, API(T));
+ }
+ 
+ // Android T 4.9 & T/U 4.14
+@@ -1060,10 +1062,11 @@ DEFINE_NETD_BPF_PROG_RANGES(egress, stats, 5_4, INF, T, 25Q4)
+     return bpf_traffic_account(skb, EGRESS, KVER_5_4, API(T));
+ }
+ 
+-// Android T/U/V 4.19
+-DEFINE_NETD_BPF_PROG_RANGES(egress, stats, 4_19, 5_4, T, 25Q2)
++// Android T+ compatibility path for legacy 4.19 launch kernels. See the
++// ingress variant above; do not claim or compile 5.4/5.10-only behavior.
++DEFINE_NETD_BPF_PROG_RANGES(egress, stats, 4_19, 5_4, T, MAXAPI)
+ (struct __sk_buff* skb) {
+-return bpf_traffic_account(skb, EGRESS, KVER_4_19, API(T));
++    return bpf_traffic_account(skb, EGRESS, KVER_4_19, API(T));
+ }
+ 
+ // Android T 4.9 & T/U 4.14
+diff --git a/service/jni/com_android_server_connectivity_LocalNetEventListener.cpp b/service/jni/com_android_server_connectivity_LocalNetEventListener.cpp
+index 9e1c027b074de2471b082f57fbefe856a21dc4f6..4b8019db43e6cac95333c15605fabca26301d5c5 100644
+--- a/service/jni/com_android_server_connectivity_LocalNetEventListener.cpp
++++ b/service/jni/com_android_server_connectivity_LocalNetEventListener.cpp
+@@ -32,6 +32,14 @@ namespace android {
+ using android::net::eventpolling::LocalNetEventHandler;
+ 
+ static jobject nativeGetLocalNetAccessRingbufFd(JNIEnv *env, jclass clazz) {
++    // The local-network event channel uses BPF_MAP_TYPE_RINGBUF and is only
++    // shipped for Android-supported 5.10+ kernels.  Legacy launch devices can
++    // still enforce the local-network maps on older kernels, but cannot expose
++    // this optional audit/metrics stream.
++    if (!android::bpf::isAtLeastKernelVersion(5, 10)) {
++        ALOGW("Local network event ring buffer is unsupported below kernel 5.10");
++        return nullptr;
++    }
+     android::base::unique_fd fd = LocalNetEventHandler::GetNewRingbufFd();
+     if (!fd.ok()) {
+         ALOGE("Failed to get local net event ring buffer.");
+diff --git a/service/native/libs/libeventpolling/LoopbackEventHandler.cpp b/service/native/libs/libeventpolling/LoopbackEventHandler.cpp
+index 942bbf653b0feffe28bd9cad2d99315398cc05bb..c82f4df4b5484b2c2fe4b6be6ca3fddd4b68d7d3 100644
+--- a/service/native/libs/libeventpolling/LoopbackEventHandler.cpp
++++ b/service/native/libs/libeventpolling/LoopbackEventHandler.cpp
+@@ -53,8 +53,18 @@ bpf::RingbufEventPoller<LoopbackAccessEvent> *
+ LoopbackEventHandler::GetPoller() {
+     static bpf::RingbufEventPoller<LoopbackAccessEvent> *const sPoller =
+         []() -> bpf::RingbufEventPoller<LoopbackAccessEvent> * {
+-        auto rb = std::make_unique<BpfRingbuf<LoopbackAccessEvent>>(
++        // The throwing constructor aborts the hosting process when the pinned
++        // map is unavailable. That is inappropriate here: this is an optional
++        // metrics consumer, and the ring-buffer object is intentionally absent
++        // on legacy kernels. Use the error-returning factory so Start() can
++        // report the unsupported stream without taking down system_server.
++        auto rb = BpfRingbuf<LoopbackAccessEvent>::Create(
+             LOOPBACK_ACCESS_RINGBUF_NETD_PATH);
++        if (!rb.ok()) {
++            ALOGW("Loopback event ring buffer is unavailable: %s",
++                  rb.error().message().c_str());
++            return nullptr;
++        }
+ 
+         auto callback = [](const std::vector<LoopbackAccessEvent> &events) {
+             for (const LoopbackAccessEvent &event : events) {
+@@ -66,7 +76,7 @@ LoopbackEventHandler::GetPoller() {
+         };
+ 
+         auto result = RingbufEventPoller<LoopbackAccessEvent>::Create(
+-            std::move(callback), std::move(rb));
++            std::move(callback), std::move(*rb));
+ 
+         if (!result.ok()) {
+             ALOGE("Failed to create RingbufEventPoller: %s",
+diff --git a/service/native/libs/libeventpolling/LoopbackEventHandlerTest.cpp b/service/native/libs/libeventpolling/LoopbackEventHandlerTest.cpp
+index 582d489ecc375bebc83f75fda4ed953417b30a88..17d4b02d66f2da8f75f67543fa295241967e8818 100644
+--- a/service/native/libs/libeventpolling/LoopbackEventHandlerTest.cpp
++++ b/service/native/libs/libeventpolling/LoopbackEventHandlerTest.cpp
+@@ -23,6 +23,16 @@
+ 
+ namespace android::net::eventpolling {
+ 
++TEST(LoopbackEventHandlerTest, MissingRingbufDoesNotAbort) {
++    if (!access(LOOPBACK_ACCESS_RINGBUF_NETD_PATH, F_OK)) {
++        GTEST_SKIP() << "BPF ring buffer exists at "
++                     << LOOPBACK_ACCESS_RINGBUF_NETD_PATH;
++    }
++
++    LoopbackEventHandler::Stop();
++    ASSERT_FALSE(LoopbackEventHandler::Start());
++}
++
+ TEST(LoopbackEventHandlerTest, StartStop) {
+     if (!android::bpf::isAtLeastKernelVersion(5, 10)) {
+         GTEST_SKIP() << "BPF ring buffers not supported below 5.10";
+@@ -42,4 +52,4 @@ TEST(LoopbackEventHandlerTest, StartStop) {
+     LoopbackEventHandler::Stop();
+ }
+ 
+-} // namespace android::net::eventpolling
+\ No newline at end of file
++} // namespace android::net::eventpolling
+diff --git a/service/src/com/android/server/connectivity/LocalNetEventListener.java b/service/src/com/android/server/connectivity/LocalNetEventListener.java
+index e8d495ca817f5ab877e15b30a45ad12262787543..2f661598aabd1432dbce075a4c0b5077d48e608c 100644
+--- a/service/src/com/android/server/connectivity/LocalNetEventListener.java
++++ b/service/src/com/android/server/connectivity/LocalNetEventListener.java
+@@ -98,6 +98,11 @@ public class LocalNetEventListener {
+         if (mStarted) {
+             return;
+         }
++        if ((mMetricsEnabled || mNoteOpsEnabled) && mRingbufFd == null) {
++            Log.w(TAG, "Local network event reporting is unavailable on this kernel");
++            mStarted = true;
++            return;
++        }
+         if (mMetricsEnabled || mNoteOpsEnabled) {
+             mLooper.getQueue().addOnFileDescriptorEventListener(mRingbufFd,
+                     EVENT_INPUT | EVENT_ERROR, this::consumeEvents);
+diff --git a/tests/unit/java/com/android/server/connectivity/LocalNetEventListenerTest.java b/tests/unit/java/com/android/server/connectivity/LocalNetEventListenerTest.java
+index 0a509ab445ec4a6f45230dce9cde423f284e8554..0fda176c33f000992bcb63799977ba8f6359e964 100644
+--- a/tests/unit/java/com/android/server/connectivity/LocalNetEventListenerTest.java
++++ b/tests/unit/java/com/android/server/connectivity/LocalNetEventListenerTest.java
+@@ -197,6 +197,16 @@ public class LocalNetEventListenerTest {
+         verify(mDeps, never()).consumeEvents();
+     }
+ 
++    @Test
++    public void testLocalNetEventListener_missingRingbufDisablesListener() throws Exception {
++        doReturn(null).when(mDeps).getFileDescriptor();
++        LocalNetEventListener listener = new LocalNetEventListener(mDeps, mContext,
++                Looper.getMainLooper(), true, true);
++        listener.start();
++        triggerEvent();
++        verify(mDeps, never()).consumeEvents();
++    }
++
+     private void triggerEvent() throws IOException {
+         // Write a single byte to the file descriptor. This makes it readable so the listener can
+         // start consuming events

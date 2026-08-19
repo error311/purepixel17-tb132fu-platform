@@ -1,0 +1,2755 @@
+diff --git a/core/java/android/app/Instrumentation.java b/core/java/android/app/Instrumentation.java
+index 7402ca5cfa101be450462df32ab3f247c6d679d6..7579c59bc4334008b71f6928ce0befbaf7b5a218 100644
+--- a/core/java/android/app/Instrumentation.java
++++ b/core/java/android/app/Instrumentation.java
+@@ -70,6 +70,7 @@ import android.view.Window;
+ import android.view.WindowManagerGlobal;
+ 
+ import com.android.internal.content.ReferrerIntent;
++import com.android.internal.util.PixelTabletAppProps;
+ 
+ import java.io.File;
+ import java.lang.annotation.Retention;
+@@ -1361,6 +1362,7 @@ public class Instrumentation {
+         Application app = getFactory(context.getPackageName())
+                 .instantiateApplication(cl, className);
+         app.attach(context);
++        PixelTabletAppProps.apply(context);
+         return app;
+     }
+     
+@@ -1379,6 +1381,7 @@ public class Instrumentation {
+             ClassNotFoundException {
+         Application app = (Application)clazz.newInstance();
+         app.attach(context);
++        PixelTabletAppProps.apply(context);
+         return app;
+     }
+ 
+diff --git a/core/java/android/view/View.java b/core/java/android/view/View.java
+index a250d4945bfed7f0f0ec81b83441ffcb589a786a..0c8fcde0d86cc258298198495757857987623aa0 100644
+--- a/core/java/android/view/View.java
++++ b/core/java/android/view/View.java
+@@ -917,6 +917,19 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
+     @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.R, trackingBug = 170729553)
+     private static final boolean DBG = false;
+ 
++    // TB132FU's Android 17 transient taskbar profile resolves the taskbar-to-hotseat Home
++    // endpoint to -44 px in landscape even though the live hotseat row is centered at -56 px.
++    // Keep this in the open platform rather than modifying the Google-signed Pixel Launcher.
++    // The narrow input range excludes the persistent taskbar endpoint and other taskbar states.
++    private static final boolean TB132FU_TASKBAR_HOME_HANDOFF_FIX =
++            "tb132fu".equals(Build.DEVICE);
++    private static final String TB132FU_TASKBAR_VIEW_CLASS =
++            "com.android.launcher3.taskbar.TaskbarView";
++    private static final String PIXEL_LAUNCHER_PACKAGE =
++            "com.google.android.apps.nexuslauncher";
++    private static final float TB132FU_TASKBAR_STOCK_HOME_ENDPOINT_PX = 44f;
++    private static final float TB132FU_TASKBAR_FIXED_HOME_ENDPOINT_PX = 56f;
++
+     /** @hide */
+     public static boolean DEBUG_DRAW = false;
+ 
+@@ -20536,6 +20549,19 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
+      */
+     @RemotableViewMethod
+     public void setTranslationY(float translationY) {
++        if (TB132FU_TASKBAR_HOME_HANDOFF_FIX
++                && translationY < 0f
++                && translationY >= -TB132FU_TASKBAR_STOCK_HOME_ENDPOINT_PX
++                && getResources().getConfiguration().orientation
++                        == Configuration.ORIENTATION_LANDSCAPE
++                && PIXEL_LAUNCHER_PACKAGE.equals(getContext().getPackageName())
++                && TB132FU_TASKBAR_VIEW_CLASS.equals(getClass().getName())) {
++            // Apply the same proportional animation as a -56 px AnimatedFloat endpoint. This
++            // keeps the outgoing taskbar row coincident with the live hotseat before its alpha
++            // owner changes, without moving nav buttons or changing taskbar window dimensions.
++            translationY *= TB132FU_TASKBAR_FIXED_HOME_ENDPOINT_PX
++                    / TB132FU_TASKBAR_STOCK_HOME_ENDPOINT_PX;
++        }
+         if (translationY != getTranslationY()) {
+             mPrivateFlags4 |= PFLAG4_HAS_MOVED;
+             invalidateViewProperty(true, false);
+diff --git a/core/java/com/android/internal/util/PixelTabletAppProps.java b/core/java/com/android/internal/util/PixelTabletAppProps.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..e2535d82f90614bd47005db5db27195cb652d3d7
+--- /dev/null
++++ b/core/java/com/android/internal/util/PixelTabletAppProps.java
+@@ -0,0 +1,195 @@
++/*
++ * Copyright (C) 2026 The Pure Pixel Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.internal.util;
++
++import android.app.Application;
++import android.content.Context;
++import android.os.Build;
++import android.os.Process;
++import android.os.SystemProperties;
++import android.ravenwood.annotation.RavenwoodKeepWholeClass;
++import android.text.TextUtils;
++import android.util.Log;
++
++import java.lang.reflect.Field;
++import java.lang.reflect.Method;
++import java.util.Map;
++
++/**
++ * Supplies the Pixel Tablet UI identity to the Google processes which use
++ * {@link Build} fields to select tablet layouts.
++ *
++ * <p>This is deliberately process-scoped. The operating system and the frozen
++ * Lenovo/MediaTek vendor stack continue to see the real TB132FU identity. Build
++ * ID, fingerprint, security patch, and the GMS attestation process are never
++ * changed here.</p>
++ *
++ * @hide
++ */
++@RavenwoodKeepWholeClass
++public final class PixelTabletAppProps {
++    private static final String TAG = "PixelTabletAppProps";
++    private static final String DEVICE_TB132FU = "tb132fu";
++    private static final String PACKAGE_GOOGLE_SEARCH =
++            "com.google.android.googlequicksearchbox";
++    private static final String PROCESS_GOOGLE_SEARCH_APP =
++            PACKAGE_GOOGLE_SEARCH + ":googleapp";
++    private static final String PROCESS_GOOGLE_SEARCH_SERVICE =
++            PACKAGE_GOOGLE_SEARCH + ":search";
++    private static final String PACKAGE_GMS = "com.google.android.gms";
++    private static final String PROCESS_GMS_UNSTABLE = PACKAGE_GMS + ".unstable";
++
++    private static final Map<String, String> PIXEL_TABLET_UI_PROPS = Map.of(
++            "PRODUCT", "tangorpro",
++            "DEVICE", "tangorpro",
++            "HARDWARE", "tangorpro",
++            "MANUFACTURER", "Google",
++            "BRAND", "google",
++            "MODEL", "Pixel Tablet");
++
++    private static boolean sApplied;
++
++    private PixelTabletAppProps() {}
++
++    /** Applies the compatibility identity before the app's onCreate callback. */
++    public static void apply(Context context) {
++        if (!DEVICE_TB132FU.equals(SystemProperties.get("ro.product.device"))
++                || !SystemProperties.get("ro.build.characteristics", "")
++                        .contains("tablet")) {
++            return;
++        }
++
++        final String packageName = context.getPackageName();
++        final String processName = Application.getProcessName();
++        if (TextUtils.isEmpty(packageName) || TextUtils.isEmpty(processName)) {
++            return;
++        }
++
++        if (!shouldApply(packageName, processName, Process.isIsolated())) {
++            return;
++        }
++
++        if (sApplied) {
++            return;
++        }
++
++        try {
++            final UnsafeAccess unsafe = UnsafeAccess.create();
++            boolean applied = true;
++            for (Map.Entry<String, String> property : PIXEL_TABLET_UI_PROPS.entrySet()) {
++                applied &= setBuildField(unsafe, property.getKey(), property.getValue());
++            }
++            if (applied) {
++                sApplied = true;
++                Log.i(TAG, "Applied Pixel Tablet UI identity to " + packageName
++                        + " process " + processName);
++            }
++        } catch (ReflectiveOperationException | SecurityException e) {
++            Log.e(TAG, "Unable to obtain framework Unsafe access", e);
++        }
++    }
++
++    /**
++     * Limits the compatibility identity to processes which actually select
++     * Google tablet UI. In particular, do not alter Pixel Launcher (the
++     * dedicated tablet APK and resource configuration already select its
++     * layout) or Search-owned WebView/hotword isolated processes.
++     */
++    static boolean shouldApply(String packageName, String processName, boolean isolated) {
++        if (isolated) {
++            return false;
++        }
++        if (PACKAGE_GOOGLE_SEARCH.equals(packageName)) {
++            return PACKAGE_GOOGLE_SEARCH.equals(processName)
++                    || PROCESS_GOOGLE_SEARCH_APP.equals(processName)
++                    || PROCESS_GOOGLE_SEARCH_SERVICE.equals(processName);
++        }
++        return PACKAGE_GMS.equals(packageName)
++                && processName.startsWith(PACKAGE_GMS)
++                && !PROCESS_GMS_UNSTABLE.equals(processName);
++    }
++
++    private static boolean setBuildField(UnsafeAccess unsafe, String name, String value) {
++        try {
++            final Field field = Build.class.getDeclaredField(name);
++            final Object fieldBase = unsafe.staticFieldBase(field);
++            final long fieldOffset = unsafe.staticFieldOffset(field);
++            unsafe.putReferenceVolatile(fieldBase, fieldOffset, value);
++            if (!value.equals(unsafe.getReferenceVolatile(fieldBase, fieldOffset))) {
++                Log.e(TAG, "Build." + name + " did not retain the requested value");
++                return false;
++            }
++            return true;
++        } catch (ReflectiveOperationException | IllegalArgumentException | SecurityException e) {
++            Log.e(TAG, "Unable to set Build." + name, e);
++            return false;
++        }
++    }
++
++    /** Reflection bridge to the libcore implementation absent from framework compile stubs. */
++    private static final class UnsafeAccess {
++        private static final String CLASS_NAME = "jdk.internal.misc.Unsafe";
++
++        private final Object mUnsafe;
++        private final Method mStaticFieldBase;
++        private final Method mStaticFieldOffset;
++        private final Method mPutReferenceVolatile;
++        private final Method mGetReferenceVolatile;
++
++        private UnsafeAccess(Object unsafe, Method staticFieldBase, Method staticFieldOffset,
++                Method putReferenceVolatile, Method getReferenceVolatile) {
++            mUnsafe = unsafe;
++            mStaticFieldBase = staticFieldBase;
++            mStaticFieldOffset = staticFieldOffset;
++            mPutReferenceVolatile = putReferenceVolatile;
++            mGetReferenceVolatile = getReferenceVolatile;
++        }
++
++        static UnsafeAccess create() throws ReflectiveOperationException {
++            final Class<?> unsafeClass = Class.forName(CLASS_NAME);
++            final Field singleton = unsafeClass.getDeclaredField("theUnsafe");
++            singleton.setAccessible(true);
++            final Object unsafe = singleton.get(null);
++            singleton.setAccessible(false);
++            return new UnsafeAccess(
++                    unsafe,
++                    unsafeClass.getMethod("staticFieldBase", Field.class),
++                    unsafeClass.getMethod("staticFieldOffset", Field.class),
++                    unsafeClass.getMethod(
++                            "putReferenceVolatile", Object.class, long.class, Object.class),
++                    unsafeClass.getMethod("getReferenceVolatile", Object.class, long.class));
++        }
++
++        Object staticFieldBase(Field field) throws ReflectiveOperationException {
++            return mStaticFieldBase.invoke(mUnsafe, field);
++        }
++
++        long staticFieldOffset(Field field) throws ReflectiveOperationException {
++            return (long) mStaticFieldOffset.invoke(mUnsafe, field);
++        }
++
++        void putReferenceVolatile(Object base, long offset, Object value)
++                throws ReflectiveOperationException {
++            mPutReferenceVolatile.invoke(mUnsafe, base, offset, value);
++        }
++
++        Object getReferenceVolatile(Object base, long offset)
++                throws ReflectiveOperationException {
++            return mGetReferenceVolatile.invoke(mUnsafe, base, offset);
++        }
++    }
++}
+diff --git a/core/java/com/zui/input/handwriting/IIMEClient.java b/core/java/com/zui/input/handwriting/IIMEClient.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..d7b2b33dbead564611d62febd835d08df7de8a8f
+--- /dev/null
++++ b/core/java/com/zui/input/handwriting/IIMEClient.java
+@@ -0,0 +1,35 @@
++/*
++ * Compatibility surface for Lenovo's stock TB132FU PenService.
++ *
++ * Lenovo's Android 14 framework exposes this Binder callback from its private
++ * ZUI handwriting framework. AOSP does not provide the corresponding system
++ * service, but PenService still verifies an anonymous implementation of this
++ * interface during Application startup.
++ */
++package com.zui.input.handwriting;
++
++import android.os.Binder;
++import android.os.IBinder;
++import android.os.IInterface;
++import android.os.RemoteException;
++
++/** @hide */
++public interface IIMEClient extends IInterface {
++    String DESCRIPTOR = "com.zui.input.handwriting.IIMEClient";
++
++    int isEditableByClient(int x, int y) throws RemoteException;
++
++    void onCallback(int value) throws RemoteException;
++
++    /** @hide */
++    abstract class Stub extends Binder implements IIMEClient {
++        public Stub() {
++            attachInterface(this, DESCRIPTOR);
++        }
++
++        @Override
++        public IBinder asBinder() {
++            return this;
++        }
++    }
++}
+diff --git a/core/java/com/zui/input/handwriting/ZuiHandWritingManager.java b/core/java/com/zui/input/handwriting/ZuiHandWritingManager.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..ee8f32c095380affee39c42e36d59c9be5bdadee
+--- /dev/null
++++ b/core/java/com/zui/input/handwriting/ZuiHandWritingManager.java
+@@ -0,0 +1,36 @@
++/*
++ * Compatibility surface for Lenovo's stock TB132FU PenService.
++ */
++package com.zui.input.handwriting;
++
++import android.content.Context;
++
++/**
++ * No-op form of Lenovo's private ZUI handwriting manager.
++ *
++ * AOSP does not register the private zui_hand_writing service, so the
++ * unsupported global-handwriting backend remains disabled. Supplying only the
++ * exact class and method surface lets Lenovo's pairing/settings application
++ * start without claiming that backend is implemented.
++ *
++ * @hide
++ */
++public final class ZuiHandWritingManager {
++    public ZuiHandWritingManager(Context context) {}
++
++    public void registerIMEClient(IIMEClient client) {}
++
++    public void unregisterIMEClient(IIMEClient client) {}
++
++    public void setHwEnable(int enabled) {}
++
++    public void setToolType(int toolType) {}
++
++    public void checkHandwriting(int x, int y) {}
++
++    public boolean isHandwriting() {
++        return false;
++    }
++
++    public void tryToResetIme() {}
++}
+diff --git a/core/tests/coretests/src/com/android/internal/util/PixelTabletAppPropsTest.java b/core/tests/coretests/src/com/android/internal/util/PixelTabletAppPropsTest.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..707383b7d4a0bc011798bf11fb1a21b451a6f765
+--- /dev/null
++++ b/core/tests/coretests/src/com/android/internal/util/PixelTabletAppPropsTest.java
+@@ -0,0 +1,65 @@
++/*
++ * Copyright (C) 2026 The Pure Pixel Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.internal.util;
++
++import static com.google.common.truth.Truth.assertThat;
++
++import androidx.test.ext.junit.runners.AndroidJUnit4;
++
++import org.junit.Test;
++import org.junit.runner.RunWith;
++
++@RunWith(AndroidJUnit4.class)
++public class PixelTabletAppPropsTest {
++    private static final String SEARCH = "com.google.android.googlequicksearchbox";
++    private static final String GMS = "com.google.android.gms";
++
++    @Test
++    public void shouldApply_searchUiProcessesOnly() {
++        assertThat(PixelTabletAppProps.shouldApply(SEARCH, SEARCH, false)).isTrue();
++        assertThat(PixelTabletAppProps.shouldApply(SEARCH, SEARCH + ":googleapp", false)).isTrue();
++        assertThat(PixelTabletAppProps.shouldApply(SEARCH, SEARCH + ":search", false)).isTrue();
++
++        assertThat(PixelTabletAppProps.shouldApply(
++                SEARCH, SEARCH + ":interactor", false)).isFalse();
++        assertThat(PixelTabletAppProps.shouldApply(
++                SEARCH, "com.google.android.webview:sandboxed_process0", true)).isFalse();
++        assertThat(PixelTabletAppProps.shouldApply(
++                SEARCH, SEARCH + ":trusted_disable_art_image_:hotword_detector_0", true))
++                .isFalse();
++    }
++
++    @Test
++    public void shouldApply_nonAttestationGmsOnly() {
++        assertThat(PixelTabletAppProps.shouldApply(GMS, GMS, false)).isTrue();
++        assertThat(PixelTabletAppProps.shouldApply(GMS, GMS + ".persistent", false)).isTrue();
++
++        assertThat(PixelTabletAppProps.shouldApply(GMS, GMS + ".unstable", false)).isFalse();
++        assertThat(PixelTabletAppProps.shouldApply(GMS, GMS + ".persistent", true)).isFalse();
++        assertThat(PixelTabletAppProps.shouldApply(
++                GMS, "com.google.android.webview:sandboxed_process0", false)).isFalse();
++    }
++
++    @Test
++    public void shouldApply_doesNotSpoofLauncherOrOtherPackages() {
++        assertThat(PixelTabletAppProps.shouldApply(
++                "com.google.android.apps.nexuslauncher",
++                "com.google.android.apps.nexuslauncher", false)).isFalse();
++        assertThat(PixelTabletAppProps.shouldApply(
++                "com.android.settings", "com.android.settings", false)).isFalse();
++    }
++}
+diff --git a/libs/WindowManager/Shell/src/com/android/wm/shell/recents/RecentsTransitionHandler.java b/libs/WindowManager/Shell/src/com/android/wm/shell/recents/RecentsTransitionHandler.java
+index 770297905edabb8160bdece2a42a75564f143bfa..d0b2c81befc2798479908be534160b8c73cc4022 100644
+--- a/libs/WindowManager/Shell/src/com/android/wm/shell/recents/RecentsTransitionHandler.java
++++ b/libs/WindowManager/Shell/src/com/android/wm/shell/recents/RecentsTransitionHandler.java
+@@ -51,11 +51,13 @@ import android.app.ActivityOptions;
+ import android.app.ActivityTaskManager;
+ import android.app.IApplicationThread;
+ import android.app.PendingIntent;
++import android.content.ComponentName;
+ import android.content.Context;
+ import android.content.Intent;
+ import android.graphics.Color;
+ import android.graphics.Rect;
+ import android.os.Binder;
++import android.os.Build;
+ import android.os.Bundle;
+ import android.os.IBinder;
+ import android.os.RemoteException;
+@@ -468,6 +470,13 @@ public class RecentsTransitionHandler implements Transitions.TransitionHandler,
+         private IBinder mTransition = null;
+         private boolean mKeyguardLocked = false;
+         private boolean mWillFinishToHome = false;
++
++        // The TB132FU Pixel Launcher fixed QSB supplies its own floating widget owner during the
++        // Gesture Home return. Keep the Google Search task's parent surface hidden after Home is
++        // selected so it cannot render a second complete QSB behind that owner. This lives in
++        // open WMShell code so the Google-signed Launcher APK remains untouched.
++        @Nullable
++        private TaskState mTb132fuFixedQsbSearchTask;
+         private Transitions.TransitionHandler mTakeoverHandler = null;
+ 
+         /** The animation is idle, waiting for the user to choose a task to switch to. */
+@@ -2019,9 +2028,59 @@ public class RecentsTransitionHandler implements Transitions.TransitionHandler,
+             // surface to match the leash. Otherwise, there will be a flicker before the
+             // visibility gets committed in Core when using split-screen (in splitscreen,
+             // the leaf-tasks are not "independent" so aren't hidden by normal setup).
++            if (task == mTb132fuFixedQsbSearchTask) {
++                // Restore the task's persistent parent alpha while it is hidden. A later launch
++                // of Google Search must never inherit the Home-return suppression.
++                finishTransaction.setAlpha(task.mTaskSurface, 1f);
++                mTb132fuFixedQsbSearchTask = null;
++            }
+             finishTransaction.hide(task.mTaskSurface);
+         }
+ 
++        private boolean isTb132fuFixedQsbSearchTask(TaskState task) {
++            if (!"tb132fu".equals(Build.DEVICE) || task == null || task.mTaskInfo == null) {
++                return false;
++            }
++            final ComponentName topActivity = task.mTaskInfo.topActivity;
++            return topActivity != null
++                    && "com.google.android.googlequicksearchbox".equals(
++                            topActivity.getPackageName())
++                    && "com.google.android.googlequicksearchbox.InternalGoogleAppActivityEntrypoint"
++                            .equals(topActivity.getClassName());
++        }
++
++        private void setTb132fuFixedQsbSearchSuppressed(boolean suppressed) {
++            if (!"tb132fu".equals(Build.DEVICE)) {
++                return;
++            }
++            if (suppressed) {
++                if (mTb132fuFixedQsbSearchTask != null || mPausingTasks == null) {
++                    return;
++                }
++                for (int i = mPausingTasks.size() - 1; i >= 0; --i) {
++                    final TaskState task = mPausingTasks.get(i);
++                    if (!isTb132fuFixedQsbSearchTask(task)
++                            || task.mTaskSurface == null
++                            || !task.mTaskSurface.isValid()) {
++                        continue;
++                    }
++                    mTb132fuFixedQsbSearchTask = task;
++                    new SurfaceControl.Transaction()
++                            .setAlpha(task.mTaskSurface, 0f)
++                            .apply();
++                    return;
++                }
++            } else if (mTb132fuFixedQsbSearchTask != null) {
++                final TaskState task = mTb132fuFixedQsbSearchTask;
++                mTb132fuFixedQsbSearchTask = null;
++                if (task.mTaskSurface != null && task.mTaskSurface.isValid()) {
++                    new SurfaceControl.Transaction()
++                            .setAlpha(task.mTaskSurface, 1f)
++                            .apply();
++                }
++            }
++        }
++
+         /**
+          * Fetches the {@link TaskState} associated with the given transition participant,
+          * associating it with a leash.
+@@ -2043,6 +2102,7 @@ public class RecentsTransitionHandler implements Transitions.TransitionHandler,
+         public void setWillFinishToHome(boolean willFinishToHome) {
+             mExecutor.execute(() -> {
+                 mWillFinishToHome = willFinishToHome;
++                setTb132fuFixedQsbSearchSuppressed(willFinishToHome);
+             });
+         }
+ 
+diff --git a/packages/SystemUI/multivalentTests/src/com/android/systemui/doze/DozeScreenStateTest.java b/packages/SystemUI/multivalentTests/src/com/android/systemui/doze/DozeScreenStateTest.java
+index 61386f720032ca63dc0f3ffa5c33de207417def9..42b14ca87e8033b7d7095696b02a797969a7a303 100644
+--- a/packages/SystemUI/multivalentTests/src/com/android/systemui/doze/DozeScreenStateTest.java
++++ b/packages/SystemUI/multivalentTests/src/com/android/systemui/doze/DozeScreenStateTest.java
+@@ -65,6 +65,8 @@ import org.mockito.ArgumentCaptor;
+ import org.mockito.Mock;
+ import org.mockito.MockitoAnnotations;
+ 
++import java.util.concurrent.atomic.AtomicInteger;
++
+ import javax.inject.Provider;
+ 
+ @RunWith(AndroidJUnit4.class)
+@@ -127,6 +129,72 @@ public class DozeScreenStateTest extends SysuiTestCase {
+         assertEquals(Display.STATE_DOZE_SUSPEND, mServiceFake.screenState);
+     }
+ 
++    @Test
++    public void timeTickRefresh_whenRequired_temporarilyLeavesDozeSuspend() {
++        when(mDozeParameters.getDozeSuspendDisplayStateNeedsTimeTickRefresh())
++                .thenReturn(true);
++        mHandlerFake.setMode(QUEUEING);
++        mScreen.transitionTo(UNINITIALIZED, INITIALIZED);
++        mScreen.transitionTo(INITIALIZED, DOZE_AOD);
++        mHandlerFake.dispatchQueuedMessages();
++        AtomicInteger ticks = new AtomicInteger();
++
++        mScreen.refreshDisplayForTimeTick(ticks::incrementAndGet);
++
++        assertEquals(1, ticks.get());
++        assertEquals(Display.STATE_DOZE, mServiceFake.screenState);
++        assertTrue(mWakeLock.isHeld());
++
++        mHandlerFake.dispatchQueuedMessages();
++
++        assertEquals(2, ticks.get());
++        assertEquals(Display.STATE_DOZE, mServiceFake.screenState);
++        assertTrue(mWakeLock.isHeld());
++
++        mHandlerFake.dispatchQueuedMessages();
++
++        assertEquals(Display.STATE_DOZE_SUSPEND, mServiceFake.screenState);
++        assertFalse(mWakeLock.isHeld());
++    }
++
++    @Test
++    public void timeTickRefresh_stateTransitionCancelsResuspend() {
++        when(mDozeParameters.getDozeSuspendDisplayStateNeedsTimeTickRefresh())
++                .thenReturn(true);
++        mHandlerFake.setMode(QUEUEING);
++        mScreen.transitionTo(UNINITIALIZED, INITIALIZED);
++        mScreen.transitionTo(INITIALIZED, DOZE_AOD);
++        mHandlerFake.dispatchQueuedMessages();
++        AtomicInteger ticks = new AtomicInteger();
++        mScreen.refreshDisplayForTimeTick(ticks::incrementAndGet);
++
++        mScreen.transitionTo(DOZE_AOD, FINISH);
++        // FakeHandler cannot remove queued callbacks, so deliberately dispatch the stale callback
++        // and verify its state guard cannot put the display back into suspended AOD.
++        mHandlerFake.dispatchQueuedMessages();
++
++        assertEquals(1, ticks.get());
++        // FINISH intentionally leaves the last applied display state unchanged. The important
++        // invariant is that the queued refresh callback cannot re-enter DOZE_SUSPEND.
++        assertEquals(Display.STATE_DOZE, mServiceFake.screenState);
++        assertFalse(mWakeLock.isHeld());
++    }
++
++    @Test
++    public void timeTickRefresh_whenNotRequired_keepsDozeSuspend() {
++        when(mDozeParameters.getDozeSuspendDisplayStateNeedsTimeTickRefresh())
++                .thenReturn(false);
++        mScreen.transitionTo(UNINITIALIZED, INITIALIZED);
++        mScreen.transitionTo(INITIALIZED, DOZE_AOD);
++        AtomicInteger ticks = new AtomicInteger();
++
++        mScreen.refreshDisplayForTimeTick(ticks::incrementAndGet);
++
++        assertEquals(1, ticks.get());
++        assertEquals(Display.STATE_DOZE_SUSPEND, mServiceFake.screenState);
++        assertFalse(mWakeLock.isHeld());
++    }
++
+     @Test
+     public void testScreen_onInPulse() {
+         mScreen.transitionTo(UNINITIALIZED, INITIALIZED);
+diff --git a/packages/SystemUI/multivalentTests/src/com/android/systemui/doze/DozeUiTest.java b/packages/SystemUI/multivalentTests/src/com/android/systemui/doze/DozeUiTest.java
+index e7ca2bdda06959e5a98be9140d422f655158be69..e1ba5917405d5ef6589c53f5e832feda460bff88 100644
+--- a/packages/SystemUI/multivalentTests/src/com/android/systemui/doze/DozeUiTest.java
++++ b/packages/SystemUI/multivalentTests/src/com/android/systemui/doze/DozeUiTest.java
+@@ -23,6 +23,7 @@ import static com.android.systemui.doze.DozeMachine.State.DOZE_REQUEST_PULSE;
+ import static com.android.systemui.doze.DozeMachine.State.INITIALIZED;
+ import static com.android.systemui.doze.DozeMachine.State.UNINITIALIZED;
+ 
++import static org.junit.Assert.assertTrue;
+ import static org.mockito.ArgumentMatchers.any;
+ import static org.mockito.ArgumentMatchers.anyInt;
+ import static org.mockito.ArgumentMatchers.anyLong;
+@@ -36,6 +37,7 @@ import android.app.AlarmManager;
+ import android.os.Handler;
+ import android.os.HandlerThread;
+ import android.platform.test.annotations.EnableFlags;
++import android.platform.test.ravenwood.RavenwoodRule;
+ import android.testing.TestableLooper;
+ 
+ import androidx.test.filters.SmallTest;
+@@ -50,6 +52,7 @@ import com.android.systemui.util.wakelock.WakeLockFake;
+ 
+ import org.junit.After;
+ import org.junit.Before;
++import org.junit.Rule;
+ import org.junit.Test;
+ import org.junit.runner.RunWith;
+ import org.mockito.ArgumentCaptor;
+@@ -57,11 +60,19 @@ import org.mockito.Captor;
+ import org.mockito.Mock;
+ import org.mockito.MockitoAnnotations;
+ 
++import java.util.concurrent.CountDownLatch;
++import java.util.concurrent.TimeUnit;
++
+ @RunWith(AndroidJUnit4.class)
+ @SmallTest
+ @TestableLooper.RunWithLooper
+ public class DozeUiTest extends SysuiTestCase {
+ 
++    @Rule
++    public final RavenwoodRule mRavenwoodRule = new RavenwoodRule.Builder()
++            .setSystemPropertyImmutable("persist.sysui.strictmode", false)
++            .build();
++
+     @Mock
+     private AlarmManager mAlarmManager;
+     @Mock
+@@ -72,6 +83,8 @@ public class DozeUiTest extends SysuiTestCase {
+     private DozeHost mHost;
+     @Mock
+     private DozeLog mDozeLog;
++    @Mock
++    private DozeScreenState mDozeScreenState;
+     private WakeLockFake mWakeLock;
+     private Handler mHandler;
+     private HandlerThread mHandlerThread;
+@@ -79,6 +92,8 @@ public class DozeUiTest extends SysuiTestCase {
+     private FakeExecutor mFakeExecutor;
+     @Captor
+     private ArgumentCaptor<DozeHost.PulseCallback> mPulseCallbackCaptor;
++    @Captor
++    private ArgumentCaptor<AlarmManager.OnAlarmListener> mAlarmListenerCaptor;
+ 
+     @Before
+     public void setUp() throws Exception {
+@@ -92,7 +107,7 @@ public class DozeUiTest extends SysuiTestCase {
+         mHandler = mHandlerThread.getThreadHandler();
+         mFakeExecutor = new FakeExecutor(new FakeSystemClock());
+         mDozeUi = new DozeUi(mContext, mAlarmManager, mWakeLock, mHost, mHandler,
+-                mHandler, mDozeParameters, mFakeExecutor, mDozeLog);
++                mHandler, mDozeParameters, mFakeExecutor, mDozeLog, mDozeScreenState);
+         mDozeUi.setDozeMachine(mMachine);
+     }
+ 
+@@ -136,6 +151,24 @@ public class DozeUiTest extends SysuiTestCase {
+                 .setExact(anyInt(), anyLong(), eq("doze_time_tick"), any(), any());
+     }
+ 
++    @Test
++    public void timeTickDelegatesDisplayRefreshAndHostUpdate() throws Exception {
++        mDozeUi.transitionTo(UNINITIALIZED, INITIALIZED);
++        mDozeUi.transitionTo(INITIALIZED, DOZE_AOD);
++        verify(mAlarmManager).setExact(anyInt(), anyLong(), eq("doze_time_tick"),
++                mAlarmListenerCaptor.capture(), any());
++
++        mAlarmListenerCaptor.getValue().onAlarm();
++        CountDownLatch handlerDrained = new CountDownLatch(1);
++        mHandler.post(handlerDrained::countDown);
++        assertTrue(handlerDrained.await(5, TimeUnit.SECONDS));
++
++        ArgumentCaptor<Runnable> timeTick = ArgumentCaptor.forClass(Runnable.class);
++        verify(mDozeScreenState).refreshDisplayForTimeTick(timeTick.capture());
++        timeTick.getValue().run();
++        verify(mHost).dozeTimeTick();
++    }
++
+     @Test
+     public void transitionSetsAnimateWakeup_noAlwaysOn() {
+         mDozeUi.transitionTo(UNINITIALIZED, DOZE);
+diff --git a/packages/SystemUI/multivalentTests/src/com/android/systemui/qs/tiles/impl/flashlight/domain/interactor/FlashlightTileUserActionInteractorTest.kt b/packages/SystemUI/multivalentTests/src/com/android/systemui/qs/tiles/impl/flashlight/domain/interactor/FlashlightTileUserActionInteractorTest.kt
+index 275cbe980d3cf8ba5cc06a53b2cf6f927de03fec..c011c268afdbea3a62e60b8447dd7ddb91f58c98 100644
+--- a/packages/SystemUI/multivalentTests/src/com/android/systemui/qs/tiles/impl/flashlight/domain/interactor/FlashlightTileUserActionInteractorTest.kt
++++ b/packages/SystemUI/multivalentTests/src/com/android/systemui/qs/tiles/impl/flashlight/domain/interactor/FlashlightTileUserActionInteractorTest.kt
+@@ -72,7 +72,7 @@ class FlashlightTileUserActionInteractorTest : SysuiTestCase() {
+ 
+     @EnableFlags(com.android.systemui.Flags.FLAG_FLASHLIGHT_STRENGTH)
+     @Test
+-    fun flagOn_handleClickToEnable_whenBinary_doesNothing() =
++    fun flagOn_handleClickToEnable_whenBinary_enables() =
+         kosmos.runTest {
+             assumeFalse(ActivityManager.isUserAMonkey())
+             val state by collectLastValue(flashlightInteractor.state)
+@@ -88,7 +88,7 @@ class FlashlightTileUserActionInteractorTest : SysuiTestCase() {
+ 
+             underTest.handleInput(click(FlashlightModel.Available.Binary(false)))
+ 
+-            assertThat(state).isEqualTo(FlashlightModel.Available.Binary(false))
++            assertThat(state).isEqualTo(FlashlightModel.Available.Binary(true))
+             verify(mockFlashlightDialogDelegate, never()).showDialog()
+         }
+ 
+@@ -130,7 +130,7 @@ class FlashlightTileUserActionInteractorTest : SysuiTestCase() {
+ 
+     @EnableFlags(com.android.systemui.Flags.FLAG_FLASHLIGHT_STRENGTH)
+     @Test
+-    fun flagOn_handleClickWhenEnabled_whenBinary_doesNothing() =
++    fun flagOn_handleClickWhenEnabled_whenBinary_disables() =
+         kosmos.runTest {
+             assumeFalse(ActivityManager.isUserAMonkey())
+             val state by collectLastValue(flashlightInteractor.state)
+@@ -150,7 +150,7 @@ class FlashlightTileUserActionInteractorTest : SysuiTestCase() {
+             // at this point the stage is set for the actual test
+             underTest.handleInput(click(enabledBinaryFlashlight))
+ 
+-            assertThat(state).isEqualTo(enabledBinaryFlashlight)
++            assertThat(state).isEqualTo(FlashlightModel.Available.Binary(false))
+             verify(mockFlashlightDialogDelegate, never()).showDialog()
+         }
+ 
+diff --git a/packages/SystemUI/res/drawable/ic_tb132fu_precision_pen.xml b/packages/SystemUI/res/drawable/ic_tb132fu_precision_pen.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..8f436e2fd5ab39dc69da30cd830ef163c04ca784
+--- /dev/null
++++ b/packages/SystemUI/res/drawable/ic_tb132fu_precision_pen.xml
+@@ -0,0 +1,10 @@
++<?xml version="1.0" encoding="utf-8"?>
++<vector xmlns:android="http://schemas.android.com/apk/res/android"
++    android:width="24dp"
++    android:height="24dp"
++    android:viewportWidth="24"
++    android:viewportHeight="24">
++    <path
++        android:fillColor="#FFFFFFFF"
++        android:pathData="M18.37,2.29c-0.39,-0.39 -1.03,-0.39 -1.42,0L5.13,14.11 3,21l6.89,-2.13L21.71,7.05c0.39,-0.39 0.39,-1.03 0,-1.42L18.37,2.29zM8.84,17.1l-2.72,0.84 0.84,-2.72 8.93,-8.93 1.88,1.88 -8.93,8.93zM19.18,6.76L17.3,4.88l0.36,-0.36 1.88,1.88 -0.36,0.36z" />
++</vector>
+diff --git a/packages/SystemUI/res/values/config.xml b/packages/SystemUI/res/values/config.xml
+index f1d7ed35d86c4a704f0bdf72348e7c390af08bd4..9da58ab98b7ba2b73e1016b8ec1e7b6a17c904be 100644
+--- a/packages/SystemUI/res/values/config.xml
++++ b/packages/SystemUI/res/values/config.xml
+@@ -192,6 +192,12 @@
+     <!-- Doze: does this device support STATE_DOZE_SUSPEND?  -->
+     <bool name="doze_suspend_display_state_supported">false</bool>
+ 
++    <!-- Doze: does a STATE_DOZE_SUSPEND display need to return briefly to STATE_DOZE
++         when SystemUI updates the AOD clock? Some legacy panels retain the last scanned-out
++         buffer while suspended even though the application processor successfully renders a
++         new frame. The normal value is false. -->
++    <bool name="doze_suspend_display_state_needs_time_tick_refresh">false</bool>
++
+     <!-- Doze: should the significant motion sensor be used as a pulse signal? -->
+     <bool name="doze_pulse_on_significant_motion">false</bool>
+ 
+diff --git a/packages/SystemUI/res/values/strings.xml b/packages/SystemUI/res/values/strings.xml
+index d025a3ff3a9dae1410f592b5579b5e4df2ae246c..923831a44386a6afae4d5906d679450a7974da70 100644
+--- a/packages/SystemUI/res/values/strings.xml
++++ b/packages/SystemUI/res/values/strings.xml
+@@ -4339,6 +4339,11 @@
+     <!-- Title for notification of low stylus battery. [CHAR_LIMIT=NONE] -->
+     <string name="stylus_battery_low">Stylus battery low</string>
+ 
++    <!-- TB132FU magnetic Precision Pen charging chip. -->
++    <string name="tb132fu_pen_charging_level">Precision Pen 3 · <xliff:g id="percentage" example="82">%1$d</xliff:g>%% charging</string>
++    <string name="tb132fu_pen_charging">Precision Pen 3 · Charging</string>
++    <string name="tb132fu_pen_charging_window_title">TB132FU pen charging</string>
++
+     <!-- Label for a lock screen shortcut to start the camera in video mode. [CHAR_LIMIT=16] -->
+     <string name="video_camera">Video camera</string>
+ 
+diff --git a/packages/SystemUI/src/com/android/systemui/dagger/SystemUICoreStartableModule.kt b/packages/SystemUI/src/com/android/systemui/dagger/SystemUICoreStartableModule.kt
+index 6463529a8901357b23e55c163dc87c62bef272ca..2f7bc441c41a4fc6842a2f1f3795545f6044b8ea 100644
+--- a/packages/SystemUI/src/com/android/systemui/dagger/SystemUICoreStartableModule.kt
++++ b/packages/SystemUI/src/com/android/systemui/dagger/SystemUICoreStartableModule.kt
+@@ -55,6 +55,7 @@ import com.android.systemui.statusbar.gesture.GesturePointerEventListener
+ import com.android.systemui.statusbar.notification.InstantAppNotifier
+ import com.android.systemui.statusbar.notification.headsup.StatusBarHeadsUpChangeListener
+ import com.android.systemui.stylus.StylusUsiPowerStartable
++import com.android.systemui.stylus.Tb132fuPenChargerStartable
+ import com.android.systemui.temporarydisplay.chipbar.ChipbarCoordinator
+ import com.android.systemui.usb.StorageNotification
+ import com.android.systemui.util.NotificationChannels
+@@ -234,6 +235,14 @@ abstract class SystemUICoreStartableModule {
+     @ClassKey(StylusUsiPowerStartable::class)
+     abstract fun bindStylusUsiPowerStartable(sysui: StylusUsiPowerStartable): CoreStartable
+ 
++    /** Inject the exact-device TB132FU magnetic pen charging UI. */
++    @Binds
++    @IntoMap
++    @ClassKey(Tb132fuPenChargerStartable::class)
++    abstract fun bindTb132fuPenChargerStartable(
++        sysui: Tb132fuPenChargerStartable
++    ): CoreStartable
++
+     @Binds
+     @IntoMap
+     @ClassKey(PhysicalKeyboardCoreStartable::class)
+diff --git a/packages/SystemUI/src/com/android/systemui/dagger/SystemUIModule.java b/packages/SystemUI/src/com/android/systemui/dagger/SystemUIModule.java
+index 742cc51e99c9838ea486d135fcfd42514c61d7e0..1b26b524694887eabbdf09a1aa402a888b72edb7 100644
+--- a/packages/SystemUI/src/com/android/systemui/dagger/SystemUIModule.java
++++ b/packages/SystemUI/src/com/android/systemui/dagger/SystemUIModule.java
+@@ -128,6 +128,9 @@ import com.android.systemui.shade.transition.LargeScreenShadeInterpolator;
+ import com.android.systemui.shade.transition.LargeScreenShadeInterpolatorImpl;
+ import com.android.systemui.shared.condition.Monitor;
+ import com.android.systemui.smartspace.dagger.SmartspaceModule;
++import com.android.systemui.smartspace.weather.PurePixelDateSmartspaceDataProvider;
++import com.android.systemui.smartspace.weather.PurePixelSmartspaceDataProvider;
++import com.android.systemui.smartspace.weather.PurePixelWeatherSmartspaceDataProvider;
+ import com.android.systemui.startable.Dependencies;
+ import com.android.systemui.statusbar.CommandQueue;
+ import com.android.systemui.statusbar.NotificationLockscreenUserManager;
+@@ -492,4 +495,27 @@ public abstract class SystemUIModule {
+     static SettingsProxy.CurrentUserIdProvider provideCurrentUserId(UserTracker userTracker) {
+         return userTracker::getUserId;
+     }
++
++    /** Supplies the date container omitted from the AOSP SystemUI target. */
++    @Provides
++    @SysUISingleton
++    @Named(SmartspaceModule.DATE_SMARTSPACE_DATA_PLUGIN)
++    static BcSmartspaceDataPlugin provideDateSmartspaceDataPlugin() {
++        return new PurePixelDateSmartspaceDataProvider();
++    }
++
++    /** Supplies the lock-screen/AOD weather renderer omitted from the AOSP SystemUI target. */
++    @Provides
++    @SysUISingleton
++    @Named(SmartspaceModule.WEATHER_SMARTSPACE_DATA_PLUGIN)
++    static BcSmartspaceDataPlugin provideWeatherSmartspaceDataPlugin() {
++        return new PurePixelWeatherSmartspaceDataProvider();
++    }
++
++    /** Enables the AOSP lock-screen Smartspace session and renders its non-weather cards. */
++    @Provides
++    @SysUISingleton
++    static BcSmartspaceDataPlugin provideBcSmartspaceDataPlugin() {
++        return new PurePixelSmartspaceDataProvider();
++    }
+ }
+diff --git a/packages/SystemUI/src/com/android/systemui/doze/DozeScreenState.java b/packages/SystemUI/src/com/android/systemui/doze/DozeScreenState.java
+index 6ee0dec04c2cdec4d37e2f2e64476b9c6a685b88..cadb95d8bed84f7231b9f3bcafc1b583434debd8 100644
+--- a/packages/SystemUI/src/com/android/systemui/doze/DozeScreenState.java
++++ b/packages/SystemUI/src/com/android/systemui/doze/DozeScreenState.java
+@@ -30,6 +30,7 @@ import android.util.Log;
+ import android.view.Display;
+ 
+ import androidx.annotation.Nullable;
++import androidx.annotation.VisibleForTesting;
+ 
+ import com.android.systemui.biometrics.AuthController;
+ import com.android.systemui.biometrics.UdfpsController;
+@@ -73,6 +74,11 @@ public class DozeScreenState implements DozeMachine.Part {
+      */
+     public static final int UDFPS_DISPLAY_STATE_DELAY = 1200;
+ 
++    // Match DozeUi's established second-frame delay when a doze display has just become ready.
++    // The additional settle window lets that frame reach SurfaceFlinger before re-suspending.
++    @VisibleForTesting static final int TIME_TICK_SECOND_FRAME_DELAY = 500;
++    @VisibleForTesting static final int TIME_TICK_RESUSPEND_DELAY = 250;
++
+     private final DozeMachine.Service mDozeService;
+     private final Handler mHandler;
+     private final Runnable mApplyPendingScreenState = this::applyPendingScreenState;
+@@ -88,6 +94,12 @@ public class DozeScreenState implements DozeMachine.Part {
+ 
+     private int mPendingScreenState = Display.STATE_UNKNOWN;
+     private SettableWakeLock mWakeLock;
++    private DozeMachine.State mMachineState = DozeMachine.State.UNINITIALIZED;
++    private int mAppliedScreenState = Display.STATE_UNKNOWN;
++    @Nullable private Runnable mPendingTimeTick;
++    private boolean mTimeTickRefreshWakeLockHeld;
++    private final Runnable mSecondTimeTick = this::applySecondTimeTick;
++    private final Runnable mResuspendAfterTimeTick = this::resuspendAfterTimeTick;
+ 
+     @Inject
+     public DozeScreenState(
+@@ -130,11 +142,14 @@ public class DozeScreenState implements DozeMachine.Part {
+ 
+     @Override
+     public void destroy() {
++        cancelTimeTickRefresh();
+         mAuthController.removeCallback(mAuthControllerCallback);
+     }
+ 
+     @Override
+     public void transitionTo(DozeMachine.State oldState, DozeMachine.State newState) {
++        cancelTimeTickRefresh();
++        mMachineState = newState;
+         int screenState = newState.screenState(mParameters);
+         mDozeHost.cancelGentleSleep();
+ 
+@@ -235,6 +250,7 @@ public class DozeScreenState implements DozeMachine.Part {
+             if (DEBUG) Log.d(TAG, "setDozeScreenState(" + screenState + ")");
+             mDozeService.setDozeScreenState(screenState);
+             mDozeInteractor.setDozeScreenState(screenState);
++            mAppliedScreenState = screenState;
+             if (screenState == Display.STATE_DOZE) {
+                 // If we're entering doze, update the doze screen brightness. We might have been
+                 // clamping it to the dim brightness during the screen off animation, and we should
+@@ -246,6 +262,63 @@ public class DozeScreenState implements DozeMachine.Part {
+         }
+     }
+ 
++    /**
++     * Pushes an AOD time tick through legacy displays that retain their old framebuffer while in
++     * {@link Display#STATE_DOZE_SUSPEND}. The display spends only 750 ms per minute in regular
++     * doze: one immediate update, the existing 500 ms second-frame opportunity, and a 250 ms
++     * SurfaceFlinger settle window. A state transition cancels the sequence and restores normal
++     * {@link DozeMachine} ownership.
++     */
++    void refreshDisplayForTimeTick(Runnable timeTick) {
++        if (!mParameters.getDozeSuspendDisplayStateNeedsTimeTickRefresh()
++                || mMachineState != DozeMachine.State.DOZE_AOD
++                || mAppliedScreenState != Display.STATE_DOZE_SUSPEND) {
++            timeTick.run();
++            return;
++        }
++
++        cancelTimeTickRefresh();
++        mPendingTimeTick = timeTick;
++        applyScreenState(Display.STATE_DOZE);
++        // applyScreenState releases transition ownership; retain it across both frame windows.
++        mWakeLock.setAcquired(true);
++        mTimeTickRefreshWakeLockHeld = true;
++        timeTick.run();
++        mHandler.postDelayed(mSecondTimeTick, TIME_TICK_SECOND_FRAME_DELAY);
++    }
++
++    private void applySecondTimeTick() {
++        if (!isTimeTickRefreshActive()) {
++            cancelTimeTickRefresh();
++            return;
++        }
++        mPendingTimeTick.run();
++        mHandler.postDelayed(mResuspendAfterTimeTick, TIME_TICK_RESUSPEND_DELAY);
++    }
++
++    private void resuspendAfterTimeTick() {
++        if (isTimeTickRefreshActive()) {
++            applyScreenState(Display.STATE_DOZE_SUSPEND);
++        }
++        cancelTimeTickRefresh();
++    }
++
++    private boolean isTimeTickRefreshActive() {
++        return mPendingTimeTick != null
++                && mMachineState == DozeMachine.State.DOZE_AOD
++                && mAppliedScreenState == Display.STATE_DOZE;
++    }
++
++    private void cancelTimeTickRefresh() {
++        mHandler.removeCallbacks(mSecondTimeTick);
++        mHandler.removeCallbacks(mResuspendAfterTimeTick);
++        mPendingTimeTick = null;
++        if (mTimeTickRefreshWakeLockHeld) {
++            mWakeLock.setAcquired(false);
++            mTimeTickRefreshWakeLockHeld = false;
++        }
++    }
++
+     private final AuthController.Callback mAuthControllerCallback = new AuthController.Callback() {
+         @Override
+         public void onAllAuthenticatorsRegistered(@BiometricAuthenticator.Modality int modality) {
+diff --git a/packages/SystemUI/src/com/android/systemui/doze/DozeUi.java b/packages/SystemUI/src/com/android/systemui/doze/DozeUi.java
+index 8489fd8ee517e513edf5ca8710282c318b8ad5a1..684fc83cebc4a48b290b809c393bf904e2f0a7d7 100644
+--- a/packages/SystemUI/src/com/android/systemui/doze/DozeUi.java
++++ b/packages/SystemUI/src/com/android/systemui/doze/DozeUi.java
+@@ -60,6 +60,7 @@ public class DozeUi implements DozeMachine.Part {
+     private final boolean mCanAnimateTransition;
+     private final DozeParameters mDozeParameters;
+     private final DozeLog mDozeLog;
++    private final DozeScreenState mDozeScreenState;
+     private final DelayableExecutor mBgExecutor;
+     private volatile long mLastTimeTickElapsed = 0;
+     // If time tick is scheduled and there's not a pending runnable to cancel:
+@@ -82,7 +83,8 @@ public class DozeUi implements DozeMachine.Part {
+             @Background Handler bgHandler,
+             DozeParameters params,
+             @Background DelayableExecutor bgExecutor,
+-            DozeLog dozeLog) {
++            DozeLog dozeLog,
++            DozeScreenState dozeScreenState) {
+         mContext = context;
+         mWakeLock = wakeLock;
+         mHost = host;
+@@ -92,6 +94,7 @@ public class DozeUi implements DozeMachine.Part {
+         mDozeParameters = params;
+         mTimeTicker = new AlarmTimeout(alarmManager, this::onTimeTick, "doze_time_tick", bgHandler);
+         mDozeLog = dozeLog;
++        mDozeScreenState = dozeScreenState;
+     }
+ 
+     @Override
+@@ -242,7 +245,8 @@ public class DozeUi implements DozeMachine.Part {
+         verifyLastTimeTick();
+ 
+         // Keep wakelock until a frame has been pushed.
+-        mHandler.post(mWakeLock.wrap(mHost::dozeTimeTick));
++        mHandler.post(mWakeLock.wrap(
++                () -> mDozeScreenState.refreshDisplayForTimeTick(mHost::dozeTimeTick)));
+ 
+         mTimeTickScheduled = false;
+         scheduleTimeTick();
+diff --git a/packages/SystemUI/src/com/android/systemui/qs/tiles/impl/flashlight/domain/interactor/FlashlightTileUserActionInteractor.kt b/packages/SystemUI/src/com/android/systemui/qs/tiles/impl/flashlight/domain/interactor/FlashlightTileUserActionInteractor.kt
+index 9ad7bc01bdbb7215afe62d08303449cc49f74de5..ee319f231047997ecbde7eb9290b1d61cf6cc080 100644
+--- a/packages/SystemUI/src/com/android/systemui/qs/tiles/impl/flashlight/domain/interactor/FlashlightTileUserActionInteractor.kt
++++ b/packages/SystemUI/src/com/android/systemui/qs/tiles/impl/flashlight/domain/interactor/FlashlightTileUserActionInteractor.kt
+@@ -44,14 +44,19 @@ constructor(
+             when (action) {
+                 is QSTileUserAction.Click -> {
+                     if (FlashlightStrength.isEnabled) {
+-                        if (
+-                            !ActivityManager.isUserAMonkey() &&
+-                                input.data is FlashlightModel.Available.Level
+-                        ) {
+-                            // Note: no Click response for Binary state. See ToggleClick.
+-                            flashlightInteractor.get().setEnabled(true)
+-                            // the ui code runs on the main thread
+-                            flashlightDialogDelegate.get().showDialog(input.action.expandable)
++                        if (!ActivityManager.isUserAMonkey()) {
++                            when (input.data) {
++                                is FlashlightModel.Available.Binary ->
++                                    flashlightInteractor.get().setEnabled(!input.data.enabled)
++                                is FlashlightModel.Available.Level -> {
++                                    flashlightInteractor.get().setEnabled(true)
++                                    // the ui code runs on the main thread
++                                    flashlightDialogDelegate
++                                        .get()
++                                        .showDialog(input.action.expandable)
++                                }
++                                is FlashlightModel.Unavailable -> Unit
++                            }
+                         }
+                     } else { // preserve old behavior at the cost of some redundancy
+                         if (
+diff --git a/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelDateSmartspaceDataProvider.java b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelDateSmartspaceDataProvider.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..bdee80241ee0a865658a2dee99612820294e28be
+--- /dev/null
++++ b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelDateSmartspaceDataProvider.java
+@@ -0,0 +1,69 @@
++/*
++ * Copyright (C) 2026 The Pure Pixel Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.systemui.smartspace.weather;
++
++import android.app.smartspace.SmartspaceTargetEvent;
++import android.content.Context;
++
++import com.android.systemui.plugins.BcSmartspaceDataPlugin;
++
++/** Provides the date container into which SystemUI inserts the weather view. */
++public final class PurePixelDateSmartspaceDataProvider implements BcSmartspaceDataPlugin {
++    private final EventNotifier mEventNotifier = new EventNotifier();
++
++    @Override
++    public SmartspaceView getView(Context context) {
++        return new PurePixelDateSmartspaceView(context, false);
++    }
++
++    @Override
++    public SmartspaceView getLargeClockView(Context context) {
++        return new PurePixelDateSmartspaceView(context, true);
++    }
++
++    @Override
++    public void setEventDispatcher(SmartspaceEventDispatcher eventDispatcher) {
++        mEventNotifier.mDispatcher = eventDispatcher;
++    }
++
++    @Override
++    public void setIntentStarter(IntentStarter intentStarter) {
++        mEventNotifier.mIntentStarter = intentStarter;
++    }
++
++    @Override
++    public SmartspaceEventNotifier getEventNotifier() {
++        return mEventNotifier;
++    }
++
++    private static final class EventNotifier implements SmartspaceEventNotifier {
++        private SmartspaceEventDispatcher mDispatcher;
++        private IntentStarter mIntentStarter;
++
++        @Override
++        public IntentStarter getIntentStarter() {
++            return mIntentStarter;
++        }
++
++        @Override
++        public void notifySmartspaceEvent(SmartspaceTargetEvent event) {
++            if (mDispatcher != null) {
++                mDispatcher.notifySmartspaceEvent(event);
++            }
++        }
++    }
++}
+diff --git a/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelDateSmartspaceView.java b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelDateSmartspaceView.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..2aa2b1a15fc799434cbef4311fe2eeaa9fa207fd
+--- /dev/null
++++ b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelDateSmartspaceView.java
+@@ -0,0 +1,111 @@
++/*
++ * Copyright (C) 2026 The Pure Pixel Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.systemui.smartspace.weather;
++
++import android.content.Context;
++import android.graphics.drawable.Drawable;
++import android.os.Handler;
++import android.text.format.DateFormat;
++import android.util.TypedValue;
++import android.view.Gravity;
++import android.widget.LinearLayout;
++import android.widget.TextClock;
++
++import com.android.internal.graphics.ColorUtils;
++import com.android.systemui.plugins.BcSmartspaceDataPlugin;
++import com.android.systemui.plugins.FalsingManager;
++
++import java.util.Locale;
++
++/** Date row used by the AOSP keyguard blueprint as the parent of the weather renderer. */
++public final class PurePixelDateSmartspaceView extends LinearLayout
++        implements BcSmartspaceDataPlugin.SmartspaceView {
++    private static final int WEATHER_GAP_DP = 8;
++
++    private final TextClock mDateView;
++    private int mPrimaryTextColor;
++    private float mDozeAmount;
++
++    PurePixelDateSmartspaceView(Context context, boolean largeClock) {
++        super(context);
++        setId(largeClock
++                ? com.android.systemui.shared.R.id.date_smartspace_view_large
++                : com.android.systemui.shared.R.id.date_smartspace_view);
++        setOrientation(HORIZONTAL);
++        setGravity(Gravity.CENTER_VERTICAL);
++        setMinimumHeight(dp(32));
++
++        mDateView = new TextClock(context);
++        mDateView.setIncludeFontPadding(false);
++        mDateView.setSingleLine(true);
++        mDateView.setTextSize(TypedValue.COMPLEX_UNIT_SP, largeClock ? 16 : 14);
++        final String pattern = DateFormat.getBestDateTimePattern(
++                Locale.getDefault(), "EEE, MMM d");
++        mDateView.setFormat12Hour(pattern);
++        mDateView.setFormat24Hour(pattern);
++        mDateView.setPaddingRelative(0, 0, dp(WEATHER_GAP_DP), 0);
++        addView(mDateView, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
++
++        mPrimaryTextColor = context.getColor(android.R.color.white);
++        updateTextColor();
++    }
++
++    @Override
++    public void registerDataProvider(BcSmartspaceDataPlugin dataProvider) {
++        // Date is generated locally; Smartspace supplies the weather sibling in this container.
++    }
++
++    @Override
++    public void setPrimaryTextColor(int color) {
++        mPrimaryTextColor = color;
++        updateTextColor();
++    }
++
++    @Override
++    public void setUiSurface(String uiSurface) {}
++
++    @Override
++    public void setBgHandler(Handler bgHandler) {}
++
++    @Override
++    public void setDozeAmount(float amount) {
++        mDozeAmount = Math.max(0f, Math.min(1f, amount));
++        updateTextColor();
++    }
++
++    @Override
++    public void setFalsingManager(FalsingManager falsingManager) {}
++
++    @Override
++    public void setDnd(Drawable image, String description) {
++        // DND is already represented by the dedicated keyguard status area on this build.
++    }
++
++    @Override
++    public void setNextAlarm(Drawable image, String description) {
++        // Alarm is already represented by the dedicated keyguard status area on this build.
++    }
++
++    private void updateTextColor() {
++        mDateView.setTextColor(ColorUtils.blendARGB(
++                mPrimaryTextColor, 0xffffffff, mDozeAmount));
++    }
++
++    private int dp(int value) {
++        return Math.round(value * getResources().getDisplayMetrics().density);
++    }
++}
+diff --git a/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelSmartspaceDataProvider.java b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelSmartspaceDataProvider.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..4b35d56307b0ac0fdc15e77ef82936d983ee4f2d
+--- /dev/null
++++ b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelSmartspaceDataProvider.java
+@@ -0,0 +1,104 @@
++/*
++ * Copyright (C) 2026 The Pure Pixel Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.systemui.smartspace.weather;
++
++import android.app.smartspace.SmartspaceTarget;
++import android.app.smartspace.SmartspaceTargetEvent;
++import android.content.Context;
++
++import com.android.systemui.plugins.BcSmartspaceDataPlugin;
++
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Set;
++import java.util.concurrent.CopyOnWriteArraySet;
++
++/**
++ * AOSP-compatible owner for the lock-screen Smartspace session.
++ *
++ * <p>AOSP's controller does not create a session unless an unqualified main plugin is present.
++ * Weather is rendered by the separately named weather plugin; this provider retains and renders
++ * the already privacy-filtered non-weather targets delivered by the controller.</p>
++ */
++public final class PurePixelSmartspaceDataProvider implements BcSmartspaceDataPlugin {
++    private final Set<SmartspaceTargetListener> mListeners = new CopyOnWriteArraySet<>();
++    private final List<SmartspaceTarget> mTargets = new ArrayList<>();
++    private final EventNotifier mEventNotifier = new EventNotifier();
++
++    @Override
++    public SmartspaceView getView(Context context) {
++        return new PurePixelSmartspaceView(context);
++    }
++
++    @Override
++    public SmartspaceView getLargeClockView(Context context) {
++        return new PurePixelSmartspaceView(context);
++    }
++
++    @Override
++    public void registerListener(SmartspaceTargetListener listener) {
++        mListeners.add(listener);
++        listener.onSmartspaceTargetsUpdated(List.copyOf(mTargets));
++    }
++
++    @Override
++    public void unregisterListener(SmartspaceTargetListener listener) {
++        mListeners.remove(listener);
++    }
++
++    @Override
++    public void onTargetsAvailable(List<SmartspaceTarget> targets) {
++        mTargets.clear();
++        mTargets.addAll(targets);
++        final List<SmartspaceTarget> snapshot = List.copyOf(mTargets);
++        for (SmartspaceTargetListener listener : mListeners) {
++            listener.onSmartspaceTargetsUpdated(snapshot);
++        }
++    }
++
++    @Override
++    public void setEventDispatcher(SmartspaceEventDispatcher eventDispatcher) {
++        mEventNotifier.mDispatcher = eventDispatcher;
++    }
++
++    @Override
++    public void setIntentStarter(IntentStarter intentStarter) {
++        mEventNotifier.mIntentStarter = intentStarter;
++    }
++
++    @Override
++    public SmartspaceEventNotifier getEventNotifier() {
++        return mEventNotifier;
++    }
++
++    private static final class EventNotifier implements SmartspaceEventNotifier {
++        private SmartspaceEventDispatcher mDispatcher;
++        private IntentStarter mIntentStarter;
++
++        @Override
++        public IntentStarter getIntentStarter() {
++            return mIntentStarter;
++        }
++
++        @Override
++        public void notifySmartspaceEvent(SmartspaceTargetEvent event) {
++            if (mDispatcher != null) {
++                mDispatcher.notifySmartspaceEvent(event);
++            }
++        }
++    }
++}
+diff --git a/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelSmartspaceView.java b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelSmartspaceView.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..3325f8f47ab0df3231d3b4ee5c440619f26203eb
+--- /dev/null
++++ b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelSmartspaceView.java
+@@ -0,0 +1,219 @@
++/*
++ * Copyright (C) 2026 The Pure Pixel Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.systemui.smartspace.weather;
++
++import android.app.smartspace.SmartspaceAction;
++import android.app.smartspace.SmartspaceTarget;
++import android.app.smartspace.SmartspaceTargetEvent;
++import android.content.Context;
++import android.graphics.drawable.Drawable;
++import android.os.Handler;
++import android.os.Parcelable;
++import android.text.TextUtils;
++import android.util.TypedValue;
++import android.view.Gravity;
++import android.view.View;
++import android.widget.TextView;
++
++import com.android.internal.graphics.ColorUtils;
++import com.android.systemui.plugins.BcSmartspaceDataPlugin;
++import com.android.systemui.plugins.FalsingManager;
++
++import java.util.List;
++
++/** Compact renderer for privacy-filtered non-weather lock-screen Smartspace targets. */
++public final class PurePixelSmartspaceView extends TextView
++        implements BcSmartspaceDataPlugin.SmartspaceTargetListener,
++                BcSmartspaceDataPlugin.SmartspaceView {
++    private BcSmartspaceDataPlugin mDataProvider;
++    private FalsingManager mFalsingManager;
++    private SmartspaceTarget mTarget;
++    private SmartspaceAction mAction;
++    private int mPrimaryTextColor;
++    private float mDozeAmount;
++
++    PurePixelSmartspaceView(Context context) {
++        super(context);
++        setId(com.android.systemui.shared.R.id.bc_smartspace_view);
++        setGravity(Gravity.CENTER_VERTICAL);
++        setSingleLine(true);
++        setEllipsize(TextUtils.TruncateAt.END);
++        setIncludeFontPadding(false);
++        setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
++        setMinHeight(dp(32));
++        setVisibility(View.GONE);
++        mPrimaryTextColor = context.getColor(android.R.color.white);
++        updateTextColor();
++    }
++
++    @Override
++    protected void onAttachedToWindow() {
++        super.onAttachedToWindow();
++        if (mDataProvider != null) {
++            mDataProvider.registerListener(this);
++        }
++    }
++
++    @Override
++    protected void onDetachedFromWindow() {
++        if (mDataProvider != null) {
++            mDataProvider.unregisterListener(this);
++        }
++        super.onDetachedFromWindow();
++    }
++
++    @Override
++    public void onSmartspaceTargetsUpdated(List<? extends Parcelable> targets) {
++        SmartspaceTarget target = null;
++        for (Parcelable candidate : targets) {
++            if (candidate instanceof SmartspaceTarget) {
++                target = (SmartspaceTarget) candidate;
++                break;
++            }
++        }
++        bindTarget(target);
++    }
++
++    private void bindTarget(SmartspaceTarget target) {
++        mTarget = target;
++        mAction = null;
++        setOnClickListener(null);
++
++        if (target == null) {
++            setText(null);
++            setContentDescription(null);
++            setVisibility(View.GONE);
++            return;
++        }
++
++        CharSequence label = null;
++        mAction = target.getHeaderAction();
++        if (mAction != null) {
++            label = mAction.getTitle();
++        }
++        if (TextUtils.isEmpty(label)) {
++            mAction = target.getBaseAction();
++            if (mAction != null) {
++                label = mAction.getTitle();
++            }
++        }
++        if (TextUtils.isEmpty(label)) {
++            setText(null);
++            setContentDescription(null);
++            setVisibility(View.GONE);
++            return;
++        }
++
++        setText(label);
++        setContentDescription(label);
++        updateTextColor();
++        setVisibility(View.VISIBLE);
++        if (mAction != null) {
++            setOnClickListener(this::openTarget);
++        }
++    }
++
++    private void openTarget(View view) {
++        if (mFalsingManager != null
++                && mFalsingManager.isFalseTap(FalsingManager.LOW_PENALTY)) {
++            return;
++        }
++        if (mDataProvider == null || mTarget == null || mAction == null) {
++            return;
++        }
++        final BcSmartspaceDataPlugin.SmartspaceEventNotifier notifier =
++                mDataProvider.getEventNotifier();
++        final BcSmartspaceDataPlugin.IntentStarter starter =
++                notifier == null ? null : notifier.getIntentStarter();
++        if (starter != null) {
++            starter.startFromAction(mAction, view, false);
++        }
++        if (notifier != null) {
++            final SmartspaceTargetEvent.Builder event = new SmartspaceTargetEvent.Builder(
++                    SmartspaceTargetEvent.EVENT_TARGET_INTERACTION)
++                    .setSmartspaceTarget(mTarget);
++            if (!TextUtils.isEmpty(mAction.getId())) {
++                event.setSmartspaceActionId(mAction.getId());
++            }
++            notifier.notifySmartspaceEvent(event.build());
++        }
++    }
++
++    @Override
++    public void registerDataProvider(BcSmartspaceDataPlugin dataProvider) {
++        if (mDataProvider != null && isAttachedToWindow()) {
++            mDataProvider.unregisterListener(this);
++        }
++        mDataProvider = dataProvider;
++        if (mDataProvider != null && isAttachedToWindow()) {
++            mDataProvider.registerListener(this);
++        }
++    }
++
++    @Override
++    public void setPrimaryTextColor(int color) {
++        mPrimaryTextColor = color;
++        updateTextColor();
++    }
++
++    @Override
++    public void setUiSurface(String uiSurface) {}
++
++    @Override
++    public void setBgHandler(Handler bgHandler) {}
++
++    @Override
++    public void setDozeAmount(float amount) {
++        mDozeAmount = Math.max(0f, Math.min(1f, amount));
++        updateTextColor();
++    }
++
++    @Override
++    public void setFalsingManager(FalsingManager falsingManager) {
++        mFalsingManager = falsingManager;
++    }
++
++    @Override
++    public void setDnd(Drawable image, String description) {}
++
++    @Override
++    public void setNextAlarm(Drawable image, String description) {}
++
++    @Override
++    public int getSelectedPage() {
++        return 0;
++    }
++
++    @Override
++    public int getCurrentCardTopPadding() {
++        return 0;
++    }
++
++    @Override
++    public void setHorizontalPaddings(int horizontalPadding) {
++        setPaddingRelative(horizontalPadding, getPaddingTop(), horizontalPadding,
++                getPaddingBottom());
++    }
++
++    private void updateTextColor() {
++        setTextColor(ColorUtils.blendARGB(mPrimaryTextColor, 0xffffffff, mDozeAmount));
++    }
++
++    private int dp(int value) {
++        return Math.round(value * getResources().getDisplayMetrics().density);
++    }
++}
+diff --git a/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelWeatherSmartspaceDataProvider.java b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelWeatherSmartspaceDataProvider.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..54c5fd91d18e65ff3bd4483695f4a09ca1627b76
+--- /dev/null
++++ b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelWeatherSmartspaceDataProvider.java
+@@ -0,0 +1,108 @@
++/*
++ * Copyright (C) 2026 The Pure Pixel Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.systemui.smartspace.weather;
++
++import android.app.smartspace.SmartspaceTarget;
++import android.app.smartspace.SmartspaceTargetEvent;
++import android.content.Context;
++
++import com.android.systemui.plugins.BcSmartspaceDataPlugin;
++
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Set;
++import java.util.concurrent.CopyOnWriteArraySet;
++
++/**
++ * Small SystemUI weather provider for builds which ship Google's Smartspace service but not
++ * Google's private SystemUI renderer.
++ *
++ * <p>The framework session remains the source of truth. This class only filters weather targets
++ * and gives the lock-screen/AOD controller a renderer to connect to that session.</p>
++ */
++public final class PurePixelWeatherSmartspaceDataProvider implements BcSmartspaceDataPlugin {
++    private final Set<SmartspaceTargetListener> mListeners = new CopyOnWriteArraySet<>();
++    private final List<SmartspaceTarget> mTargets = new ArrayList<>();
++    private final EventNotifier mEventNotifier = new EventNotifier();
++
++    @Override
++    public SmartspaceView getView(Context context) {
++        return new PurePixelWeatherSmartspaceView(context, false);
++    }
++
++    @Override
++    public SmartspaceView getLargeClockView(Context context) {
++        return new PurePixelWeatherSmartspaceView(context, true);
++    }
++
++    @Override
++    public void registerListener(SmartspaceTargetListener listener) {
++        mListeners.add(listener);
++        listener.onSmartspaceTargetsUpdated(List.copyOf(mTargets));
++    }
++
++    @Override
++    public void unregisterListener(SmartspaceTargetListener listener) {
++        mListeners.remove(listener);
++    }
++
++    @Override
++    public void onTargetsAvailable(List<SmartspaceTarget> targets) {
++        mTargets.clear();
++        for (SmartspaceTarget target : targets) {
++            if (target.getFeatureType() == SmartspaceTarget.FEATURE_WEATHER) {
++                mTargets.add(target);
++            }
++        }
++        final List<SmartspaceTarget> snapshot = List.copyOf(mTargets);
++        for (SmartspaceTargetListener listener : mListeners) {
++            listener.onSmartspaceTargetsUpdated(snapshot);
++        }
++    }
++
++    @Override
++    public void setEventDispatcher(SmartspaceEventDispatcher eventDispatcher) {
++        mEventNotifier.mDispatcher = eventDispatcher;
++    }
++
++    @Override
++    public void setIntentStarter(IntentStarter intentStarter) {
++        mEventNotifier.mIntentStarter = intentStarter;
++    }
++
++    @Override
++    public SmartspaceEventNotifier getEventNotifier() {
++        return mEventNotifier;
++    }
++
++    private static final class EventNotifier implements SmartspaceEventNotifier {
++        private SmartspaceEventDispatcher mDispatcher;
++        private IntentStarter mIntentStarter;
++
++        @Override
++        public IntentStarter getIntentStarter() {
++            return mIntentStarter;
++        }
++
++        @Override
++        public void notifySmartspaceEvent(SmartspaceTargetEvent event) {
++            if (mDispatcher != null) {
++                mDispatcher.notifySmartspaceEvent(event);
++            }
++        }
++    }
++}
+diff --git a/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelWeatherSmartspaceView.java b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelWeatherSmartspaceView.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..8aab6e9866e2618d3598e20cc24f049ca41e28d7
+--- /dev/null
++++ b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelWeatherSmartspaceView.java
+@@ -0,0 +1,248 @@
++/*
++ * Copyright (C) 2026 The Pure Pixel Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.systemui.smartspace.weather;
++
++import android.app.smartspace.SmartspaceAction;
++import android.app.smartspace.SmartspaceTarget;
++import android.app.smartspace.SmartspaceTargetEvent;
++import android.app.smartspace.uitemplatedata.BaseTemplateData;
++import android.app.smartspace.uitemplatedata.TapAction;
++import android.content.Context;
++import android.graphics.drawable.Drawable;
++import android.os.Handler;
++import android.os.Parcelable;
++import android.text.TextUtils;
++import android.util.TypedValue;
++import android.view.Gravity;
++import android.view.View;
++import android.widget.TextView;
++
++import com.android.internal.graphics.ColorUtils;
++import com.android.systemui.plugins.BcSmartspaceDataPlugin;
++import com.android.systemui.plugins.FalsingManager;
++
++import java.util.List;
++
++/** A compact weather target view shared by lock screen and AOD. */
++public final class PurePixelWeatherSmartspaceView extends TextView
++        implements BcSmartspaceDataPlugin.SmartspaceTargetListener,
++                BcSmartspaceDataPlugin.SmartspaceView {
++    private static final int ICON_SIZE_DP = 20;
++    private static final int ICON_PADDING_DP = 8;
++
++    private BcSmartspaceDataPlugin mDataProvider;
++    private FalsingManager mFalsingManager;
++    private SmartspaceTarget mTarget;
++    private TapAction mTapAction;
++    private SmartspaceAction mHeaderAction;
++    private int mPrimaryTextColor;
++    private float mDozeAmount;
++    private boolean mTintIcon;
++
++    PurePixelWeatherSmartspaceView(Context context, boolean largeClock) {
++        super(context);
++        setId(largeClock
++                ? com.android.systemui.shared.R.id.weather_smartspace_view_large
++                : com.android.systemui.shared.R.id.weather_smartspace_view);
++        setGravity(Gravity.CENTER_VERTICAL);
++        setSingleLine(true);
++        setEllipsize(TextUtils.TruncateAt.END);
++        setIncludeFontPadding(false);
++        setTextSize(TypedValue.COMPLEX_UNIT_SP, largeClock ? 16 : 14);
++        setCompoundDrawablePadding(dp(ICON_PADDING_DP));
++        setMinHeight(dp(32));
++        setVisibility(View.GONE);
++        mPrimaryTextColor = context.getColor(android.R.color.white);
++        updateTextAndIconColor();
++    }
++
++    @Override
++    protected void onAttachedToWindow() {
++        super.onAttachedToWindow();
++        if (mDataProvider != null) {
++            mDataProvider.registerListener(this);
++        }
++    }
++
++    @Override
++    protected void onDetachedFromWindow() {
++        if (mDataProvider != null) {
++            mDataProvider.unregisterListener(this);
++        }
++        super.onDetachedFromWindow();
++    }
++
++    @Override
++    public void onSmartspaceTargetsUpdated(List<? extends Parcelable> targets) {
++        SmartspaceTarget weather = null;
++        for (Parcelable candidate : targets) {
++            if (candidate instanceof SmartspaceTarget
++                    && ((SmartspaceTarget) candidate).getFeatureType()
++                            == SmartspaceTarget.FEATURE_WEATHER) {
++                weather = (SmartspaceTarget) candidate;
++                break;
++            }
++        }
++        bindTarget(weather);
++    }
++
++    private void bindTarget(SmartspaceTarget target) {
++        mTarget = target;
++        mTapAction = null;
++        mHeaderAction = null;
++        mTintIcon = false;
++        setOnClickListener(null);
++        setCompoundDrawablesRelative(null, null, null, null);
++
++        if (target == null) {
++            setText(null);
++            setContentDescription(null);
++            setVisibility(View.GONE);
++            return;
++        }
++
++        CharSequence label = null;
++        CharSequence iconDescription = null;
++        Drawable icon = null;
++        final BaseTemplateData template = target.getTemplateData();
++        final BaseTemplateData.SubItemInfo subtitle =
++                template == null ? null : template.getSubtitleItem();
++        if (subtitle != null) {
++            if (subtitle.getText() != null) {
++                label = subtitle.getText().getText();
++            }
++            if (subtitle.getIcon() != null) {
++                icon = subtitle.getIcon().getIcon().loadDrawable(getContext());
++                iconDescription = subtitle.getIcon().getContentDescription();
++                mTintIcon = subtitle.getIcon().shouldTint();
++            }
++            mTapAction = subtitle.getTapAction();
++        }
++
++        mHeaderAction = target.getHeaderAction();
++        if (TextUtils.isEmpty(label) && mHeaderAction != null) {
++            label = mHeaderAction.getTitle();
++        }
++        if (icon == null && mHeaderAction != null && mHeaderAction.getIcon() != null) {
++            icon = mHeaderAction.getIcon().loadDrawable(getContext());
++            iconDescription = mHeaderAction.getContentDescription();
++        }
++
++        if (TextUtils.isEmpty(label)) {
++            setText(null);
++            setContentDescription(null);
++            setVisibility(View.GONE);
++            return;
++        }
++
++        setText(label);
++        setContentDescription(TextUtils.isEmpty(iconDescription)
++                ? label : TextUtils.concat(label, ", ", iconDescription));
++        if (icon != null) {
++            final int size = dp(ICON_SIZE_DP);
++            icon.setBounds(0, 0, size, size);
++            setCompoundDrawablesRelative(icon, null, null, null);
++        }
++        updateTextAndIconColor();
++        setVisibility(View.VISIBLE);
++        if (mTapAction != null || mHeaderAction != null) {
++            setOnClickListener(this::openTarget);
++        }
++    }
++
++    private void openTarget(View view) {
++        if (mFalsingManager != null
++                && mFalsingManager.isFalseTap(FalsingManager.LOW_PENALTY)) {
++            return;
++        }
++        if (mDataProvider == null || mTarget == null) {
++            return;
++        }
++        final BcSmartspaceDataPlugin.SmartspaceEventNotifier notifier =
++                mDataProvider.getEventNotifier();
++        final BcSmartspaceDataPlugin.IntentStarter starter =
++                notifier == null ? null : notifier.getIntentStarter();
++        String actionId = null;
++        if (starter != null && mTapAction != null) {
++            starter.startFromAction(mTapAction, view, mTapAction.shouldShowOnLockscreen());
++            actionId = mTapAction.getId() == null ? null : mTapAction.getId().toString();
++        } else if (starter != null && mHeaderAction != null) {
++            starter.startFromAction(mHeaderAction, view, false);
++            actionId = mHeaderAction.getId();
++        }
++        if (notifier != null) {
++            final SmartspaceTargetEvent.Builder event = new SmartspaceTargetEvent.Builder(
++                    SmartspaceTargetEvent.EVENT_TARGET_INTERACTION)
++                    .setSmartspaceTarget(mTarget);
++            if (!TextUtils.isEmpty(actionId)) {
++                event.setSmartspaceActionId(actionId);
++            }
++            notifier.notifySmartspaceEvent(event.build());
++        }
++    }
++
++    @Override
++    public void registerDataProvider(BcSmartspaceDataPlugin dataProvider) {
++        if (mDataProvider != null && isAttachedToWindow()) {
++            mDataProvider.unregisterListener(this);
++        }
++        mDataProvider = dataProvider;
++        if (mDataProvider != null && isAttachedToWindow()) {
++            mDataProvider.registerListener(this);
++        }
++    }
++
++    @Override
++    public void setPrimaryTextColor(int color) {
++        mPrimaryTextColor = color;
++        updateTextAndIconColor();
++    }
++
++    @Override
++    public void setUiSurface(String uiSurface) {
++        // This renderer is intentionally valid only for the controller's lockscreen/AOD surface.
++    }
++
++    @Override
++    public void setBgHandler(Handler bgHandler) {
++        // No binder or settings work is performed by the view itself.
++    }
++
++    @Override
++    public void setDozeAmount(float amount) {
++        mDozeAmount = Math.max(0f, Math.min(1f, amount));
++        updateTextAndIconColor();
++    }
++
++    @Override
++    public void setFalsingManager(FalsingManager falsingManager) {
++        mFalsingManager = falsingManager;
++    }
++
++    private void updateTextAndIconColor() {
++        final int color = ColorUtils.blendARGB(mPrimaryTextColor, 0xffffffff, mDozeAmount);
++        setTextColor(color);
++        final Drawable icon = getCompoundDrawablesRelative()[0];
++        if (icon != null && mTintIcon) {
++            icon.setTint(color);
++        }
++    }
++
++    private int dp(int value) {
++        return Math.round(value * getResources().getDisplayMetrics().density);
++    }
++}
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java
+index 43a93d2d1fbf7ec2789cbeb1a34fdcd0aa1e0ccc..f35005bd6c48cc5a5ccc23a3b136041f4e579c19 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java
+@@ -209,6 +209,15 @@ public class DozeParameters implements
+         return mResources.getBoolean(R.bool.doze_suspend_display_state_supported);
+     }
+ 
++    /**
++     * Whether AOD time ticks need a short {@link android.view.Display#STATE_DOZE} window while
++     * the display otherwise remains in {@link android.view.Display#STATE_DOZE_SUSPEND}.
++     */
++    public boolean getDozeSuspendDisplayStateNeedsTimeTickRefresh() {
++        return mResources.getBoolean(
++                R.bool.doze_suspend_display_state_needs_time_tick_refresh);
++    }
++
+     public int getPulseDuration() {
+         return getPulseInDuration() + getPulseVisibleDuration() + getPulseOutDuration();
+     }
+diff --git a/packages/SystemUI/src/com/android/systemui/stylus/Tb132fuPenChargerStartable.kt b/packages/SystemUI/src/com/android/systemui/stylus/Tb132fuPenChargerStartable.kt
+new file mode 100644
+index 0000000000000000000000000000000000000000..8d9216db8161a7e60b10ec793631e12fe4655946
+--- /dev/null
++++ b/packages/SystemUI/src/com/android/systemui/stylus/Tb132fuPenChargerStartable.kt
+@@ -0,0 +1,184 @@
++/*
++ * Copyright (C) 2026 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.systemui.stylus
++
++import android.Manifest
++import android.annotation.SuppressLint
++import android.bluetooth.BluetoothDevice
++import android.bluetooth.BluetoothManager
++import android.content.BroadcastReceiver
++import android.content.Context
++import android.content.Intent
++import android.content.IntentFilter
++import android.os.Handler
++import android.os.SystemProperties
++import android.util.Log
++import com.android.systemui.CoreStartable
++import com.android.systemui.broadcast.BroadcastDispatcher
++import com.android.systemui.common.shared.model.Icon
++import com.android.systemui.common.shared.model.Text
++import com.android.systemui.common.shared.model.TintedIcon
++import com.android.systemui.dagger.SysUISingleton
++import com.android.systemui.dagger.qualifiers.Main
++import com.android.systemui.res.R
++import com.android.systemui.temporarydisplay.ViewPriority
++import com.android.systemui.temporarydisplay.chipbar.ChipbarCoordinator
++import com.android.systemui.temporarydisplay.chipbar.ChipbarInfo
++import javax.inject.Inject
++
++/** Shows the TB132FU pen-charging chip and bridges CTN730 state to Lenovo PenService. */
++@SysUISingleton
++class Tb132fuPenChargerStartable
++@Inject
++constructor(
++    private val context: Context,
++    private val broadcastDispatcher: BroadcastDispatcher,
++    private val chipbarCoordinator: ChipbarCoordinator,
++    @Main private val mainHandler: Handler,
++) : CoreStartable, BroadcastReceiver() {
++
++    private var syncedPenMac: String? = null
++
++    override fun start() {
++        if (!isTb132fu()) return
++
++        broadcastDispatcher.registerReceiver(
++            receiver = this,
++            filter = IntentFilter(ACTION_PEN_CHARGER_CHANGED),
++            flags = Context.RECEIVER_EXPORTED,
++            permission = Manifest.permission.STATUS_BAR_SERVICE,
++        )
++        Log.i(TAG, "TB132FU magnetic pen-charger UI enabled")
++    }
++
++    override fun onReceive(receiverContext: Context?, intent: Intent?) {
++        if (intent?.action != ACTION_PEN_CHARGER_CHANGED) return
++
++        val attached = intent.getBooleanExtra(EXTRA_ATTACHED, false)
++        val mac = intent.getStringExtra(EXTRA_MAC)?.takeIf { it.isNotBlank() }
++        val eventLevel = intent.getIntExtra(EXTRA_LEVEL, BluetoothDevice.BATTERY_LEVEL_UNKNOWN)
++        if (!attached) {
++            relayBatteryToLenovoPenService(mac, eventLevel, attached = false)
++            return
++        }
++
++        val level = resolveBatteryLevel(mac, eventLevel)
++        if (level != BluetoothDevice.BATTERY_LEVEL_UNKNOWN) {
++            showChargingChip(level)
++            relayBatteryToLenovoPenService(mac, level, attached = true)
++            return
++        }
++
++        // The CTN730 attach uevent can arrive just before Bluetooth publishes its battery cache.
++        mainHandler.postDelayed(
++            {
++                val delayedLevel = resolveBatteryLevel(mac, eventLevel)
++                showChargingChip(delayedLevel)
++                relayBatteryToLenovoPenService(mac, delayedLevel, attached = true)
++            },
++            BATTERY_RETRY_DELAY_MS,
++        )
++    }
++
++    private fun showChargingChip(level: Int) {
++        val message =
++            if (level in 0..100) {
++                context.getString(R.string.tb132fu_pen_charging_level, level)
++            } else {
++                context.getString(R.string.tb132fu_pen_charging)
++            }
++        chipbarCoordinator.displayView(
++            ChipbarInfo(
++                startIcon =
++                    TintedIcon(
++                        Icon.Resource(R.drawable.ic_tb132fu_precision_pen, null),
++                        ChipbarInfo.DEFAULT_ICON_TINT,
++                    ),
++                text = Text.Loaded(message),
++                endItem = null,
++                vibrationEffect = null,
++                allowSwipeToDismiss = true,
++                windowTitle = context.getString(R.string.tb132fu_pen_charging_window_title),
++                wakeReason = "TB132FU_PEN_CHARGER_ATTACHED",
++                timeoutMs = CHIP_TIMEOUT_MS,
++                id = CHIP_ID,
++                priority = ViewPriority.NORMAL,
++                instanceId = null,
++            )
++        )
++        Log.i(TAG, "Displayed magnetic pen charging chip; level=$level")
++    }
++
++    @SuppressLint("MissingPermission")
++    private fun resolveBatteryLevel(mac: String?, eventLevel: Int): Int {
++        if (eventLevel in 0..100) return eventLevel
++        if (mac == null) return BluetoothDevice.BATTERY_LEVEL_UNKNOWN
++        return try {
++            val adapter = context.getSystemService(BluetoothManager::class.java)?.adapter
++            adapter?.getRemoteDevice(mac)?.batteryLevel ?: BluetoothDevice.BATTERY_LEVEL_UNKNOWN
++        } catch (exception: IllegalArgumentException) {
++            Log.w(TAG, "CTN730 supplied an invalid pen address", exception)
++            BluetoothDevice.BATTERY_LEVEL_UNKNOWN
++        }
++    }
++
++    private fun relayBatteryToLenovoPenService(mac: String?, level: Int, attached: Boolean) {
++        if (mac == null) return
++        if (syncedPenMac != mac) {
++            context.sendBroadcast(
++                Intent(ACTION_LENOVO_PEN_BT_CHANGED)
++                    .setPackage(LENOVO_PEN_SERVICE_PACKAGE)
++                    .putExtra("status", 1)
++                    .putExtra("address", mac)
++                    .putExtra("attached", if (attached) 1 else 0)
++                    .putExtra("isfirstpair", false)
++                    .putExtra("attached_mac", mac)
++            )
++            syncedPenMac = mac
++        }
++        if (level !in 0..100) return
++        context.sendBroadcast(
++            Intent(ACTION_LENOVO_PEN_BATTERY_CHANGED)
++                .setPackage(LENOVO_PEN_SERVICE_PACKAGE)
++                .putExtra("address", mac)
++                .putExtra("level", level)
++                .putExtra("charging_state", if (attached) 1 else 2)
++                .putExtra("attached", if (attached) 1 else 0)
++                .putExtra("attached_mac", mac)
++                .putExtra("source", 0)
++        )
++    }
++
++    private fun isTb132fu(): Boolean =
++        SystemProperties.get("ro.product.vendor.device", "").equals("TB132FU", ignoreCase = true)
++
++    companion object {
++        private const val TAG = "Tb132fuPenCharger"
++        private const val ACTION_PEN_CHARGER_CHANGED =
++            "com.android.systemui.action.TB132FU_PEN_CHARGER_CHANGED"
++        private const val ACTION_LENOVO_PEN_BT_CHANGED = "com.zui.udevice.action.PEN_BT_CHANGED"
++        private const val ACTION_LENOVO_PEN_BATTERY_CHANGED =
++            "com.zui.udevice.action.PEN_BATTERY_CHANGED"
++        private const val LENOVO_PEN_SERVICE_PACKAGE = "com.lenovo.penservice"
++        private const val EXTRA_ATTACHED = "attached"
++        private const val EXTRA_MAC = "mac"
++        private const val EXTRA_LEVEL = "level"
++        private const val CHIP_ID = "tb132fu_pen_charging"
++        private const val CHIP_TIMEOUT_MS = 5000
++        private const val BATTERY_RETRY_DELAY_MS = 600L
++    }
++}
+diff --git a/ravenwood/texts/ravenwood-annotation-allowed-classes.txt b/ravenwood/texts/ravenwood-annotation-allowed-classes.txt
+index a3a16547e852ff7bee5cff04bcbcdba521b7506c..8e0b7cc9163a444acc4be0c586652bce0d1945d9 100644
+--- a/ravenwood/texts/ravenwood-annotation-allowed-classes.txt
++++ b/ravenwood/texts/ravenwood-annotation-allowed-classes.txt
+@@ -756,6 +756,7 @@ com.android.internal.util.NamedLock
+ com.android.internal.util.ObjectUtils
+ com.android.internal.util.Parcelling
+ com.android.internal.util.ParseUtils
++com.android.internal.util.PixelTabletAppProps
+ com.android.internal.util.ProcFileReader
+ com.android.internal.util.QuickSelect
+ com.android.internal.util.RateLimitingCache
+@@ -810,6 +811,7 @@ com.android.server.am.psc.ServiceBindingEdge
+ com.android.server.am.psc.SyncBatchSession
+ com.android.server.am.psc.SystemNode
+ com.android.server.power.PowerManagerBatchProxy
++com.android.server.power.Tb132fuAmbientController
+ com.android.server.utils.TimingsTraceAndSlog
+ com.google.android.collect.Lists
+ com.google.android.collect.Maps
+diff --git a/services/core/java/com/android/server/policy/PhoneWindowManager.java b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+index 1af1825d32cf9f77118d952a9a1dc9ec7fd04a5d..c0eb8b8767abe8216abf48e864a7b803c4f499a6 100644
+--- a/services/core/java/com/android/server/policy/PhoneWindowManager.java
++++ b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+@@ -1453,6 +1453,15 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+     }
+ 
+     private int getLidBehavior() {
++        // The TB132FU keyboard cover reports a standards-compliant SW_LID
++        // switch. Lenovo's inherited global default is NONE, which wakes on
++        // open but leaves both the display and AOD running after close. Treat
++        // the physical cover as a real lid and use Android's NO_DOZE close
++        // path; scope this behavior to the exact vendor device identity.
++        if ("TB132FU".equalsIgnoreCase(
++                SystemProperties.get("ro.product.vendor.device", ""))) {
++            return LID_BEHAVIOR_SLEEP;
++        }
+         return Settings.Global.getInt(mContext.getContentResolver(),
+                 Settings.Global.LID_BEHAVIOR, LID_BEHAVIOR_NONE);
+     }
+diff --git a/services/core/java/com/android/server/power/AmbientDisplaySuppressionController.java b/services/core/java/com/android/server/power/AmbientDisplaySuppressionController.java
+index e6922aea8e312ed91e4eda0a221d2970c34d9516..bde7c64b784fdb540be681783f395071322027e8 100644
+--- a/services/core/java/com/android/server/power/AmbientDisplaySuppressionController.java
++++ b/services/core/java/com/android/server/power/AmbientDisplaySuppressionController.java
+@@ -225,6 +225,15 @@ public class AmbientDisplaySuppressionController {
+         return !mSuppressionTokens.isEmpty();
+     }
+ 
++    /** Returns whether the always-on-display portion of ambient display is suppressed. */
++    boolean isAlwaysOnDisplaySuppressed() {
++        if (Flags.lowLightDreamBehavior()) {
++            return (calculateSuppression() & PowerManager.FLAG_AMBIENT_SUPPRESSION_AOD)
++                    == PowerManager.FLAG_AMBIENT_SUPPRESSION_AOD;
++        }
++        return isSuppressed();
++    }
++
+     /**
+      * Dumps the state of ambient display suppression and the list of suppression tokens into
+      * {@code pw}.
+diff --git a/services/core/java/com/android/server/power/PowerManagerService.java b/services/core/java/com/android/server/power/PowerManagerService.java
+index 505530cc23786cb015c30dd4044ddc4c327a0905..aedc60b96d88d2ef7de845148cbbab5cf89f74b2 100644
+--- a/services/core/java/com/android/server/power/PowerManagerService.java
++++ b/services/core/java/com/android/server/power/PowerManagerService.java
+@@ -371,6 +371,10 @@ public final class PowerManagerService extends SystemService
+ 
+     private final InattentiveSleepWarningController mInattentiveSleepWarningOverlayController;
+     private final AmbientDisplaySuppressionController mAmbientDisplaySuppressionController;
++    @Nullable
++    private final Tb132fuAmbientController mTb132fuAmbientController;
++    @Nullable
++    private Tb132fuPenChargerObserver mTb132fuPenChargerObserver;
+ 
+     @SystemServerLock(LockGuard.INDEX_POWER)
+     private final Object mLock = LockGuard.installNewLock(LockGuard.INDEX_POWER);
+@@ -1281,6 +1285,8 @@ public final class PowerManagerService extends SystemService
+         mAmbientDisplaySuppressionController =
+                 mInjector.createAmbientDisplaySuppressionController(
+                         mAmbientSuppressionChangedCallback);
++        mTb132fuAmbientController = Tb132fuAmbientController.createIfSupported(
++                context, mHandler, mAmbientDisplaySuppressionController);
+         mAttentionDetector = new AttentionDetector(this::onUserAttention, mLock);
+         mFaceDownDetector = new FaceDownDetector(this::onFlip);
+         mScreenUndimDetector = new ScreenUndimDetector();
+@@ -1546,6 +1552,14 @@ public final class PowerManagerService extends SystemService
+         }
+         mFaceDownDetector.systemReady(mContext);
+         mScreenUndimDetector.systemReady(mContext);
++        if (mTb132fuAmbientController != null) {
++            mTb132fuAmbientController.systemReady();
++        }
++        mTb132fuPenChargerObserver =
++                Tb132fuPenChargerObserver.createIfSupported(mContext, mHandler);
++        if (mTb132fuPenChargerObserver != null) {
++            mTb132fuPenChargerObserver.start();
++        }
+ 
+         // Register for settings changes.
+         resolver.registerContentObserver(Settings.Secure.getUriFor(
+@@ -2995,7 +3009,8 @@ public final class PowerManagerService extends SystemService
+         }
+ 
+         // On Always On Display, SystemUI shows the charging indicator
+-        if (mAlwaysOnEnabled && getGlobalWakefulnessLocked() == WAKEFULNESS_DOZING) {
++        if (mAlwaysOnEnabled && getGlobalWakefulnessLocked() == WAKEFULNESS_DOZING
++                && !mAmbientDisplaySuppressionController.isAlwaysOnDisplaySuppressed()) {
+             return false;
+         }
+ 
+@@ -5831,6 +5846,9 @@ public final class PowerManagerService extends SystemService
+             synchronized (mLock) {
+                 handleSettingsChangedLocked();
+             }
++            if (mTb132fuAmbientController != null) {
++                mTb132fuAmbientController.onUserChanged();
++            }
+         }
+     }
+ 
+diff --git a/services/core/java/com/android/server/power/Tb132fuAmbientController.java b/services/core/java/com/android/server/power/Tb132fuAmbientController.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..67c9d04b207e112a0a59a5f2cbcd78b9a2bfc10f
+--- /dev/null
++++ b/services/core/java/com/android/server/power/Tb132fuAmbientController.java
+@@ -0,0 +1,205 @@
++/*
++ * Copyright (C) 2026 The Android Open Source Project
++ * SPDX-License-Identifier: Apache-2.0
++ */
++package com.android.server.power;
++
++import android.app.ActivityManager;
++import android.app.AlarmManager;
++import android.content.BroadcastReceiver;
++import android.content.ContentResolver;
++import android.content.Context;
++import android.content.Intent;
++import android.content.IntentFilter;
++import android.database.ContentObserver;
++import android.os.Flags;
++import android.os.Handler;
++import android.os.PowerManager;
++import android.os.Process;
++import android.os.SystemProperties;
++import android.os.UserHandle;
++import android.provider.Settings;
++import android.ravenwood.annotation.RavenwoodKeepWholeClass;
++import android.util.Slog;
++
++import com.android.server.LocalServices;
++import com.android.server.twilight.TwilightListener;
++import com.android.server.twilight.TwilightManager;
++import com.android.server.twilight.TwilightState;
++
++import java.time.LocalTime;
++import java.time.ZonedDateTime;
++import java.util.concurrent.Executor;
++
++/** Device-scoped always-on-display policy for the Lenovo TB132FU. */
++@RavenwoodKeepWholeClass
++final class Tb132fuAmbientController implements TwilightListener {
++    private static final String TAG = "Tb132fuAmbient";
++    private static final String DEVICE = "TB132FU";
++    private static final String SETTING_AOD_TWILIGHT_SCHEDULE =
++            "tb132fu_aod_twilight_schedule";
++    private static final String SUPPRESSION_TOKEN = "tb132fu-aod-nighttime";
++
++    // A deterministic local-time fallback keeps nighttime AOD off when no last
++    // known location is available to Android's twilight service.
++    private static final int FALLBACK_NIGHT_START_HOUR = 19;
++    private static final int FALLBACK_NIGHT_END_HOUR = 7;
++
++    private final Context mContext;
++    private final Handler mHandler;
++    private final AmbientDisplaySuppressionController mSuppressionController;
++    private final ContentObserver mSettingsObserver;
++    private final AlarmManager.OnAlarmListener mFallbackAlarmListener;
++    private final BroadcastReceiver mTimeChangedReceiver;
++    private final Executor mHandlerExecutor;
++
++    private AlarmManager mAlarmManager;
++    private TwilightManager mTwilightManager;
++    private boolean mTwilightListening;
++    private boolean mScheduleEnabled;
++    private boolean mScheduleSuppressed;
++
++    static Tb132fuAmbientController createIfSupported(Context context, Handler handler,
++            AmbientDisplaySuppressionController suppressionController) {
++        if (!DEVICE.equalsIgnoreCase(
++                SystemProperties.get("ro.product.vendor.device", ""))) {
++            return null;
++        }
++        return new Tb132fuAmbientController(context, handler, suppressionController);
++    }
++
++    private Tb132fuAmbientController(Context context, Handler handler,
++            AmbientDisplaySuppressionController suppressionController) {
++        mContext = context;
++        mHandler = handler;
++        mHandlerExecutor = handler::post;
++        mSuppressionController = suppressionController;
++        mFallbackAlarmListener = this::updateFromCurrentTwilightState;
++        mTimeChangedReceiver = new BroadcastReceiver() {
++            @Override
++            public void onReceive(Context context, Intent intent) {
++                updateFromCurrentTwilightState();
++            }
++        };
++        mSettingsObserver = new ContentObserver(handler) {
++            @Override
++            public void onChange(boolean selfChange) {
++                updateSettings();
++            }
++        };
++    }
++
++    void systemReady() {
++        final ContentResolver resolver = mContext.getContentResolver();
++        resolver.registerContentObserver(Settings.Secure.getUriFor(
++                        SETTING_AOD_TWILIGHT_SCHEDULE), false, mSettingsObserver,
++                UserHandle.USER_ALL);
++        final IntentFilter timeChangedFilter = new IntentFilter();
++        timeChangedFilter.addAction(Intent.ACTION_TIME_CHANGED);
++        timeChangedFilter.addAction(Intent.ACTION_TIMEZONE_CHANGED);
++        mContext.registerReceiver(mTimeChangedReceiver, timeChangedFilter, null, mHandler,
++                Context.RECEIVER_NOT_EXPORTED);
++        mAlarmManager = mContext.getSystemService(AlarmManager.class);
++        mTwilightManager = LocalServices.getService(TwilightManager.class);
++        if (mTwilightManager == null) {
++            Slog.w(TAG, "Twilight service unavailable; using local-time fallback");
++        }
++        updateSettings();
++    }
++
++    void onUserChanged() {
++        updateSettings();
++    }
++
++    private void updateSettings() {
++        final boolean enabled = Settings.Secure.getIntForUser(
++                mContext.getContentResolver(), SETTING_AOD_TWILIGHT_SCHEDULE, 1,
++                ActivityManager.getCurrentUser()) != 0;
++        mScheduleEnabled = enabled;
++
++        if (mTwilightManager != null && enabled && !mTwilightListening) {
++            mTwilightManager.registerListener(this, mHandler);
++            mTwilightListening = true;
++        } else if (mTwilightManager != null && !enabled && mTwilightListening) {
++            mTwilightManager.unregisterListener(this);
++            mTwilightListening = false;
++        }
++
++        updateFromCurrentTwilightState();
++    }
++
++    @Override
++    public void onTwilightStateChanged(TwilightState state) {
++        updateSuppression(state);
++    }
++
++    private void updateSuppression(TwilightState state) {
++        final boolean isNight = state != null ? state.isNight() : isFallbackNight();
++        final boolean suppressForSchedule = shouldSuppressAod(mScheduleEnabled, isNight);
++        updateFallbackAlarm(mScheduleEnabled && state == null);
++        if (suppressForSchedule == mScheduleSuppressed) {
++            return;
++        }
++        mScheduleSuppressed = suppressForSchedule;
++
++        if (Flags.lowLightDreamBehavior()) {
++            mSuppressionController.suppress(SUPPRESSION_TOKEN, Process.SYSTEM_UID,
++                    suppressForSchedule ? PowerManager.FLAG_AMBIENT_SUPPRESSION_AOD
++                            : PowerManager.FLAG_AMBIENT_SUPPRESSION_NONE);
++        } else {
++            mSuppressionController.suppress(
++                    SUPPRESSION_TOKEN, Process.SYSTEM_UID, suppressForSchedule);
++        }
++        Slog.i(TAG, suppressForSchedule
++                ? "AOD suppressed overnight"
++                : "AOD allowed during daytime schedule");
++    }
++
++    private void updateFromCurrentTwilightState() {
++        updateSuppression(mTwilightManager == null
++                ? null : mTwilightManager.getLastTwilightState());
++    }
++
++    private void updateFallbackAlarm(boolean enabled) {
++        if (mAlarmManager == null) {
++            return;
++        }
++        mAlarmManager.cancel(mFallbackAlarmListener);
++        if (!enabled) {
++            return;
++        }
++        // The tablet can remain in device idle across a fallback boundary. This policy changes
++        // visible AOD state only twice per day, so wake exactly at the boundary rather than
++        // retaining the old suppression state until an unrelated wake or maintenance window.
++        mAlarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,
++                nextFallbackTransition(ZonedDateTime.now()).toInstant().toEpochMilli(),
++                TAG, mHandlerExecutor, null, mFallbackAlarmListener);
++    }
++
++    static boolean shouldSuppressAod(boolean scheduleEnabled, boolean isNight) {
++        return scheduleEnabled && isNight;
++    }
++
++    private static boolean isFallbackNight() {
++        return isFallbackNight(LocalTime.now());
++    }
++
++    static boolean isFallbackNight(LocalTime time) {
++        final int hour = time.getHour();
++        return hour >= FALLBACK_NIGHT_START_HOUR || hour < FALLBACK_NIGHT_END_HOUR;
++    }
++
++    static ZonedDateTime nextFallbackTransition(ZonedDateTime now) {
++        final ZonedDateTime morning = now.withHour(FALLBACK_NIGHT_END_HOUR)
++                .withMinute(0).withSecond(0).withNano(0);
++        if (now.isBefore(morning)) {
++            return morning;
++        }
++        final ZonedDateTime evening = now.withHour(FALLBACK_NIGHT_START_HOUR)
++                .withMinute(0).withSecond(0).withNano(0);
++        if (now.isBefore(evening)) {
++            return evening;
++        }
++        return morning.plusDays(1);
++    }
++}
+diff --git a/services/core/java/com/android/server/power/Tb132fuPenChargerObserver.java b/services/core/java/com/android/server/power/Tb132fuPenChargerObserver.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..f5489560d36ef3f06754dbb5e11be71462065e38
+--- /dev/null
++++ b/services/core/java/com/android/server/power/Tb132fuPenChargerObserver.java
+@@ -0,0 +1,114 @@
++/*
++ * Copyright (C) 2026 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.android.server.power;
++
++import android.content.Context;
++import android.content.Intent;
++import android.os.Handler;
++import android.os.SystemProperties;
++import android.os.UEventObserver;
++import android.os.UserHandle;
++import android.util.Slog;
++
++import com.android.internal.annotations.VisibleForTesting;
++
++/** Relays the TB132FU's CTN730 magnetic pen-charger state to SystemUI. */
++final class Tb132fuPenChargerObserver extends UEventObserver {
++    static final String ACTION_PEN_CHARGER_CHANGED =
++            "com.android.systemui.action.TB132FU_PEN_CHARGER_CHANGED";
++    static final String EXTRA_ATTACHED = "attached";
++    static final String EXTRA_CHARGING_STATE = "charging_state";
++    static final String EXTRA_MAC = "mac";
++    static final String EXTRA_LEVEL = "level";
++
++    private static final String TAG = "Tb132fuPenCharger";
++    private static final String TB132FU_DEVICE = "TB132FU";
++    private static final String CTN730_DEVPATH = "/devices/virtual/misc/ctn730";
++    private static final String SYSTEMUI_PACKAGE = "com.android.systemui";
++
++    private final Context mContext;
++    private final Handler mHandler;
++    private Boolean mLastAttached;
++    private String mLastMac;
++
++    Tb132fuPenChargerObserver(Context context, Handler handler) {
++        mContext = context;
++        mHandler = handler;
++    }
++
++    static Tb132fuPenChargerObserver createIfSupported(Context context, Handler handler) {
++        if (!TB132FU_DEVICE.equalsIgnoreCase(
++                SystemProperties.get("ro.product.vendor.device", ""))) {
++            return null;
++        }
++        return new Tb132fuPenChargerObserver(context, handler);
++    }
++
++    void start() {
++        startObserving("DEVPATH=" + CTN730_DEVPATH);
++        Slog.i(TAG, "Observing the CTN730 magnetic pen charger");
++    }
++
++    @Override
++    public void onUEvent(UEvent event) {
++        final String attachedValue = event.get("ATTACHED");
++        if (attachedValue == null) {
++            return;
++        }
++        final boolean attached = "1".equals(attachedValue);
++        final String chargingState = event.get("CHARGING_STATE");
++        final String mac = event.get("MAC");
++        final int level = parseLevel(event.get("LEVEL"));
++        mHandler.post(() -> dispatchIfChanged(attached, chargingState, mac, level));
++    }
++
++    private void dispatchIfChanged(boolean attached, String chargingState, String mac, int level) {
++        if (mac != null && !mac.isBlank()) {
++            mLastMac = mac;
++        }
++        if (mLastAttached != null && mLastAttached == attached) {
++            return;
++        }
++        mLastAttached = attached;
++
++        final Intent intent = new Intent(ACTION_PEN_CHARGER_CHANGED)
++                .setPackage(SYSTEMUI_PACKAGE)
++                .putExtra(EXTRA_ATTACHED, attached)
++                .putExtra(EXTRA_CHARGING_STATE,
++                        chargingState == null ? "Unknown" : chargingState)
++                .putExtra(EXTRA_LEVEL, level);
++        if (mLastMac != null) {
++            intent.putExtra(EXTRA_MAC, mLastMac);
++        }
++        mContext.sendBroadcastAsUser(intent, UserHandle.ALL);
++        Slog.i(TAG, "Magnetic pen charger changed: attached=" + attached
++                + ", charging=" + chargingState + ", level=" + level);
++    }
++
++    @VisibleForTesting
++    static int parseLevel(String value) {
++        if (value == null) {
++            return -1;
++        }
++        try {
++            final int level = Integer.parseInt(value);
++            return level >= 0 && level <= 100 ? level : -1;
++        } catch (NumberFormatException ignored) {
++            return -1;
++        }
++    }
++}
+diff --git a/services/tests/powerservicetests/src/com/android/server/power/PowerManagerServiceTest.java b/services/tests/powerservicetests/src/com/android/server/power/PowerManagerServiceTest.java
+index 63f63ae0ecb3e52092333818d5a5bd4bb068bc8c..b191899541c865b5f7245a61db3dedad8bc0e783 100644
+--- a/services/tests/powerservicetests/src/com/android/server/power/PowerManagerServiceTest.java
++++ b/services/tests/powerservicetests/src/com/android/server/power/PowerManagerServiceTest.java
+@@ -1725,6 +1725,25 @@ public class PowerManagerServiceTest {
+         assertThat(mService.getGlobalWakefulnessLocked()).isEqualTo(WAKEFULNESS_AWAKE);
+     }
+ 
++    @Test
++    @EnableFlags(FLAG_LOW_LIGHT_DREAM_BEHAVIOR)
++    public void testWakefulnessDozing_aodSuppressed_wakesWhenPluggedIn() {
++        createService();
++        startSystem();
++
++        when(mAmbientDisplayConfigurationMock.alwaysOnEnabled(UserHandle.USER_CURRENT))
++                .thenReturn(true);
++        mUserSwitchedReceiver.onReceive(mContextSpy, new Intent(Intent.ACTION_USER_SWITCHED));
++        mService.getBinderServiceInstance().suppressAmbientDisplayBehavior(
++                "daytime-schedule", FLAG_AMBIENT_SUPPRESSION_AOD);
++
++        forceAwake();
++        forceDozing();
++        setPluggedIn(true);
++
++        assertThat(mService.getGlobalWakefulnessLocked()).isEqualTo(WAKEFULNESS_AWAKE);
++    }
++
+     /**
+      * Tests that dreaming stops when undocking and not configured to keep dreaming.
+      */
+diff --git a/services/tests/servicestests/Android.bp b/services/tests/servicestests/Android.bp
+index 6bd823b53e8a7c929f1d90477cdb8d900beac51c..29811a31f9409a19a2301ce3d4c8b0d47081641f 100644
+--- a/services/tests/servicestests/Android.bp
++++ b/services/tests/servicestests/Android.bp
+@@ -243,6 +243,7 @@ android_ravenwood_test {
+     ],
+     srcs: [
+         "src/com/android/server/power/PowerManagerBatchProxyTest.java",
++        "src/com/android/server/power/Tb132fuAmbientControllerTest.java",
+     ],
+ }
+ 
+diff --git a/services/tests/servicestests/src/com/android/server/power/Tb132fuAmbientControllerTest.java b/services/tests/servicestests/src/com/android/server/power/Tb132fuAmbientControllerTest.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..08ef93b94c8a8fd3213eb910688f0cf2f3c14e4d
+--- /dev/null
++++ b/services/tests/servicestests/src/com/android/server/power/Tb132fuAmbientControllerTest.java
+@@ -0,0 +1,85 @@
++/*
++ * Copyright (C) 2026 The Android Open Source Project
++ * SPDX-License-Identifier: Apache-2.0
++ */
++package com.android.server.power;
++
++import static com.google.common.truth.Truth.assertThat;
++
++import org.junit.Test;
++
++import java.time.LocalTime;
++import java.time.ZoneId;
++import java.time.ZonedDateTime;
++
++public final class Tb132fuAmbientControllerTest {
++    @Test
++    public void schedule_suppressesOnlyAtNight() {
++        assertThat(Tb132fuAmbientController.shouldSuppressAod(true, true)).isTrue();
++        assertThat(Tb132fuAmbientController.shouldSuppressAod(true, false)).isFalse();
++        assertThat(Tb132fuAmbientController.shouldSuppressAod(false, true)).isFalse();
++    }
++
++    @Test
++    public void fallbackNight_startsAtNineteenHundred() {
++        assertThat(Tb132fuAmbientController.isFallbackNight(LocalTime.of(18, 59))).isFalse();
++        assertThat(Tb132fuAmbientController.isFallbackNight(LocalTime.of(19, 0))).isTrue();
++    }
++
++    @Test
++    public void fallbackNight_endsAtSevenHundred() {
++        assertThat(Tb132fuAmbientController.isFallbackNight(LocalTime.of(6, 59))).isTrue();
++        assertThat(Tb132fuAmbientController.isFallbackNight(LocalTime.of(7, 0))).isFalse();
++    }
++
++    @Test
++    public void fallbackNight_spansMidnight() {
++        assertThat(Tb132fuAmbientController.isFallbackNight(LocalTime.MIDNIGHT)).isTrue();
++        assertThat(Tb132fuAmbientController.isFallbackNight(LocalTime.NOON)).isFalse();
++    }
++
++    @Test
++    public void nextFallbackTransition_beforeMorning_isMorning() {
++        final ZonedDateTime now = timeAt(6, 59);
++
++        assertThat(Tb132fuAmbientController.nextFallbackTransition(now))
++                .isEqualTo(timeAt(7, 0));
++    }
++
++    @Test
++    public void nextFallbackTransition_atMorning_isEvening() {
++        final ZonedDateTime now = timeAt(7, 0);
++
++        assertThat(Tb132fuAmbientController.nextFallbackTransition(now))
++                .isEqualTo(timeAt(19, 0));
++    }
++
++    @Test
++    public void nextFallbackTransition_duringDay_isEvening() {
++        final ZonedDateTime now = timeAt(12, 0);
++
++        assertThat(Tb132fuAmbientController.nextFallbackTransition(now))
++                .isEqualTo(timeAt(19, 0));
++    }
++
++    @Test
++    public void nextFallbackTransition_afterEvening_isNextMorning() {
++        final ZonedDateTime now = timeAt(19, 0);
++
++        assertThat(Tb132fuAmbientController.nextFallbackTransition(now))
++                .isEqualTo(timeAt(7, 0).plusDays(1));
++    }
++
++    @Test
++    public void nextFallbackTransition_preservesLocalTimeZone() {
++        final ZoneId zone = ZoneId.of("America/New_York");
++        final ZonedDateTime now = ZonedDateTime.of(2026, 3, 8, 12, 0, 0, 0, zone);
++
++        assertThat(Tb132fuAmbientController.nextFallbackTransition(now))
++                .isEqualTo(ZonedDateTime.of(2026, 3, 8, 19, 0, 0, 0, zone));
++    }
++
++    private static ZonedDateTime timeAt(int hour, int minute) {
++        return ZonedDateTime.of(2026, 8, 17, hour, minute, 0, 0, ZoneId.of("UTC"));
++    }
++}

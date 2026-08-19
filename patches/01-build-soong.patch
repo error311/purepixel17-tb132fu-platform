@@ -1,0 +1,36 @@
+diff --git a/ui/build/soong.go b/ui/build/soong.go
+index 4521b4abef559c568e568dc6c113d385339d14fd..f67aaadf089d7d86ecd0b396be9616d1b289685c 100644
+--- a/ui/build/soong.go
++++ b/ui/build/soong.go
+@@ -215,6 +215,14 @@ func (pb PrimaryBuilderFactory) primaryBuilderInvocation(config Config) bootstra
+ 
+ 	commonArgs = append(commonArgs, "-l", filepath.Join(pb.config.FileListDir(), "Android.bp.list"))
+ 	invocationEnv := make(map[string]string)
++	// The generated rule launches soong_build through `env -i`; explicitly
++	// preserve Go memory controls supplied by constrained local build hosts.
++	if value := os.Getenv("GOMEMLIMIT"); value != "" {
++		invocationEnv["GOMEMLIMIT"] = value
++	}
++	if value := os.Getenv("GOGC"); value != "" {
++		invocationEnv["GOGC"] = value
++	}
+ 	if pb.debugPort != "" {
+ 		//debug mode
+ 		commonArgs = append(commonArgs, "--delve_listen", pb.debugPort,
+@@ -749,6 +757,16 @@ func runSoong(ctx Context, config Config, enforceNoSoongOutput bool) {
+ 			// This is currently how the command line to invoke soong_build finds the
+ 			// root of the source tree and the output root
+ 			ninjaEnv.Set("TOP", os.Getenv("TOP"))
++			// Preserve Go's soft memory limit for the generated soong_build process.
++			// The bootstrap ninja command otherwise starts it through `env -i`,
++			// discarding the container limit and exhausting a 64 GiB build host while
++			// indexing the Android 17 graph.
++			if value, ok := config.Environment().Get("GOMEMLIMIT"); ok {
++				ninjaEnv.Set("GOMEMLIMIT", value)
++			}
++			if value, ok := config.Environment().Get("GOGC"); ok {
++				ninjaEnv.Set("GOGC", value)
++			}
+ 			SetupLitePath(ctx, config, "")
+ 			ninjaPath, _ := config.Environment().Get("PATH")
+ 			ninjaEnv.Set("PATH", ninjaPath)

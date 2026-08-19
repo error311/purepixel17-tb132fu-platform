@@ -1,0 +1,247 @@
+diff --git a/loader/bpfloader.rs b/loader/bpfloader.rs
+index 1292c315aa3fdaf412efacd18d9405c9db39fba3..4c248790914202c01c875ddf6f488d9949ef236e 100644
+--- a/loader/bpfloader.rs
++++ b/loader/bpfloader.rs
+@@ -49,6 +49,7 @@ const fn kver(a: u32, b: u32, c: u32) -> u32 {
+ }
+ 
+ const KVER_NONE: u32 = kver(0, 0, 0);
++const KVER_5_10: u32 = kver(5, 10, 0);
+ const KVER_6_1: u32 = kver(6, 1, 0);
+ const KVER_INF: u32 = 0xFFFFFFFF;
+ 
+@@ -198,6 +199,9 @@ impl ProgDesc {
+ #[derive(Clone)]
+ struct BpfFileDesc {
+     filename: &'static str,
++    // Optional stable stem for pinned maps/programs when a compatibility
++    // object has a different on-disk filename.
++    pin_stem: &'static str,
+     // Maps and Progs are pinned under /sys/fs/bpf/<prefix>.
+     prefix: &'static str,
+     // Warning: setting this to 'true' will cause the system to boot loop if there are any issues
+@@ -226,6 +230,7 @@ const GID_MEDIA_RW: u32 = AID_MEDIA_RW;
+ 
+ const BPF_FILE_DESC_DEFAULT: BpfFileDesc = BpfFileDesc {
+     filename: "",
++    pin_stem: "",
+     prefix: "",
+     critical: false,
+     skip_on_user: false,
+@@ -237,6 +242,12 @@ const BPF_FILE_DESC_DEFAULT: BpfFileDesc = BpfFileDesc {
+ // Sections like .rodata, .rodata.str1.1, etc. do not require pinning
+ const OPTIONAL_SEC: &[&str] = &[".data", ".kconfig", ".rodata"];
+ 
++const TIME_IN_STATE_LEGACY_PROGS: &[ProgDesc] = &[
++    ProgDesc::new(GID_SYSTEM, "tracepoint_power_cpu_frequency"),
++    ProgDesc::new(GID_SYSTEM, "tracepoint_sched_sched_process_free"),
++    ProgDesc::new(GID_SYSTEM, "tracepoint_sched_sched_switch"),
++];
++
+ const FILE_ARR: &[BpfFileDesc] = &[
+     BpfFileDesc {
+         filename: "/system/etc/bpf/cputimeinstate/timeInState.bpf",
+@@ -260,7 +271,14 @@ const FILE_ARR: &[BpfFileDesc] = &[
+         ],
+         progs: &[
+             ProgDesc::new(GID_SYSTEM, "tracepoint_power_cpu_frequency"),
+-            ProgDesc::new(GID_SYSTEM, "tracepoint_sched_sched_process_free"),
++            // This program uses BPF CO-RE to read task_struct and therefore
++            // needs the kernel BTF supplied by Android 5.10+ kernels. The
++            // sched-switch and cpufreq programs remain useful on older kernels.
++            ProgDesc::new_kver(
++                GID_SYSTEM,
++                KVER_5_10,
++                "tracepoint_sched_sched_process_free",
++            ),
+             ProgDesc::new(GID_SYSTEM, "tracepoint_sched_sched_switch"),
+         ],
+         ..BPF_FILE_DESC_DEFAULT
+@@ -289,15 +307,31 @@ const FILE_ARR: &[BpfFileDesc] = &[
+         filename: "/system/etc/bpf/memevents/bpfMemEvents.bpf",
+         prefix: "memevents/",
+         maps: &[
+-            MapDesc::new(GID_SYSTEM, PERM_GRW, "ams_rb"),
+-            MapDesc::new(GID_SYSTEM, PERM_GRW, "lmkd_rb"),
++            MapDesc::new_kver(GID_SYSTEM, PERM_GRW, KVER_5_10, "ams_rb"),
++            MapDesc::new_kver(GID_SYSTEM, PERM_GRW, KVER_5_10, "lmkd_rb"),
+         ],
+         progs: &[
+-            ProgDesc::new(GID_SYSTEM, "tracepoint_oom_mark_victim_ams"),
+-            ProgDesc::new(GID_SYSTEM, "tracepoint_vmscan_mm_vmscan_direct_reclaim_begin_lmkd"),
+-            ProgDesc::new(GID_SYSTEM, "tracepoint_vmscan_mm_vmscan_direct_reclaim_end_lmkd"),
+-            ProgDesc::new(GID_SYSTEM, "tracepoint_vmscan_mm_vmscan_kswapd_wake_lmkd"),
+-            ProgDesc::new(GID_SYSTEM, "tracepoint_vmscan_mm_vmscan_kswapd_sleep_lmkd"),
++            ProgDesc::new_kver(GID_SYSTEM, KVER_5_10, "tracepoint_oom_mark_victim_ams"),
++            ProgDesc::new_kver(
++                GID_SYSTEM,
++                KVER_5_10,
++                "tracepoint_vmscan_mm_vmscan_direct_reclaim_begin_lmkd",
++            ),
++            ProgDesc::new_kver(
++                GID_SYSTEM,
++                KVER_5_10,
++                "tracepoint_vmscan_mm_vmscan_direct_reclaim_end_lmkd",
++            ),
++            ProgDesc::new_kver(
++                GID_SYSTEM,
++                KVER_5_10,
++                "tracepoint_vmscan_mm_vmscan_kswapd_wake_lmkd",
++            ),
++            ProgDesc::new_kver(
++                GID_SYSTEM,
++                KVER_5_10,
++                "tracepoint_vmscan_mm_vmscan_kswapd_sleep_lmkd",
++            ),
+             ProgDesc::new_kver(
+                 GID_SYSTEM,
+                 KVER_6_1,
+@@ -315,14 +349,14 @@ const FILE_ARR: &[BpfFileDesc] = &[
+         filename: "/system/etc/bpf/memevents/bpfMemEventsTest.bpf",
+         prefix: "memevents/",
+         skip_on_user: true,
+-        maps: &[MapDesc::new(GID_SYSTEM, PERM_GRW, "rb")],
++        maps: &[MapDesc::new_kver(GID_SYSTEM, PERM_GRW, KVER_5_10, "rb")],
+         progs: &[
+-            ProgDesc::new(GID_SYSTEM, "tracepoint_oom_mark_victim"),
+-            ProgDesc::new(GID_ROOT, "skfilter_oom_kill"),
+-            ProgDesc::new(GID_ROOT, "skfilter_direct_reclaim_begin"),
+-            ProgDesc::new(GID_ROOT, "skfilter_direct_reclaim_end"),
+-            ProgDesc::new(GID_ROOT, "skfilter_kswapd_wake"),
+-            ProgDesc::new(GID_ROOT, "skfilter_kswapd_sleep"),
++            ProgDesc::new_kver(GID_SYSTEM, KVER_5_10, "tracepoint_oom_mark_victim"),
++            ProgDesc::new_kver(GID_ROOT, KVER_5_10, "skfilter_oom_kill"),
++            ProgDesc::new_kver(GID_ROOT, KVER_5_10, "skfilter_direct_reclaim_begin"),
++            ProgDesc::new_kver(GID_ROOT, KVER_5_10, "skfilter_direct_reclaim_end"),
++            ProgDesc::new_kver(GID_ROOT, KVER_5_10, "skfilter_kswapd_wake"),
++            ProgDesc::new_kver(GID_ROOT, KVER_5_10, "skfilter_kswapd_sleep"),
+             ProgDesc::new_kver(GID_SYSTEM, KVER_6_1, "skfilter_android_trigger_vendor_lmk_kill"),
+             ProgDesc::new_kver(GID_ROOT, KVER_6_1, "skfilter_calculate_totalreserve_pages"),
+         ],
+@@ -332,8 +366,17 @@ const FILE_ARR: &[BpfFileDesc] = &[
+         filename: "/system/etc/bpf/bpfRingbufProg.bpf",
+         critical: true,
+         skip_on_user: true,
+-        maps: &[MapDesc::new(GID_ROOT, PERM_GRW, "test_ringbuf")],
+-        progs: &[ProgDesc::new(GID_ROOT, "skfilter_ringbuf_test")],
++        // This is a userdebug self-test, not a production dependency. Keep its
++        // map aligned with the program's embedded KVER(5, 10, 0) requirement
++        // so an older kernel skips the whole object instead of boot-looping
++        // while trying to create BPF_MAP_TYPE_RINGBUF.
++        maps: &[MapDesc::new_kver(
++            GID_ROOT,
++            PERM_GRW,
++            KVER_5_10,
++            "test_ringbuf",
++        )],
++        progs: &[ProgDesc::new_kver(GID_ROOT, KVER_5_10, "skfilter_ringbuf_test")],
+         ..BPF_FILE_DESC_DEFAULT
+     },
+ ];
+@@ -358,15 +401,30 @@ const CYCLE_PER_UID_FILE: BpfFileDesc = BpfFileDesc {
+ const KERNEL_WAKELOCK_DURATION_FILE: BpfFileDesc = BpfFileDesc {
+     filename: "/system/etc/bpf/kernelWakelockDuration.bpf",
+     prefix: "kernelwakelockduration/",
+-    maps: &[MapDesc::new(GID_SYSTEM, PERM_GRO, "program_state")],
++    // libbpf auto-attach uses BPF links, which are not available on the
++    // Android 4.19 kernel. Keep this optional telemetry disabled there.
++    maps: &[MapDesc::new_kver(
++        GID_SYSTEM,
++        PERM_GRO,
++        KVER_5_10,
++        "program_state",
++    )],
+     progs: &[
+         ProgDesc {
+             auto_attach: true,
+-            ..ProgDesc::new(GID_SYSTEM, "tracepoint_power_wakeup_source_activate")
++            ..ProgDesc::new_kver(
++                GID_SYSTEM,
++                KVER_5_10,
++                "tracepoint_power_wakeup_source_activate",
++            )
+         },
+         ProgDesc {
+             auto_attach: true,
+-            ..ProgDesc::new(GID_SYSTEM, "tracepoint_power_wakeup_source_deactivate")
++            ..ProgDesc::new_kver(
++                GID_SYSTEM,
++                KVER_5_10,
++                "tracepoint_power_wakeup_source_deactivate",
++            )
+         },
+     ],
+     ..BPF_FILE_DESC_DEFAULT
+@@ -376,10 +434,23 @@ const KERNEL_WAKELOCK_DURATION_TEST_FILE: BpfFileDesc = BpfFileDesc {
+     filename: "system/etc/bpf/kernelWakelockDurationTest.bpf",
+     prefix: "kernelwakelockduration/",
+     skip_on_user: true,
+-    maps: &[MapDesc::new(GID_SYSTEM, PERM_GRO, "program_state")],
++    maps: &[MapDesc::new_kver(
++        GID_SYSTEM,
++        PERM_GRO,
++        KVER_5_10,
++        "program_state",
++    )],
+     progs: &[
+-        ProgDesc::new(GID_SYSTEM, "tracepoint_power_wakeup_source_activate"),
+-        ProgDesc::new(GID_SYSTEM, "tracepoint_power_wakeup_source_deactivate"),
++        ProgDesc::new_kver(
++            GID_SYSTEM,
++            KVER_5_10,
++            "tracepoint_power_wakeup_source_activate",
++        ),
++        ProgDesc::new_kver(
++            GID_SYSTEM,
++            KVER_5_10,
++            "tracepoint_power_wakeup_source_deactivate",
++        ),
+     ],
+     ..BPF_FILE_DESC_DEFAULT
+ };
+@@ -569,9 +640,11 @@ fn libbpf_worker(file_desc: &BpfFileDesc) -> Result<(), anyhow::Error> {
+             return Err(anyhow!("File {} does not exist", filepath.display()));
+         }
+     }
+-    let filename =
++    let object_stem =
+         filepath.file_stem().ok_or_else(|| anyhow!("Failed to parse stem from filename"))?;
+-    let filename = filename.to_str().ok_or_else(|| anyhow!("Failed to parse filename"))?;
++    let object_stem = object_stem.to_str().ok_or_else(|| anyhow!("Failed to parse filename"))?;
++    let filename =
++        if file_desc.pin_stem.is_empty() { object_stem } else { file_desc.pin_stem };
+ 
+     let mut ob = ObjectBuilder::default();
+     let mut open_file = ob.open_file(filepath)?;
+@@ -700,6 +773,31 @@ fn libbpf_worker(file_desc: &BpfFileDesc) -> Result<(), anyhow::Error> {
+ fn get_file_vec() -> Vec<BpfFileDesc> {
+     let mut file_vec = FILE_ARR.to_vec();
+ 
++    // Android's current time-in-state object includes one CO-RE cleanup
++    // program. On a pre-BTF kernel use the device-provided compatibility
++    // object, while preserving the sched-switch and cpufreq accounting.
++    const LEGACY_TIME_IN_STATE: &str =
++        "/system/etc/bpf/cputimeinstate/timeInStateLegacy.bpf";
++    if kernel_version().is_ok_and(|version| version < KVER_5_10)
++        && Path::new(LEGACY_TIME_IN_STATE).exists()
++    {
++        if let Some(desc) = file_vec
++            .iter_mut()
++            .find(|desc| desc.filename == "/system/etc/bpf/cputimeinstate/timeInState.bpf")
++        {
++            desc.filename = LEGACY_TIME_IN_STATE;
++            desc.pin_stem = "timeInState";
++            desc.progs = TIME_IN_STATE_LEGACY_PROGS;
++        }
++    }
++
++    // FUSE-BPF is an optional Android kernel extension and has an explicit
++    // runtime discovery node. Do not try to open its object when the kernel
++    // does not expose that program type.
++    if !Path::new("/sys/fs/fuse/bpf_prog_type_fuse").exists() {
++        file_vec.retain(|desc| desc.filename != "/system/etc/bpf/fuseMedia.bpf");
++    }
++
+     if android_bpfprogs_flags::kernel_wakelock_duration() {
+         file_vec.push(KERNEL_WAKELOCK_DURATION_FILE);
+         file_vec.push(KERNEL_WAKELOCK_DURATION_TEST_FILE);

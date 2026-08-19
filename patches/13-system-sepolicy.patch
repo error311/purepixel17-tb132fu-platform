@@ -1,0 +1,88 @@
+diff --git a/private/bpfloader.te b/private/bpfloader.te
+index af4920c99966696bc4b0cff9f9aa0098ee46be79..3b30f099a869d63f61988961850574207573ffbc 100644
+--- a/private/bpfloader.te
++++ b/private/bpfloader.te
+@@ -38,6 +38,7 @@ allow bpfloader sysfs_fs_fuse_bpf:file r_file_perms;
+ allow bpfloader proc_bpf:file rw_file_perms;
+ 
+ set_prop(bpfloader, bpf_progs_loaded_prop)
++get_prop(bpfloader, bpf_platform_kver_override_prop)
+ 
+ allow bpfloader bpfloader_exec:file execute_no_trans;
+ allow bpfloader bpfloader_platform_exec:file { execute execute_no_trans getattr map open read };
+diff --git a/private/netd.te b/private/netd.te
+index 38e3730680f63435c107fb59eae34c2d41ed9a86..c9520cf1c880bcedd25fb427992c2831c9f08fc6 100644
+--- a/private/netd.te
++++ b/private/netd.te
+@@ -25,6 +25,7 @@ set_prop(netd, ctl_mdnsd_prop)
+ set_prop(netd, netd_stable_secret_prop)
+ 
+ get_prop(netd, adbd_config_prop)
++get_prop(netd, bpf_platform_kver_override_prop)
+ get_prop(netd, hwservicemanager_prop)
+ get_prop(netd, device_config_netd_native_prop)
+ 
+diff --git a/private/property.te b/private/property.te
+index 59d8f9f3101c6c62ad68b1f678f350ce89b2b3bd..7ddf42bdffd66e23a81cc4f603af8d7e14e1bbeb 100644
+--- a/private/property.te
++++ b/private/property.te
+@@ -7,6 +7,7 @@ system_internal_prop(apexd_payload_metadata_prop)
+ system_internal_prop(apexd_private_prop)
+ system_internal_prop(appsearch_vm_prop)
+ system_internal_prop(bluetooth_lea_prop)
++system_internal_prop(bpf_platform_kver_override_prop)
+ system_internal_prop(casefolding_status_prop)
+ system_internal_prop(casefolding_override_prop)
+ system_internal_prop(ctl_snapuserd_prop)
+diff --git a/private/property_contexts b/private/property_contexts
+index 0bd43ef9d06070c3d74ecc0c2235990715298708..23624b7f344396fdbcfd595a22b1c8824205f944 100644
+--- a/private/property_contexts
++++ b/private/property_contexts
+@@ -116,6 +116,7 @@ ro.serialno             u:object_r:serialno_prop:s0
+ ro.boot.btmacaddr       u:object_r:bluetooth_prop:s0
+ ro.boot.serialno        u:object_r:serialno_prop:s0
+ ro.bt.                  u:object_r:bluetooth_prop:s0
++ro.bpf.platform_kver_override u:object_r:bpf_platform_kver_override_prop:s0 exact string
+ ro.boot.bootreason      u:object_r:bootloader_boot_reason_prop:s0
+ ro.misctrl.             u:object_r:misctrl_prop:s0
+ persist.sys.boot.reason u:object_r:last_boot_reason_prop:s0
+@@ -382,7 +383,9 @@ perf.drop_caches        u:object_r:perf_drop_caches_prop:s0 exact enum 0 3
+ # Charger properties
+ ro.charger.                 u:object_r:charger_prop:s0
+ sys.boot_from_charger_mode  u:object_r:charger_status_prop:s0 exact int
++ro.charger_mode_autoboot u:object_r:charger_config_prop:s0 exact bool
+ ro.enable_boot_charger_mode u:object_r:charger_config_prop:s0 exact bool
++ro.product.charger.boot_min_cap u:object_r:charger_config_prop:s0 exact int
+ ro.product.charger.unplugged_shutdown_time  u:object_r:charger_config_prop:s0 exact int
+ 
+ # Prefetch boot properties which are tunables
+diff --git a/private/system_server.te b/private/system_server.te
+index 355e5b9a212464c42367bb03cb7240208f86a91b..a349227fd490874948629487d8831bf0943027ba 100644
+--- a/private/system_server.te
++++ b/private/system_server.te
+@@ -1812,6 +1812,10 @@ neverallow {
+ # ThreadNetworkService reads Thread Network properties
+ get_prop(system_server, threadnetwork_config_prop)
+ 
++# Connectivity's in-process JNI must use the same policy kernel version as
++# netd and bpfloader while the TB132FU remains on its supported 4.19 kernel.
++get_prop(system_server, bpf_platform_kver_override_prop)
++
+ # Do not allow any domain other than init and system server to set the property
+ neverallow {
+   domain
+diff --git a/private/zygote.te b/private/zygote.te
+index 197198c10e581ca354ae7d113fd7c285baa16986..b99f935732d8fcb7918e1c6ccb44b0b3ee450e67 100644
+--- a/private/zygote.te
++++ b/private/zygote.te
+@@ -250,6 +250,10 @@ get_prop(zygote, packagemanager_config_prop)
+ # Allow zygote to read qemu.sf.lcd_density
+ get_prop(zygote, qemu_sf_lcd_density_prop)
+ 
++# Connectivity native code is preloaded in zygote.  Let it initialize the
++# shared policy-version cache from the same read-only property as netd.
++get_prop(zygote, bpf_platform_kver_override_prop)
++
+ # Allow zygote to read persist.wm.debug.* to toggle experimental window manager features in
+ # preloaded classes
+ get_prop(zygote, persist_wm_debug_prop)

@@ -1,0 +1,180 @@
+diff --git a/libs/cputimeinstate/Android.bp b/libs/cputimeinstate/Android.bp
+index 79cc15f571f9c980cc905c986eec4d21a23a8733..5df3b3186eac9b7f7db38fb1729bbbd6aed31c24 100644
+--- a/libs/cputimeinstate/Android.bp
++++ b/libs/cputimeinstate/Android.bp
+@@ -49,3 +49,19 @@ cc_test {
+     require_root: true,
+     test_suites: ["general-tests"],
+ }
++
++// Explicitly built, non-installed target probe for the TB132FU pre-BTF
++// compatibility object and tracepoint-attach fallback.
++cc_binary {
++    name: "timeinstate_tb132fu_probe",
++    srcs: ["Tb132fuTimeInStateProbe.cpp"],
++    static_libs: ["libtimeinstate"],
++    shared_libs: [
++        "libbase",
++        "libbpf_bcc",
++        "libbpf_minimal",
++        "liblog",
++    ],
++    compile_multilib: "64",
++    installable: false,
++}
+diff --git a/libs/cputimeinstate/Tb132fuTimeInStateProbe.cpp b/libs/cputimeinstate/Tb132fuTimeInStateProbe.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..324dfb6e588cae64e941dedb1c44571fafc52591
+--- /dev/null
++++ b/libs/cputimeinstate/Tb132fuTimeInStateProbe.cpp
+@@ -0,0 +1,17 @@
++/*
++ * Copyright (C) 2026 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ */
++
++#include <cputimeinstate.h>
++
++#include <cstdio>
++
++int main() {
++    const bool supported = android::bpf::isTrackingUidTimesSupported();
++    const bool started = supported && android::bpf::startTrackingUidTimes();
++    std::printf("TB132FU_TIME_IN_STATE supported=%d started=%d\n", supported, started);
++    return started ? 0 : 1;
++}
+diff --git a/libs/cputimeinstate/cputimeinstate.cpp b/libs/cputimeinstate/cputimeinstate.cpp
+index b9dfd353a49a9fac6c62889d07e442cc8430d096..10afae9fddec6d75f6d41eca5d0aefbec00774bc 100644
+--- a/libs/cputimeinstate/cputimeinstate.cpp
++++ b/libs/cputimeinstate/cputimeinstate.cpp
+@@ -186,7 +186,12 @@ static bool attachTracepointProgram(const std::string &eventType, const std::str
+ static bool attachRawTracepointProgram(const std::string &eventType, const std::string &eventName) {
+     int prog_fd = retrieveProgramFd(eventType, eventName);
+     if (prog_fd < 0) return false;
+-    return bpf_attach_raw_tracepoint(prog_fd, eventName.c_str()) >= 0;
++    if (bpf_attach_raw_tracepoint(prog_fd, eventName.c_str()) >= 0) return true;
++
++    // Pre-BTF compatibility objects use Android 12L's regular tracepoint
++    // implementation for sched_process_free. Modern raw-tracepoint programs
++    // still take the path above.
++    return attachTracepointProgram(eventType, eventName);
+ }
+ 
+ static std::optional<uint32_t> getPolicyFreqIdx(uint32_t policy) {
+diff --git a/services/surfaceflinger/FrontEnd/LayerSnapshotBuilder.cpp b/services/surfaceflinger/FrontEnd/LayerSnapshotBuilder.cpp
+index 35d258f45b2497817beb7bcfcf61c46ab0e597e7..34f1d9fd709d3b7bcec3ac5bf6001f805ffc07c6 100644
+--- a/services/surfaceflinger/FrontEnd/LayerSnapshotBuilder.cpp
++++ b/services/surfaceflinger/FrontEnd/LayerSnapshotBuilder.cpp
+@@ -23,6 +23,7 @@
+ #include <numeric>
+ #include <optional>
+ 
++#include <android-base/properties.h>
+ #include <android/gui/ISystemContentPriorityConstants.h>
+ #include <android/gui/Vec2.h>
+ #include <common/FlagManager.h>
+@@ -49,6 +50,12 @@ using namespace ftl::flag_operators;
+ 
+ namespace {
+ 
++bool forceClientCompositionForCursor() {
++    static const bool forceClientCursor =
++            android::base::GetProperty("ro.product.vendor.device", "") == "TB132FU";
++    return forceClientCursor;
++}
++
+ float getMaxHdrSdrRatio(float left, float right) {
+     if (left >= 1.f && right >= 1.f) {
+         return std::min(left, right);
+@@ -1110,7 +1117,9 @@ void LayerSnapshotBuilder::updateSnapshot(LayerSnapshot& snapshot, const Args& a
+     }
+ 
+     // computed snapshot properties
+-    snapshot.forceClientComposition = snapshot.shadowSettings.length > 0 ||
++    snapshot.forceClientComposition =
++            (requested.potentialCursor && forceClientCompositionForCursor()) ||
++            snapshot.shadowSettings.length > 0 ||
+             snapshot.stretchEffect.hasEffect() || snapshot.edgeExtensionEffect.hasEffect() ||
+             snapshot.borderSettings.strokeWidth > 0 ||
+             !snapshot.boxShadowSettings.boxShadows.empty() ||
+diff --git a/services/surfaceflinger/Scheduler/RefreshRateSelector.cpp b/services/surfaceflinger/Scheduler/RefreshRateSelector.cpp
+index 0b11899defe82dde458453f43a8112026d6926ed..d13f8cb6520f0fb9ce0c2a1377261a61c9859508 100644
+--- a/services/surfaceflinger/Scheduler/RefreshRateSelector.cpp
++++ b/services/surfaceflinger/Scheduler/RefreshRateSelector.cpp
+@@ -780,9 +780,14 @@ auto RefreshRateSelector::getRankedFrameRatesLocked(const std::vector<LayerRequi
+ 
+     // Consider the touch event if there are no Explicit* layers. Otherwise wait until after we've
+     // selected a refresh rate to see if we should apply touch boost.
++    static const bool kTouchBoostUsesAppRequestRange =
++            base::GetProperty("ro.product.vendor.device", "") == "TB132FU";
+     if (signals.touch && !hasExplicitVoteLayers) {
+         ALOGV("Touch Boost");
+-        const auto ranking = rankFrameRates(anchorGroup, RefreshRateOrder::Descending);
++        const auto ranking =
++                rankFrameRates(anchorGroup, RefreshRateOrder::Descending, std::nullopt,
++                               [](FrameRateMode) { return true; },
++                               kTouchBoostUsesAppRequestRange);
+         SFTRACE_FORMAT_INSTANT("%s (Touch Boost)",
+                                to_string(ranking.front().frameRateMode.fps).c_str());
+         return {ranking, GlobalSignals{.touch = true}};
+@@ -1059,7 +1064,10 @@ auto RefreshRateSelector::getRankedFrameRatesLocked(const std::vector<LayerRequi
+     const bool isLateGlobalTouchBoost = signals.touch && explicitDefaultVoteLayers == 0;
+     const bool isLateTouchBoost = isLateGlobalTouchBoost || isAppTouchBoost;
+     if (isLateTouchBoost && isTouchBoostForExplicitExact() && isTouchBoostForCategory()) {
+-        const auto touchRefreshRates = rankFrameRates(anchorGroup, RefreshRateOrder::Descending);
++        const auto touchRefreshRates =
++                rankFrameRates(anchorGroup, RefreshRateOrder::Descending, std::nullopt,
++                               [](FrameRateMode) { return true; },
++                               kTouchBoostUsesAppRequestRange);
+         using fps_approx_ops::operator<;
+ 
+         if (scores.front().frameRateMode.fps <= touchRefreshRates.front().frameRateMode.fps) {
+@@ -1333,7 +1341,8 @@ auto RefreshRateSelector::getPreferredFpsForMode(std::optional<int> anchorGroupO
+ auto RefreshRateSelector::rankFrameRates(std::optional<int> anchorGroupOpt,
+                                          RefreshRateOrder refreshRateOrder,
+                                          std::optional<DisplayModeId> preferredDisplayModeOpt,
+-                                         const RankFrameRatesPredicate& predicate) const
++                                         const RankFrameRatesPredicate& predicate,
++                                         bool useAppRequestRange) const
+         -> FrameRateRanking {
+     const char* const whence = __func__;
+ 
+@@ -1378,10 +1387,11 @@ auto RefreshRateSelector::rankFrameRates(std::optional<int> anchorGroupOpt,
+         ranking.emplace_back(ScoredFrameRate{frameRateMode, score});
+     };
+ 
++    const auto& frameRates = useAppRequestRange ? mAppRequestFrameRates : mPrimaryFrameRates;
+     if (refreshRateOrder == RefreshRateOrder::Ascending) {
+-        std::for_each(mPrimaryFrameRates.begin(), mPrimaryFrameRates.end(), rankFrameRate);
++        std::for_each(frameRates.begin(), frameRates.end(), rankFrameRate);
+     } else {
+-        std::for_each(mPrimaryFrameRates.rbegin(), mPrimaryFrameRates.rend(), rankFrameRate);
++        std::for_each(frameRates.rbegin(), frameRates.rend(), rankFrameRate);
+     }
+ 
+     if (!ranking.empty() || !anchorGroupOpt) {
+diff --git a/services/surfaceflinger/Scheduler/RefreshRateSelector.h b/services/surfaceflinger/Scheduler/RefreshRateSelector.h
+index 2d1415c9a5158f2c66135d224da79cd9dacd9253..edde77738985723254b1edfc41a27ad06fcc4ef3 100644
+--- a/services/surfaceflinger/Scheduler/RefreshRateSelector.h
++++ b/services/surfaceflinger/Scheduler/RefreshRateSelector.h
+@@ -471,13 +471,14 @@ private:
+ 
+     typedef std::function<bool(const FrameRateMode)> RankFrameRatesPredicate;
+ 
+-    // Rank the frame rates.
+-    // Only modes in the primary range for which `predicate` is `true` will be scored.
+-    // Does not use the app requested range.
++    // Rank the frame rates. By default, only modes in the primary range for which
++    // `predicate` is `true` will be scored. A device-scoped touch boost may opt into
++    // the wider app-request range without changing the idle/default policy.
+     FrameRateRanking rankFrameRates(
+             std::optional<int> anchorGroupOpt, RefreshRateOrder refreshRateOrder,
+             std::optional<DisplayModeId> preferredDisplayModeOpt = std::nullopt,
+-            const RankFrameRatesPredicate& predicate = [](FrameRateMode) { return true; }) const
++            const RankFrameRatesPredicate& predicate = [](FrameRateMode) { return true; },
++            bool useAppRequestRange = false) const
+             REQUIRES(mLock);
+ 
+     const Policy* getCurrentPolicyLocked() const REQUIRES(mLock);
