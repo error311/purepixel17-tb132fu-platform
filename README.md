@@ -1,52 +1,52 @@
-# Pure Pixel 17 platform integration for Lenovo TB132FU
+# Pure Pixel 17 platform patches for TB132FU
 
-This repository contains the source-only Android 17 platform patch set used by
-Pure Pixel 17 R1 on the Lenovo Tab P11 Pro (2nd Gen), model TB132FU.
+This is the Android platform side of Pure Pixel 17 for the Lenovo Tab P11 Pro
+(2nd Gen), model TB132FU.
 
-It complements the public projects below:
+The device needs more than a device tree and kernel to run Android 17 properly.
+These patches are the framework and system changes used by the R1 build. They
+are kept here separately because they belong to existing AOSP projects rather
+than `device/lenovo/tb132fu`.
 
-- [TB132FU Android 17 device tree](https://github.com/error311/android_device_lenovo_tb132fu)
+The other two source repositories are:
+
+- [TB132FU device tree](https://github.com/error311/android_device_lenovo_tb132fu)
 - [TB132FU kernel #13](https://github.com/error311/tb132fu-kernel/tree/tb132fu-purepixel17-r1-k13)
 
-The patches are final net diffs against pinned AOSP `android17-release` project
-bases. They cover the legacy 4.19 BPF/ION/VINTF compatibility contract,
-Bluetooth handling, charger policy, TB132FU Settings/SystemUI integration,
-AOD/pen/cover behavior, refresh and cursor behavior, and the two narrow
-Android 17 Pixel Launcher platform hooks used by R1.
+## What is included
 
-## Scope and publication boundary
+The patch set covers:
 
-This is not a complete Android source tree or a standalone ROM. It contains no
-Google or Lenovo applications, GApps payloads, Pixel Launcher APK, proprietary
-vendor blobs, signing keys, partition images, device logs, recordings, or
-userdata. The optional Google/Pixel package composition used by Pure Pixel is
-intentionally separate and is not published here.
+- Android 17 support for the tablet's legacy 4.19 kernel
+- BPF, ION and VINTF compatibility
+- Bluetooth and charger fixes
+- TB132FU Settings and SystemUI features
+- pen, keyboard-cover and AOD behavior
+- refresh-rate, cursor and display behavior
+- the two small platform hooks used to fix the Pixel Launcher landscape QSB
+  return animation
 
-Thirteen projects have non-empty final patches. `system/apex` is retained in
-`PROJECTS.tsv` for exact R1 provenance, but its two temporary diagnostic commits
-cancel completely; its qualified tree equals the pinned AOSP base, so no patch
-or diagnostic instrumentation is published.
+These are the final R1 diffs, not the full bring-up history. Temporary tests and
+reverted experiments were left out. `system/apex` is listed in `PROJECTS.tsv`
+because it was part of the bring-up, but its final tree matches clean AOSP and
+there is no patch to apply.
 
-Several changes—especially the fixed-QSB handoff and transient-taskbar endpoint
-hooks in `frameworks/base`—are specific to the Android 17 CP2A/QPR baseline.
-They must be reviewed and retested rather than carried blindly onto a later QPR.
+## R1 base
 
-## Pinned inputs
+- AOSP branch: `android17-release`
+- Android build: `CP2A.260605.016`
+- Release tag: `purepixel17-r1-platform`
+- Project revisions and expected trees: `PROJECTS.tsv`
+- Patch checksums: `PATCHES.sha256`
 
-- AOSP branch family: `android17-release`
-- Pure Pixel build ID: `CP2A.260605.016`
-- R1 platform tag: `purepixel17-r1-platform`
-- Per-project base and qualified topic revisions: `PROJECTS.tsv`
-- Patch hashes: `PATCHES.sha256`
-
-`manifest/tb132fu-platform-bases.xml` contains only public AOSP project pins.
-It deliberately excludes the private Google/Pixel local manifest.
+The QSB/taskbar changes in `frameworks/base` are tied to this Android 17
+release. Check whether Google has fixed the original problem before carrying
+them into a later QPR.
 
 ## Applying the patches
 
-Start with a clean AOSP Android 17 checkout. Copy or symlink the included base
-manifest into `.repo/local_manifests`, sync the listed projects, and run the
-guarded apply helper:
+Start with a clean AOSP checkout. Add the pinned manifest, sync the affected
+projects, and run the helper:
 
 ```sh
 mkdir -p /path/to/aosp/.repo/local_manifests
@@ -63,19 +63,20 @@ cd /path/to/purepixel17-tb132fu-platform
 ./apply-patches.sh /path/to/aosp
 ```
 
-The helper fails unless every target project is clean and checked out at its
-exact pinned base. It verifies `PATCHES.sha256`, checks each patch before
-application, and confirms through an isolated temporary index that the result
-matches the exact qualified R1 Git tree. It leaves the checkout's real index
-untouched and does not commit, reset, clean, build, flash, or contact a device.
+The script intentionally refuses to patch a dirty or mismatched source tree.
+It checks the patch hashes and confirms that the result matches the exact R1
+Git tree. It does not commit anything, erase source, start a build or touch a
+connected device.
 
-After applying this platform set, add the public TB132FU device tree at
-`device/lenovo/tb132fu`, provide the locally required proprietary inputs
-described by that tree, and use the separately documented kernel/boot pipeline.
+Afterward, add the device tree at `device/lenovo/tb132fu` and supply the vendor
+files required for your own build.
 
-## Licensing
+## What is not included
 
-Repository-authored documentation and helper scripts are licensed under
-Apache-2.0. Each patch remains subject to the license and notices of its target
-AOSP project and files. No license or redistribution permission for external
-proprietary components is granted here.
+This is source code only. It does not contain a ROM, GApps, Pixel Launcher,
+Google or Lenovo APKs, vendor blobs, signing keys, device logs or user data.
+
+## License
+
+The README and helper script are Apache-2.0 licensed. Individual patches keep
+the licensing terms of the AOSP projects and files they modify.
