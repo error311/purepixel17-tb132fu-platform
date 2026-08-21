@@ -16,13 +16,25 @@ index 0000000000000000000000000000000000000000..20c7fb1fca0e63d07d9039cf5c16d9d0
 +        android:pathData="M19,1L5,1C3.34,1 2,2.34 2,4v16c0,1.66 1.34,3 3,3h14c1.66,0 3,-1.34 3,-3L22,4c0,-1.66 -1.34,-3 -3,-3zM12,21c-0.83,0 -1.5,-0.67 -1.5,-1.5S11.17,18 12,18s1.5,0.67 1.5,1.5S12.83,21 12,21zM20,16L4,16L4,4h16v12z" />
 +</vector>
 diff --git a/res/values/arrays.xml b/res/values/arrays.xml
-index e8ce91ab5b570eea26fd2ac17c28d5a817a4c2b5..8080a1c190442f64e7eae992c4d0fa22440ab5dc 100644
+index e8ce91ab5b570eea26fd2ac17c28d5a817a4c2b5..79a8224ebf29fcaf8f71cbb8a4f6606635ac92b7 100644
 --- a/res/values/arrays.xml
 +++ b/res/values/arrays.xml
-@@ -1796,4 +1796,16 @@
+@@ -1796,4 +1796,28 @@
          <item>Quick settings</item>
          <item>Lockscreen</item>
      </string-array>
++
++    <!-- TB132FU ambient display policy. -->
++    <string-array name="tb132fu_aod_mode_entries">
++        <item>@string/tb132fu_aod_mode_off</item>
++        <item>@string/tb132fu_aod_mode_pulse</item>
++        <item>@string/tb132fu_aod_mode_always</item>
++    </string-array>
++    <string-array name="tb132fu_aod_mode_values" translatable="false">
++        <item>off</item>
++        <item>pulse</item>
++        <item>always</item>
++    </string-array>
 +
 +    <!-- TB132FU display refresh policy. -->
 +    <string-array name="tb132fu_refresh_rate_entries">
@@ -36,11 +48,55 @@ index e8ce91ab5b570eea26fd2ac17c28d5a817a4c2b5..8080a1c190442f64e7eae992c4d0fa22
 +        <item>force_120</item>
 +    </string-array>
  </resources>
+diff --git a/res/values/config.xml b/res/values/config.xml
+index f836ad1be4a4c67bcbeda36388557b9e474b754a..8291d8a4c686a9bb3c3c2c40257a01f4e75ec02c 100644
+--- a/res/values/config.xml
++++ b/res/values/config.xml
+@@ -564,7 +564,7 @@
+     <!-- Grayscale settings intent -->
+     <string name="config_grayscale_settings_intent" translatable="false"></string>
+ 
+-    <!-- List containing the injected tile keys which are suppressed. -->
++    <!-- List containing injected tile keys or flattened component names which are suppressed. -->
+     <string-array name="config_suppress_injected_tile_keys" translatable="false"/>
+ 
+     <!-- Reset application package name -->
+@@ -646,6 +646,9 @@
+     <!-- Whether to show Smart Storage toggle -->
+     <bool name="config_show_smart_storage_toggle">true</bool>
+ 
++    <!-- Use a vendor MediaTek picture-quality HAL for selectable display color modes. -->
++    <bool name="config_use_mtk_pq_color_modes">false</bool>
++
+     <!-- Display settings screen, Color mode options. Must be the same length and order as
+          config_color_mode_options_values below. Only the values that also appear in
+          frameworks/base/core/res/res/values/config.xml's config_availableColorModes are shown. -->
+@@ -1094,6 +1097,9 @@
+     <!-- Whether to enable the device state app functions. -->
+     <bool name="config_device_state_app_functions_enabled">false</bool>
+ 
++    <!-- Whether the device exposes reliable battery gauge capacity and cycle data. -->
++    <bool name="config_show_battery_health_details">false</bool>
++
+     <!-- TODO(b/496286136): Whether to force showing the icon on the locale picker screen. -->
+     <bool name="config_force_showing_icon_on_locale_picker_screen">false</bool>
+ </resources>
 diff --git a/res/values/strings.xml b/res/values/strings.xml
-index 8246f5be5ae9a85b48e5ee7896bb912562d843fb..680b4f7174169a86a3dd57092472e81fd48df2e8 100644
+index 8246f5be5ae9a85b48e5ee7896bb912562d843fb..97d1d7e3f4adc1392d16cb0890a5e6a42131cb2d 100644
 --- a/res/values/strings.xml
 +++ b/res/values/strings.xml
-@@ -3658,6 +3658,12 @@
+@@ -3184,6 +3184,10 @@
+     <string name="color_mode_title">Colors</string>
+     <!-- Display settings screen, Color mode option for "natural(sRGB) color"  [CHAR LIMIT=45] -->
+     <string name="color_mode_option_natural">Natural</string>
++    <!-- Display color mode that uses the panel's standard color tuning. -->
++    <string name="color_mode_option_mtk_normal">Normal</string>
++    <!-- Display color mode with the panel's more saturated tuning. -->
++    <string name="color_mode_option_mtk_vibrant">Vibrant</string>
+     <!-- Display settings screen, Color mode option for "Boosted(sRGB + 10%) color"  [CHAR LIMIT=45] -->
+     <string name="color_mode_option_boosted">Boosted</string>
+     <!-- Display settings screen, Color mode option for "Saturated color"  [CHAR LIMIT=45] -->
+@@ -3658,6 +3662,12 @@
      <string name="kernel_version">Kernel version</string>
      <!-- About phone screen,  setting option name  [CHAR LIMIT=40] -->
      <string name="build_number">Build number</string>
@@ -53,7 +109,35 @@ index 8246f5be5ae9a85b48e5ee7896bb912562d843fb..680b4f7174169a86a3dd57092472e81f
      <!-- About phone screen, tapping this button will take user to a seperate UI to check Google Play system update [CHAR LIMIT=60] -->
      <string name="module_version">Google Play system update</string>
      <!-- About phone screen, show a list of battery information  [CHAR LIMIT=60] -->
-@@ -15590,4 +15596,27 @@
+@@ -3743,6 +3753,27 @@
+     <!-- About phone, status item title. The status summary for cycle count that's not available. [CHAR LIMIT=40] -->
+     <string name="battery_cycle_count_not_available">Unavailable</string>
+ 
++    <!-- Battery settings entry and detailed battery health screen. -->
++    <string name="battery_health_title">Battery health</string>
++    <string name="battery_health_summary">Estimated capacity, condition, and cycle count</string>
++    <string name="battery_health_maximum_capacity">Maximum capacity</string>
++    <string name="battery_health_full_charge_capacity">Estimated full-charge capacity</string>
++    <string name="battery_health_design_capacity">Design capacity</string>
++    <string name="battery_health_condition">Battery condition</string>
++    <string name="battery_health_percent"><xliff:g id="percentage" example="87">%1$d</xliff:g>%%</string>
++    <string name="battery_health_capacity_mah"><xliff:g id="capacity" example="6,993">%1$s</xliff:g> mAh</string>
++    <string name="battery_health_condition_good">Good</string>
++    <string name="battery_health_condition_overheat">Overheated</string>
++    <string name="battery_health_condition_dead">Needs service</string>
++    <string name="battery_health_condition_over_voltage">Over voltage</string>
++    <string name="battery_health_condition_failure">Unspecified failure</string>
++    <string name="battery_health_condition_cold">Cold</string>
++    <string name="battery_health_footer">Capacity is an estimate from the tablet’s fuel gauge and may change slightly with temperature and calibration.</string>
++    <string name="battery_health_care_category">Battery care</string>
++    <string name="battery_health_information_category">Battery information</string>
++    <string name="battery_health_google_settings_title">Charging optimization and health tips</string>
++    <string name="battery_health_google_settings_summary">Manage charging preferences and view battery care guidance</string>
++
+     <!-- SD card & phone storage settings summary. Displayed when the total memory usage is being calculated. Will be replaced with a number like "12.3 GB" when finished calucating. [CHAR LIMIT=30] -->
+     <string name="memory_calculating_size">Calculating\u2026</string>
+ 
+@@ -15590,4 +15621,29 @@
      <!-- Search keywords for Human interface device access setting -->
      <string name="keywords_access_hid">hid, human, access, device</string>
      <!-- Access HID end -->
@@ -63,7 +147,9 @@ index 8246f5be5ae9a85b48e5ee7896bb912562d843fb..680b4f7174169a86a3dd57092472e81f
 +    <string name="tb132fu_settings_summary">Display, wake, pen, and keyboard controls</string>
 +    <string name="tb132fu_display_and_wake">Display and wake</string>
 +    <string name="tb132fu_aod_title">Always-on display</string>
-+    <string name="tb132fu_aod_summary">Show time and notifications while the tablet is idle</string>
++    <string name="tb132fu_aod_mode_off">Off</string>
++    <string name="tb132fu_aod_mode_pulse">Pulse for notifications</string>
++    <string name="tb132fu_aod_mode_always">Always on (uses more battery)</string>
 +    <string name="tb132fu_dt2w_title">Double-tap to wake</string>
 +    <string name="tb132fu_dt2w_summary">Wake the screen by tapping it twice</string>
 +    <string name="tb132fu_aod_schedule_title">Show AOD during the day</string>
@@ -81,6 +167,77 @@ index 8246f5be5ae9a85b48e5ee7896bb912562d843fb..680b4f7174169a86a3dd57092472e81f
 +    <string name="tb132fu_build_info_title">Software</string>
 +    <string name="tb132fu_build_info_summary">Android %1$s · Linux %2$s</string>
  </resources>
+diff --git a/res/xml/battery_health.xml b/res/xml/battery_health.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..7e258cca412ceed280b37f276e84d35803f3c74a
+--- /dev/null
++++ b/res/xml/battery_health.xml
+@@ -0,0 +1,65 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!-- Copyright (C) 2026 The Android Open Source Project
++     SPDX-License-Identifier: Apache-2.0 -->
++<PreferenceScreen
++    xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:settings="http://schemas.android.com/apk/res-auto"
++    android:key="battery_health_screen"
++    android:title="@string/battery_health_title">
++
++    <PreferenceCategory
++        android:key="battery_health_care_category"
++        android:title="@string/battery_health_care_category">
++
++        <Preference
++            android:key="battery_health_google_settings"
++            android:title="@string/battery_health_google_settings_title"
++            android:summary="@string/battery_health_google_settings_summary"
++            settings:controller="com.android.settings.fuelgauge.GoogleBatteryHealthPreferenceController" />
++    </PreferenceCategory>
++
++    <PreferenceCategory
++        android:key="battery_health_information_category"
++        android:title="@string/battery_health_information_category">
++
++        <Preference
++            android:key="battery_health_maximum_capacity"
++            android:title="@string/battery_health_maximum_capacity"
++            android:summary="@string/summary_placeholder"
++            settings:controller="com.android.settings.fuelgauge.BatteryHealthDetailPreferenceController"
++            settings:enableCopying="true" />
++
++        <Preference
++            android:key="battery_health_full_charge_capacity"
++            android:title="@string/battery_health_full_charge_capacity"
++            android:summary="@string/summary_placeholder"
++            settings:controller="com.android.settings.fuelgauge.BatteryHealthDetailPreferenceController"
++            settings:enableCopying="true" />
++
++        <Preference
++            android:key="battery_health_design_capacity"
++            android:title="@string/battery_health_design_capacity"
++            android:summary="@string/summary_placeholder"
++            settings:controller="com.android.settings.fuelgauge.BatteryHealthDetailPreferenceController"
++            settings:enableCopying="true" />
++
++        <Preference
++            android:key="battery_health_cycle_count"
++            android:title="@string/battery_cycle_count"
++            android:summary="@string/summary_placeholder"
++            settings:controller="com.android.settings.fuelgauge.BatteryHealthDetailPreferenceController"
++            settings:enableCopying="true" />
++
++        <Preference
++            android:key="battery_health_condition"
++            android:title="@string/battery_health_condition"
++            android:summary="@string/summary_placeholder"
++            settings:controller="com.android.settings.fuelgauge.BatteryHealthDetailPreferenceController"
++            settings:enableCopying="true" />
++    </PreferenceCategory>
++
++    <com.android.settingslib.widget.FooterPreference
++        android:key="battery_health_footer"
++        android:title="@string/battery_health_footer"
++        settings:searchable="false" />
++</PreferenceScreen>
 diff --git a/res/xml/credman_dashboard_settings.xml b/res/xml/credman_dashboard_settings.xml
 index 09a60595a978d5d0b67e4e15a35f2cf8fcfb0da1..592d37bf9b9fa0b899b07156585c5291759b2293 100644
 --- a/res/xml/credman_dashboard_settings.xml
@@ -133,6 +290,24 @@ index 41f7733cfb2bf33e2e3ac859789dca1ca63a26ae..1ae48b4f0d0f45fca11769bf14ed2376
      <!-- Android version -->
      <Preference
          android:key="os_firmware_version"
+diff --git a/res/xml/power_usage_summary.xml b/res/xml/power_usage_summary.xml
+index 4890560e3f71abe9ee3488bee1a9389db7fe808d..a0fc3208df57aa1a287a71fa89ed19cc96b041ac 100644
+--- a/res/xml/power_usage_summary.xml
++++ b/res/xml/power_usage_summary.xml
+@@ -66,6 +66,13 @@
+             android:title="@string/smart_battery_manager_title"
+             settings:controller="com.android.settings.fuelgauge.batterytip.BatteryManagerPreferenceController"
+             settings:keywords="@string/keywords_battery_adaptive_preferences" />
++
++        <Preference
++            android:fragment="com.android.settings.fuelgauge.BatteryHealthFragment"
++            android:key="battery_health"
++            android:title="@string/battery_health_title"
++            android:summary="@string/battery_health_summary"
++            settings:controller="com.android.settings.fuelgauge.BatteryHealthEntryPreferenceController" />
+     </com.android.settingslib.widget.UntitledPreferenceCategory>
+ 
+     <com.android.settingslib.widget.UntitledPreferenceCategory
 diff --git a/res/xml/system_dashboard_fragment.xml b/res/xml/system_dashboard_fragment.xml
 index 3dae93a4d867d32d3b54bc9c31158b86d480d648..c6144671f5da2d77dbafeddc088c187dcfa143fe 100644
 --- a/res/xml/system_dashboard_fragment.xml
@@ -173,24 +348,25 @@ index e0cb8cf38135608304d450d706ee5eac62e28043..35d1512850b0b37c9c67032f87ab1427
              android:title="@string/date_and_time"
 diff --git a/res/xml/tb132fu_settings.xml b/res/xml/tb132fu_settings.xml
 new file mode 100644
-index 0000000000000000000000000000000000000000..db62265d9363a97bb11aea7620212d7dd4c499aa
+index 0000000000000000000000000000000000000000..18500af20063ac482ace5e2c8fe69932b23053e5
 --- /dev/null
 +++ b/res/xml/tb132fu_settings.xml
-@@ -0,0 +1,41 @@
+@@ -0,0 +1,42 @@
 +<?xml version="1.0" encoding="utf-8"?>
 +<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 +    <PreferenceCategory android:title="@string/tb132fu_display_and_wake">
-+        <SwitchPreferenceCompat
-+            android:key="tb132fu_aod"
++        <ListPreference
++            android:key="tb132fu_aod_mode"
 +            android:title="@string/tb132fu_aod_title"
-+            android:summary="@string/tb132fu_aod_summary" />
++            android:entries="@array/tb132fu_aod_mode_entries"
++            android:entryValues="@array/tb132fu_aod_mode_values"
++            android:defaultValue="pulse" />
 +        <SwitchPreferenceCompat
 +            android:key="tb132fu_dt2w"
 +            android:title="@string/tb132fu_dt2w_title"
 +            android:summary="@string/tb132fu_dt2w_summary" />
 +        <SwitchPreferenceCompat
 +            android:key="tb132fu_aod_twilight_schedule"
-+            android:dependency="tb132fu_aod"
 +            android:title="@string/tb132fu_aod_schedule_title"
 +            android:summary="@string/tb132fu_aod_schedule_summary" />
 +        <ListPreference
@@ -262,10 +438,18 @@ index 73fef1bcedc0b7c1993d0471f46499b197806443..0c141b6bbfe025691927fdeacd2f907d
          replaceEnterpriseStringTitle(screen, "auto_sync_personal_account_data",
                  AUTO_SYNC_PERSONAL_DATA, R.string.account_settings_menu_auto_sync_personal);
 diff --git a/src/com/android/settings/core/gateway/SettingsGateway.java b/src/com/android/settings/core/gateway/SettingsGateway.java
-index 2a05a30620ce5852437602d2bf2370f645463f55..a1b297ef2c633f3173331628025f525b20504d90 100644
+index 2a05a30620ce5852437602d2bf2370f645463f55..9de3d79f7d3b43754d7a1dc196cc469245ee544f 100644
 --- a/src/com/android/settings/core/gateway/SettingsGateway.java
 +++ b/src/com/android/settings/core/gateway/SettingsGateway.java
-@@ -206,6 +206,7 @@ import com.android.settings.support.SupportDashboardActivity;
+@@ -115,6 +115,7 @@ import com.android.settings.display.darkmode.DarkModeSettingsFragment;
+ import com.android.settings.dream.DreamSettings;
+ import com.android.settings.enterprise.EnterprisePrivacySettings;
+ import com.android.settings.fuelgauge.AdvancedPowerUsageDetail;
++import com.android.settings.fuelgauge.BatteryHealthFragment;
+ import com.android.settings.fuelgauge.batterysaver.BatterySaverScheduleSettings;
+ import com.android.settings.fuelgauge.batterysaver.BatterySaverSettings;
+ import com.android.settings.fuelgauge.batteryusage.PowerUsageAdvanced;
+@@ -206,6 +207,7 @@ import com.android.settings.support.SupportDashboardActivity;
  import com.android.settings.system.ResetDashboardFragment;
  import com.android.settings.system.ShadePanelsFragment;
  import com.android.settings.system.SystemDashboardFragment;
@@ -273,7 +457,7 @@ index 2a05a30620ce5852437602d2bf2370f645463f55..a1b297ef2c633f3173331628025f525b
  import com.android.settings.tts.TextToSpeechSettings;
  import com.android.settings.users.UserSettings;
  import com.android.settings.vpn2.VpnSettings;
-@@ -364,6 +365,7 @@ public class SettingsGateway {
+@@ -364,6 +366,7 @@ public class SettingsGateway {
              AutomaticStorageManagerSettings.class.getName(),
              StorageDashboardFragment.class.getName(),
              SystemDashboardFragment.class.getName(),
@@ -281,6 +465,41 @@ index 2a05a30620ce5852437602d2bf2370f645463f55..a1b297ef2c633f3173331628025f525b
              NetworkDashboardFragment.class.getName(),
              ConnectedDeviceDashboardFragment.class.getName(),
              UsbDetailsFragment.class.getName(),
+@@ -409,6 +412,7 @@ public class SettingsGateway {
+             MeasurementSystemItemFragment.class.getName(),
+             NumberingSystemLocaleListFragment.class.getName(),
+             BatteryInfoFragment.class.getName(),
++            BatteryHealthFragment.class.getName(),
+             UserAspectRatioDetails.class.getName(),
+             ScreenTimeoutSettings.class.getName(),
+             ResetNetwork.class.getName(),
+diff --git a/src/com/android/settings/dashboard/DashboardFragment.java b/src/com/android/settings/dashboard/DashboardFragment.java
+index b55de4b74469b2d10c5dc97d92bddf9e3df604da..4435cc9722290598754f13739a118b3b382ec38c 100644
+--- a/src/com/android/settings/dashboard/DashboardFragment.java
++++ b/src/com/android/settings/dashboard/DashboardFragment.java
+@@ -371,9 +371,19 @@ public abstract class DashboardFragment extends SettingsPreferenceFragment
+      */
+     @CallSuper
+     protected boolean displayTile(Tile tile) {
+-        if (mSuppressInjectedTileKeys != null && tile.hasKey()) {
+-            // For suppressing injected tiles for OEMs.
+-            return !mSuppressInjectedTileKeys.contains(tile.getKey(getContext()));
++        if (mSuppressInjectedTileKeys != null) {
++            // For suppressing injected tiles for OEMs. Some external tiles do not declare a
++            // preference key, so also allow the component's flattened name in this list.
++            if (tile.hasKey()
++                    && mSuppressInjectedTileKeys.contains(tile.getKey(getContext()))) {
++                return false;
++            }
++            final Intent tileIntent = tile.getIntent();
++            if (tileIntent != null && tileIntent.getComponent() != null
++                    && mSuppressInjectedTileKeys.contains(
++                            tileIntent.getComponent().flattenToString())) {
++                return false;
++            }
+         }
+         return true;
+     }
 diff --git a/src/com/android/settings/deviceinfo/firmwareversion/FirmwareVersionScreen.kt b/src/com/android/settings/deviceinfo/firmwareversion/FirmwareVersionScreen.kt
 index 8948b33174ce6666460b072fc84f6f431efad3a7..543269241a9caa9c1ae08359bea8da4a5ef18d72 100644
 --- a/src/com/android/settings/deviceinfo/firmwareversion/FirmwareVersionScreen.kt
@@ -377,7 +596,7 @@ index 0000000000000000000000000000000000000000..0558ad1c41a4a9a3f7d1db615c060ac1
 +        summaryRes = R.string.pure_pixel_maintainer_summary,
 +    )
 diff --git a/src/com/android/settings/display/ColorModeApiScreen.kt b/src/com/android/settings/display/ColorModeApiScreen.kt
-index a15b02d6357a37b040dbac95e661c6997a75539b..0ac435989016ace9f2515ddb5a47311ba78449f6 100644
+index a15b02d6357a37b040dbac95e661c6997a75539b..88b93fb2fb1dbed15f71fbb72c758a202e34024e 100644
 --- a/src/com/android/settings/display/ColorModeApiScreen.kt
 +++ b/src/com/android/settings/display/ColorModeApiScreen.kt
 @@ -53,7 +53,9 @@ class ColorModeApiScreen :
@@ -387,12 +606,27 @@ index a15b02d6357a37b040dbac95e661c6997a75539b..0ac435989016ace9f2515ddb5a47311b
 -            if (!context.colorDisplayManager.isDeviceColorManaged) {
 +            if (ColorModeUtils.getAvailableColorModes(context).size <= 1) {
 +                HardwareUnsupported("The device does not expose multiple selectable color modes")
-+            } else if (!context.colorDisplayManager.isDeviceColorManaged) {
++            } else if (!ColorModeUtils.isColorModeSupported(context)) {
                  HardwareUnsupported("The device does not have a wide color gamut display")
              } else if (ColorDisplayManager.areAccessibilityTransformsEnabled(context)) {
                  Custom(R.string.color_mode_unsupported, stability = PreconditionStability.UNSTABLE)
+@@ -81,7 +83,13 @@ class ColorModeApiScreen :
+             purpose = R.string.color_mode_purpose,
+         ) {
+             get { execute { ColorModeUtils.getColorMode(context) } }
+-            set { execute { value -> context.colorDisplayManager.let { it.setColorMode(value) } } }
++            set {
++                execute { value ->
++                    check(ColorModeUtils.setColorMode(context, value)) {
++                        "Unable to apply color mode"
++                    }
++                }
++            }
+         }
+     }
+ 
 diff --git a/src/com/android/settings/display/ColorModePreferenceController.java b/src/com/android/settings/display/ColorModePreferenceController.java
-index 5d74948e8a91d88fdc3e83a57edb167b0c38e3dc..b34d4c40a1bc93247459ff7b105c7a44faad4137 100644
+index 5d74948e8a91d88fdc3e83a57edb167b0c38e3dc..bba7f872b6a1b53d34ba3173b35f17fccba294e0 100644
 --- a/src/com/android/settings/display/ColorModePreferenceController.java
 +++ b/src/com/android/settings/display/ColorModePreferenceController.java
 @@ -53,10 +53,15 @@ public class ColorModePreferenceController extends BasePreferenceController
@@ -409,17 +643,121 @@ index 5d74948e8a91d88fdc3e83a57edb167b0c38e3dc..b34d4c40a1bc93247459ff7b105c7a44
 +        if (ColorModeUtils.getAvailableColorModes(mContext).length <= 1) {
 +            return UNSUPPORTED_ON_DEVICE;
 +        }
-+        return mContext.getSystemService(ColorDisplayManager.class).isDeviceColorManaged()
++        return ColorModeUtils.isColorModeSupported(mContext)
 +                && !ColorDisplayManager.areAccessibilityTransformsEnabled(mContext)
 +                ? AVAILABLE : DISABLED_FOR_USER;
      }
  
      @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
+@@ -65,6 +70,12 @@ public class ColorModePreferenceController extends BasePreferenceController
+                 Settings.System.getUriFor(Settings.System.DISPLAY_COLOR_MODE),
+                 /* notifyForDescendants= */ false,
+                 mContentObserver);
++        if (ColorModeUtils.isMtkPqColorModeSupported(mContext)) {
++            mContext.getContentResolver().registerContentObserver(
++                    Settings.Secure.getUriFor(MtkPqColorModeManager.SETTING_KEY),
++                    /* notifyForDescendants= */ false,
++                    mContentObserver);
++        }
+     }
+ 
+     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+diff --git a/src/com/android/settings/display/ColorModePreferenceFragment.java b/src/com/android/settings/display/ColorModePreferenceFragment.java
+index 3469a48ac06f6106083a835d7c7fa0962f80f3d6..95c2f569758a8f111b006b824d67cd503255f52c 100644
+--- a/src/com/android/settings/display/ColorModePreferenceFragment.java
++++ b/src/com/android/settings/display/ColorModePreferenceFragment.java
+@@ -13,12 +13,7 @@
+  */
+ package com.android.settings.display;
+ 
+-import static android.hardware.display.ColorDisplayManager.COLOR_MODE_AUTOMATIC;
+-import static android.hardware.display.ColorDisplayManager.COLOR_MODE_BOOSTED;
+ import static android.hardware.display.ColorDisplayManager.COLOR_MODE_NATURAL;
+-import static android.hardware.display.ColorDisplayManager.COLOR_MODE_SATURATED;
+-import static android.hardware.display.ColorDisplayManager.VENDOR_COLOR_MODE_RANGE_MAX;
+-import static android.hardware.display.ColorDisplayManager.VENDOR_COLOR_MODE_RANGE_MIN;
+ 
+ import android.app.settings.SettingsEnums;
+ import android.content.ContentResolver;
+@@ -75,7 +70,6 @@ public class ColorModePreferenceFragment extends RadioButtonPickerFragment {
+     private static final int DOT_INDICATOR_RIGHT_PADDING = 6;
+ 
+     private ContentObserver mContentObserver;
+-    private ColorDisplayManager mColorDisplayManager;
+     private Resources mResources;
+ 
+     private View mViewArrowPrevious;
+@@ -91,7 +85,6 @@ public class ColorModePreferenceFragment extends RadioButtonPickerFragment {
+     public void onAttach(Context context) {
+         super.onAttach(context);
+ 
+-        mColorDisplayManager = context.getSystemService(ColorDisplayManager.class);
+         mResources = context.getResources();
+ 
+         final ContentResolver cr = context.getContentResolver();
+@@ -261,9 +254,9 @@ public class ColorModePreferenceFragment extends RadioButtonPickerFragment {
+     protected boolean setDefaultKey(String key) {
+         int colorMode = Integer.parseInt(key.substring(key.lastIndexOf("_") + 1));
+         if (isValidColorMode(colorMode)) {
+-            setColorMode(colorMode);
++            return setColorMode(colorMode);
+         }
+-        return true;
++        return false;
+     }
+ 
+     @Override
+@@ -276,15 +269,15 @@ public class ColorModePreferenceFragment extends RadioButtonPickerFragment {
+      */
+     @VisibleForTesting
+     public int getColorMode() {
+-        return mColorDisplayManager.getColorMode();
++        return ColorModeUtils.getColorMode(getContext());
+     }
+ 
+     /**
+      * Wraps ColorDisplayManager#setColorMode for substitution in testing.
+      */
+     @VisibleForTesting
+-    public void setColorMode(int colorMode) {
+-        mColorDisplayManager.setColorMode(colorMode);
++    public boolean setColorMode(int colorMode) {
++        return ColorModeUtils.setColorMode(getContext(), colorMode);
+     }
+ 
+     @Override
+@@ -298,12 +291,12 @@ public class ColorModePreferenceFragment extends RadioButtonPickerFragment {
+     }
+ 
+     private boolean isValidColorMode(int colorMode) {
+-        return colorMode == COLOR_MODE_NATURAL
+-                || colorMode == COLOR_MODE_BOOSTED
+-                || colorMode == COLOR_MODE_SATURATED
+-                || colorMode == COLOR_MODE_AUTOMATIC
+-                || (colorMode >= VENDOR_COLOR_MODE_RANGE_MIN
+-                && colorMode <= VENDOR_COLOR_MODE_RANGE_MAX);
++        for (int availableMode : ColorModeUtils.getAvailableColorModes(getContext())) {
++            if (colorMode == availableMode) {
++                return true;
++            }
++        }
++        return false;
+     }
+ 
+     @VisibleForTesting
 diff --git a/src/com/android/settings/display/ColorModeScreen.kt b/src/com/android/settings/display/ColorModeScreen.kt
-index a430df86e16b4b23e5a037e87aba8e9c289c2af5..9fe83362efe5fd9c18caaf692b7334ee038e701c 100644
+index a430df86e16b4b23e5a037e87aba8e9c289c2af5..ae9f7a3a2ab60593e2ae586d17a1cd7bb6c53e8d 100644
 --- a/src/com/android/settings/display/ColorModeScreen.kt
 +++ b/src/com/android/settings/display/ColorModeScreen.kt
-@@ -80,13 +80,15 @@ open class ColorModeScreen :
+@@ -30,6 +30,7 @@ import com.android.settingslib.datastore.HandlerExecutor
+ import com.android.settingslib.datastore.KeyValueStore
+ import com.android.settingslib.datastore.KeyedObserver
+ import com.android.settingslib.datastore.SettingsSystemStore
++import com.android.settingslib.datastore.SettingsSecureStore
+ import com.android.settingslib.metadata.METADATA_IN_UI
+ import com.android.settingslib.metadata.PersistentPreference
+ import com.android.settingslib.metadata.PreferenceAvailabilityProvider
+@@ -80,13 +81,14 @@ open class ColorModeScreen :
      private var settingsKeyedObserver: KeyedObserver<String>? = null
  
      override val availabilityDescription =
@@ -430,13 +768,488 @@ index a430df86e16b4b23e5a037e87aba8e9c289c2af5..9fe83362efe5fd9c18caaf692b7334ee
      override fun getAvailabilityStability() = PreconditionStability.UNSTABLE
  
      override fun isAvailable(context: Context): Boolean {
-         val colorManager = context.getSystemService(ColorDisplayManager::class.java) ?: return false
+-        val colorManager = context.getSystemService(ColorDisplayManager::class.java) ?: return false
 -        return colorManager.isDeviceColorManaged &&
 +        return ColorModeUtils.getAvailableColorModes(context).size > 1 &&
-+            colorManager.isDeviceColorManaged &&
++            ColorModeUtils.isColorModeSupported(context) &&
              !ColorDisplayManager.areAccessibilityTransformsEnabled(context)
      }
  
+@@ -101,6 +103,10 @@ open class ColorModeScreen :
+             settingsKeyedObserver = observer
+             val storage = SettingsSystemStore.get(context)
+             storage.addObserver(DISPLAY_COLOR_MODE, observer, HandlerExecutor.main)
++            if (ColorModeUtils.isMtkPqColorModeSupported(context)) {
++                SettingsSecureStore.get(context).addObserver(
++                    MtkPqColorModeManager.SETTING_KEY, observer, HandlerExecutor.main)
++            }
+         }
+     }
+ 
+@@ -109,6 +115,10 @@ open class ColorModeScreen :
+             settingsKeyedObserver?.let {
+                 val storage = SettingsSystemStore.get(context)
+                 storage.removeObserver(DISPLAY_COLOR_MODE, it)
++                if (ColorModeUtils.isMtkPqColorModeSupported(context)) {
++                    SettingsSecureStore.get(context).removeObserver(
++                        MtkPqColorModeManager.SETTING_KEY, it)
++                }
+                 settingsKeyedObserver = null
+             }
+         }
+diff --git a/src/com/android/settings/display/ColorModeUtils.kt b/src/com/android/settings/display/ColorModeUtils.kt
+index 01a6a50c0fe1a0fe76ca31ecfabb6b9b3664df22..594259a8b3646e64671633c809d0c2d58782ed1d 100644
+--- a/src/com/android/settings/display/ColorModeUtils.kt
++++ b/src/com/android/settings/display/ColorModeUtils.kt
+@@ -19,8 +19,6 @@ import android.content.Context
+ import android.content.res.Resources
+ import android.hardware.display.ColorDisplayManager
+ import android.hardware.display.ColorDisplayManager.*
+-import android.util.Log
+-
+ import com.android.settings.R
+ 
+ object ColorModeUtils {
+@@ -29,6 +27,16 @@ object ColorModeUtils {
+ 
+     @JvmStatic
+     fun getColorModeMapping(resources: Resources): Map<Int, String> {
++        if (resources.getBoolean(R.bool.config_use_mtk_pq_color_modes)) {
++            return linkedMapOf(
++                MtkPqColorModeManager.MODE_NORMAL to
++                    resources.getString(R.string.color_mode_option_mtk_normal),
++                MtkPqColorModeManager.MODE_VIBRANT to
++                    resources.getString(R.string.color_mode_option_mtk_vibrant),
++                MtkPqColorModeManager.MODE_NATURAL to
++                    resources.getString(R.string.color_mode_option_natural),
++            )
++        }
+         val colorModeOptionsStrings = resources.getStringArray(
+                 R.array.config_color_mode_options_strings
+         )
+@@ -52,8 +60,20 @@ object ColorModeUtils {
+     }
+ 
+     @JvmStatic
+-    fun getColorMode(context: Context): Int =
+-            context.getSystemService(ColorDisplayManager::class.java).colorMode
++    fun getColorMode(context: Context): Int = if (isMtkPqColorModeSupported(context)) {
++        MtkPqColorModeManager.getColorMode(context)
++    } else {
++        context.getSystemService(ColorDisplayManager::class.java).colorMode
++    }
++
++    @JvmStatic
++    fun setColorMode(context: Context, colorMode: Int): Boolean =
++        if (isMtkPqColorModeSupported(context)) {
++            MtkPqColorModeManager.setColorMode(context, colorMode)
++        } else {
++            context.getSystemService(ColorDisplayManager::class.java).setColorMode(colorMode)
++            true
++        }
+ 
+     @JvmStatic
+     fun getActiveColorModeName(context: Context): String =
+@@ -61,5 +81,24 @@ object ColorModeUtils {
+ 
+     @JvmStatic
+     fun getAvailableColorModes(context: Context): IntArray =
+-        context.getResources().getIntArray(com.android.internal.R.array.config_availableColorModes)
+-}
+\ No newline at end of file
++        if (isMtkPqColorModeSupported(context)) {
++            intArrayOf(
++                MtkPqColorModeManager.MODE_NORMAL,
++                MtkPqColorModeManager.MODE_VIBRANT,
++                MtkPqColorModeManager.MODE_NATURAL,
++            )
++        } else {
++            context.resources.getIntArray(com.android.internal.R.array.config_availableColorModes)
++        }
++
++    @JvmStatic
++    fun isMtkPqColorModeSupported(context: Context): Boolean =
++        MtkPqColorModeManager.isSupported(context)
++
++    @JvmStatic
++    fun isColorModeSupported(context: Context): Boolean {
++        if (isMtkPqColorModeSupported(context)) return true
++        val colorManager = context.getSystemService(ColorDisplayManager::class.java) ?: return false
++        return colorManager.isDeviceColorManaged
++    }
++}
+diff --git a/src/com/android/settings/display/MtkPqColorModeManager.java b/src/com/android/settings/display/MtkPqColorModeManager.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..493ebf3cca5383c17c5d8b59f623c66d7f9fc35d
+--- /dev/null
++++ b/src/com/android/settings/display/MtkPqColorModeManager.java
+@@ -0,0 +1,124 @@
++/*
++ * Copyright (C) 2026 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package com.android.settings.display;
++
++import android.content.Context;
++import android.os.HwBinder;
++import android.os.HwParcel;
++import android.os.IHwBinder;
++import android.os.RemoteException;
++import android.provider.Settings;
++import android.util.Log;
++
++import androidx.annotation.VisibleForTesting;
++
++import com.android.settings.R;
++
++import java.util.NoSuchElementException;
++
++/** Bridges the TB132FU color choices to MediaTek's picture-quality HAL. */
++final class MtkPqColorModeManager {
++    static final String SETTING_KEY = "mtk_color_mode";
++
++    static final int MODE_NORMAL = 0;
++    static final int MODE_VIBRANT = 1;
++    static final int MODE_NATURAL = 2;
++    static final int DEFAULT_MODE = MODE_VIBRANT;
++
++    private static final String TAG = "MtkPqColorMode";
++    private static final String SERVICE_INTERFACE =
++            "vendor.mediatek.hardware.pq@2.15::IPictureQuality";
++    private static final String METHOD_INTERFACE =
++            "vendor.mediatek.hardware.pq@2.0::IPictureQuality";
++    private static final String SERVICE_INSTANCE = "default";
++    private static final int TRANSACTION_SET_PQ_MODE = 3;
++
++    private MtkPqColorModeManager() {}
++
++    static boolean isSupported(Context context) {
++        return context.getResources().getBoolean(R.bool.config_use_mtk_pq_color_modes);
++    }
++
++    static int getColorMode(Context context) {
++        return Settings.Secure.getInt(context.getContentResolver(), SETTING_KEY, DEFAULT_MODE);
++    }
++
++    static boolean setColorMode(Context context, int mode) {
++        return setColorMode(context, mode, MtkPqColorModeManager::applyColorMode);
++    }
++
++    @VisibleForTesting
++    static boolean setColorMode(Context context, int mode, ColorModeApplier applier) {
++        if (!isValidMode(mode)) {
++            Log.w(TAG, "Rejecting invalid color mode " + mode);
++            return false;
++        }
++
++        final int previousMode = getColorMode(context);
++        if (!applier.apply(mode)) {
++            return false;
++        }
++        if (Settings.Secure.putInt(context.getContentResolver(), SETTING_KEY, mode)) {
++            return true;
++        }
++
++        Log.e(TAG, "Could not persist color mode; restoring the previous mode");
++        if (isValidMode(previousMode) && !applier.apply(previousMode)) {
++            Log.e(TAG, "Could not restore the previous color mode");
++        }
++        return false;
++    }
++
++    private static boolean applyColorMode(int mode) {
++        HwParcel request = null;
++        HwParcel reply = null;
++        try {
++            final IHwBinder service = HwBinder.getService(
++                    SERVICE_INTERFACE, SERVICE_INSTANCE);
++            request = new HwParcel();
++            reply = new HwParcel();
++            request.writeInterfaceToken(METHOD_INTERFACE);
++            request.writeInt32(mode);
++            request.writeInt32(0);
++            service.transact(TRANSACTION_SET_PQ_MODE, request, reply, 0);
++            reply.verifySuccess();
++            return true;
++        } catch (RemoteException | NoSuchElementException | SecurityException e) {
++            Log.e(TAG, "Could not apply color mode " + mode, e);
++            return false;
++        } catch (RuntimeException e) {
++            Log.e(TAG, "Picture-quality HAL rejected color mode " + mode, e);
++            return false;
++        } finally {
++            if (request != null) {
++                request.releaseTemporaryStorage();
++                request.release();
++            }
++            if (reply != null) {
++                reply.release();
++            }
++        }
++    }
++
++    private static boolean isValidMode(int mode) {
++        return mode >= MODE_NORMAL && mode <= MODE_NATURAL;
++    }
++
++    @VisibleForTesting
++    interface ColorModeApplier {
++        boolean apply(int mode);
++    }
++}
+diff --git a/src/com/android/settings/fuelgauge/BatteryHealthDetailPreferenceController.java b/src/com/android/settings/fuelgauge/BatteryHealthDetailPreferenceController.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..e496d0be8133260dcd15ceb2d35bb0847ebda3c9
+--- /dev/null
++++ b/src/com/android/settings/fuelgauge/BatteryHealthDetailPreferenceController.java
+@@ -0,0 +1,103 @@
++/*
++ * Copyright (C) 2026 The Android Open Source Project
++ * SPDX-License-Identifier: Apache-2.0
++ */
++package com.android.settings.fuelgauge;
++
++import android.content.Context;
++import android.content.Intent;
++import android.os.BatteryManager;
++
++import com.android.settings.R;
++import com.android.settings.core.BasePreferenceController;
++import com.android.settingslib.fuelgauge.BatteryUtils;
++
++import java.text.NumberFormat;
++
++/** Supplies framework-owned fuel-gauge data to the battery health screen. */
++public class BatteryHealthDetailPreferenceController extends BasePreferenceController {
++    static final String KEY_MAXIMUM_CAPACITY = "battery_health_maximum_capacity";
++    static final String KEY_FULL_CHARGE_CAPACITY = "battery_health_full_charge_capacity";
++    static final String KEY_DESIGN_CAPACITY = "battery_health_design_capacity";
++    static final String KEY_CYCLE_COUNT = "battery_health_cycle_count";
++    static final String KEY_CONDITION = "battery_health_condition";
++
++    private static final int INVALID_VALUE = -1;
++
++    public BatteryHealthDetailPreferenceController(Context context, String preferenceKey) {
++        super(context, preferenceKey);
++    }
++
++    @Override
++    public int getAvailabilityStatus() {
++        return AVAILABLE;
++    }
++
++    @Override
++    public CharSequence getSummary() {
++        final Intent batteryIntent = BatteryUtils.getBatteryIntent(mContext);
++        if (batteryIntent == null) {
++            return unavailable();
++        }
++
++        final int fullCapacityUah = batteryIntent.getIntExtra(
++                BatteryManager.EXTRA_FULL_CHARGE_CAPACITY_UAH, INVALID_VALUE);
++        final int designCapacityUah = batteryIntent.getIntExtra(
++                BatteryManager.EXTRA_DESIGN_CAPACITY_UAH, INVALID_VALUE);
++
++        switch (getPreferenceKey()) {
++            case KEY_MAXIMUM_CAPACITY:
++                if (fullCapacityUah <= 0 || designCapacityUah <= 0) {
++                    return unavailable();
++                }
++                final int percent = Math.min(100, Math.max(0,
++                        (int) Math.round(fullCapacityUah * 100.0 / designCapacityUah)));
++                return mContext.getString(R.string.battery_health_percent, percent);
++            case KEY_FULL_CHARGE_CAPACITY:
++                return formatCapacity(fullCapacityUah);
++            case KEY_DESIGN_CAPACITY:
++                return formatCapacity(designCapacityUah);
++            case KEY_CYCLE_COUNT:
++                final int cycleCount = batteryIntent.getIntExtra(
++                        BatteryManager.EXTRA_CYCLE_COUNT, INVALID_VALUE);
++                return cycleCount < 0 ? unavailable() : Integer.toString(cycleCount);
++            case KEY_CONDITION:
++                return formatCondition(batteryIntent.getIntExtra(
++                        BatteryManager.EXTRA_HEALTH, BatteryManager.BATTERY_HEALTH_UNKNOWN));
++            default:
++                return unavailable();
++        }
++    }
++
++    private CharSequence formatCapacity(int capacityUah) {
++        if (capacityUah <= 0) {
++            return unavailable();
++        }
++        final String capacityMah = NumberFormat.getIntegerInstance()
++                .format(Math.round(capacityUah / 1000.0));
++        return mContext.getString(R.string.battery_health_capacity_mah, capacityMah);
++    }
++
++    private CharSequence formatCondition(int condition) {
++        switch (condition) {
++            case BatteryManager.BATTERY_HEALTH_GOOD:
++                return mContext.getText(R.string.battery_health_condition_good);
++            case BatteryManager.BATTERY_HEALTH_OVERHEAT:
++                return mContext.getText(R.string.battery_health_condition_overheat);
++            case BatteryManager.BATTERY_HEALTH_DEAD:
++                return mContext.getText(R.string.battery_health_condition_dead);
++            case BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE:
++                return mContext.getText(R.string.battery_health_condition_over_voltage);
++            case BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE:
++                return mContext.getText(R.string.battery_health_condition_failure);
++            case BatteryManager.BATTERY_HEALTH_COLD:
++                return mContext.getText(R.string.battery_health_condition_cold);
++            default:
++                return unavailable();
++        }
++    }
++
++    private CharSequence unavailable() {
++        return mContext.getText(R.string.battery_cycle_count_not_available);
++    }
++}
+diff --git a/src/com/android/settings/fuelgauge/BatteryHealthEntryPreferenceController.java b/src/com/android/settings/fuelgauge/BatteryHealthEntryPreferenceController.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..7e6a02f076aa20cb0f4f828090389dd8e6664298
+--- /dev/null
++++ b/src/com/android/settings/fuelgauge/BatteryHealthEntryPreferenceController.java
+@@ -0,0 +1,24 @@
++/*
++ * Copyright (C) 2026 The Android Open Source Project
++ * SPDX-License-Identifier: Apache-2.0
++ */
++package com.android.settings.fuelgauge;
++
++import android.content.Context;
++
++import com.android.settings.R;
++import com.android.settings.core.BasePreferenceController;
++
++/** Controls whether the battery health page is exposed by this product. */
++public class BatteryHealthEntryPreferenceController extends BasePreferenceController {
++
++    public BatteryHealthEntryPreferenceController(Context context, String preferenceKey) {
++        super(context, preferenceKey);
++    }
++
++    @Override
++    public int getAvailabilityStatus() {
++        return mContext.getResources().getBoolean(R.bool.config_show_battery_health_details)
++                ? AVAILABLE : UNSUPPORTED_ON_DEVICE;
++    }
++}
+diff --git a/src/com/android/settings/fuelgauge/BatteryHealthFragment.java b/src/com/android/settings/fuelgauge/BatteryHealthFragment.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..f7de91693ee2e3e773d42fc8590adb77c7aedeca
+--- /dev/null
++++ b/src/com/android/settings/fuelgauge/BatteryHealthFragment.java
+@@ -0,0 +1,43 @@
++/*
++ * Copyright (C) 2026 The Android Open Source Project
++ * SPDX-License-Identifier: Apache-2.0
++ */
++package com.android.settings.fuelgauge;
++
++import android.app.settings.SettingsEnums;
++import android.content.Context;
++
++import com.android.settings.R;
++import com.android.settings.dashboard.DashboardFragment;
++import com.android.settings.search.BaseSearchIndexProvider;
++import com.android.settingslib.search.SearchIndexable;
++
++/** Displays capacity, condition, and charge-cycle data reported by the fuel gauge. */
++@SearchIndexable
++public class BatteryHealthFragment extends DashboardFragment {
++    private static final String TAG = "BatteryHealth";
++
++    @Override
++    public int getMetricsCategory() {
++        return SettingsEnums.SETTINGS_BATTERY_INFORMATION;
++    }
++
++    @Override
++    protected int getPreferenceScreenResId() {
++        return R.xml.battery_health;
++    }
++
++    @Override
++    protected String getLogTag() {
++        return TAG;
++    }
++
++    public static final BaseSearchIndexProvider SEARCH_INDEX_DATA_PROVIDER =
++            new BaseSearchIndexProvider(R.xml.battery_health) {
++                @Override
++                protected boolean isPageSearchEnabled(Context context) {
++                    return context.getResources().getBoolean(
++                            R.bool.config_show_battery_health_details);
++                }
++            };
++}
+diff --git a/src/com/android/settings/fuelgauge/GoogleBatteryHealthPreferenceController.java b/src/com/android/settings/fuelgauge/GoogleBatteryHealthPreferenceController.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..2d549c3c09187aa15ee986eb626b791b031201ac
+--- /dev/null
++++ b/src/com/android/settings/fuelgauge/GoogleBatteryHealthPreferenceController.java
+@@ -0,0 +1,48 @@
++/*
++ * Copyright (C) 2026 The Android Open Source Project
++ * SPDX-License-Identifier: Apache-2.0
++ */
++package com.android.settings.fuelgauge;
++
++import android.content.ComponentName;
++import android.content.Context;
++import android.content.Intent;
++import android.content.pm.PackageManager;
++import android.text.TextUtils;
++
++import androidx.preference.Preference;
++
++import com.android.settings.core.BasePreferenceController;
++
++/** Links the local battery statistics page to Google's optional battery-care UI. */
++public class GoogleBatteryHealthPreferenceController extends BasePreferenceController {
++    static final ComponentName GOOGLE_BATTERY_HEALTH_COMPONENT = new ComponentName(
++            "com.google.android.settings.intelligence",
++            "com.google.android.settings.intelligence.modules.battery.impl.health"
++                    + ".BHSettingsActivity");
++
++    private final Intent mIntent;
++
++    public GoogleBatteryHealthPreferenceController(Context context, String preferenceKey) {
++        super(context, preferenceKey);
++        final Intent intent = new Intent().setComponent(GOOGLE_BATTERY_HEALTH_COMPONENT);
++        mIntent = context.getPackageManager().resolveActivity(
++                intent, PackageManager.MATCH_DEFAULT_ONLY) != null ? intent : null;
++    }
++
++    @Override
++    public int getAvailabilityStatus() {
++        return mIntent != null ? AVAILABLE_UNSEARCHABLE : UNSUPPORTED_ON_DEVICE;
++    }
++
++    @Override
++    public boolean handlePreferenceTreeClick(Preference preference) {
++        if (!TextUtils.equals(preference.getKey(), mPreferenceKey)) {
++            return false;
++        }
++        if (mIntent != null) {
++            mContext.startActivity(mIntent);
++        }
++        return true;
++    }
++}
 diff --git a/src/com/android/settings/tb132fu/Tb132fuEntryPreferenceController.java b/src/com/android/settings/tb132fu/Tb132fuEntryPreferenceController.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..7fb0547ba74eff520b2d0433da432ce667fa4009
@@ -474,10 +1287,10 @@ index 0000000000000000000000000000000000000000..7fb0547ba74eff520b2d0433da432ce6
 +}
 diff --git a/src/com/android/settings/tb132fu/Tb132fuSettingsFragment.java b/src/com/android/settings/tb132fu/Tb132fuSettingsFragment.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..39c93e6fe129b5d8fd9c3c35531a4521b2b9e602
+index 0000000000000000000000000000000000000000..75a22ef9bb0afe8696af67a8c90701a59a042f16
 --- /dev/null
 +++ b/src/com/android/settings/tb132fu/Tb132fuSettingsFragment.java
-@@ -0,0 +1,263 @@
+@@ -0,0 +1,332 @@
 +/*
 + * Copyright (C) 2026 The Android Open Source Project
 + * SPDX-License-Identifier: Apache-2.0
@@ -518,7 +1331,7 @@ index 0000000000000000000000000000000000000000..39c93e6fe129b5d8fd9c3c35531a4521
 +                Preference.OnPreferenceClickListener {
 +    private static final String TAG = "Tb132fuSettings";
 +
-+    private static final String KEY_AOD = "tb132fu_aod";
++    private static final String KEY_AOD_MODE = "tb132fu_aod_mode";
 +    private static final String KEY_DT2W = "tb132fu_dt2w";
 +    private static final String KEY_AOD_SCHEDULE = "tb132fu_aod_twilight_schedule";
 +    private static final String KEY_REFRESH_RATE = "tb132fu_refresh_rate";
@@ -536,12 +1349,16 @@ index 0000000000000000000000000000000000000000..39c93e6fe129b5d8fd9c3c35531a4521
 +    private static final String REFRESH_FLUID = "fluid";
 +    private static final String REFRESH_FORCE_120 = "force_120";
 +
++    private static final String AOD_MODE_OFF = "off";
++    private static final String AOD_MODE_PULSE = "pulse";
++    private static final String AOD_MODE_ALWAYS = "always";
++
 +    private static final int POGO_VENDOR_ID = 0x17ef;
 +    private static final int POGO_PRODUCT_ID = 0x613d;
 +    private static final ComponentName LENOVO_PEN_SETTINGS = new ComponentName(
 +            "com.lenovo.penservice", "com.lenovo.pen.bt.ui.BtSettingsActivity");
 +
-+    private SwitchPreferenceCompat mAod;
++    private ListPreference mAodMode;
 +    private SwitchPreferenceCompat mDt2w;
 +    private SwitchPreferenceCompat mAodSchedule;
 +    private ListPreference mRefreshRate;
@@ -551,14 +1368,14 @@ index 0000000000000000000000000000000000000000..39c93e6fe129b5d8fd9c3c35531a4521
 +    @Override
 +    public void onCreate(Bundle savedInstanceState) {
 +        super.onCreate(savedInstanceState);
-+        mAod = findPreference(KEY_AOD);
++        mAodMode = findPreference(KEY_AOD_MODE);
 +        mDt2w = findPreference(KEY_DT2W);
 +        mAodSchedule = findPreference(KEY_AOD_SCHEDULE);
 +        mRefreshRate = findPreference(KEY_REFRESH_RATE);
 +        mPenSettings = findPreference(KEY_PEN_SETTINGS);
 +        mPogoStatus = findPreference(KEY_POGO_STATUS);
 +
-+        mAod.setOnPreferenceChangeListener(this);
++        mAodMode.setOnPreferenceChangeListener(this);
 +        mDt2w.setOnPreferenceChangeListener(this);
 +        mAodSchedule.setOnPreferenceChangeListener(this);
 +        mRefreshRate.setOnPreferenceChangeListener(this);
@@ -566,7 +1383,7 @@ index 0000000000000000000000000000000000000000..39c93e6fe129b5d8fd9c3c35531a4521
 +
 +        final boolean aodAvailable = new AmbientDisplayConfiguration(getContext())
 +                .alwaysOnAvailableForUser(UserHandle.myUserId());
-+        mAod.setVisible(aodAvailable);
++        mAodMode.setVisible(aodAvailable);
 +        mAodSchedule.setVisible(aodAvailable);
 +
 +        final Preference buildInfo = findPreference(KEY_BUILD_INFO);
@@ -578,13 +1395,15 @@ index 0000000000000000000000000000000000000000..39c93e6fe129b5d8fd9c3c35531a4521
 +    public void onResume() {
 +        super.onResume();
 +        final int user = UserHandle.myUserId();
-+        mAod.setChecked(Settings.Secure.getIntForUser(getContentResolver(),
-+                Settings.Secure.DOZE_ALWAYS_ON, 0, user) != 0);
++        final String aodMode = getAodMode(user);
++        mAodMode.setValue(aodMode);
++        updateAodModeSummary(aodMode);
 +        mDt2w.setChecked(SystemProperties.getBoolean(PROP_DT2W,
 +                Settings.Secure.getIntForUser(getContentResolver(),
 +                        Settings.Secure.DOUBLE_TAP_TO_WAKE, 1, user) != 0));
 +        mAodSchedule.setChecked(Settings.Secure.getIntForUser(getContentResolver(),
 +                SETTING_AOD_SCHEDULE, 1, user) != 0);
++        mAodSchedule.setEnabled(AOD_MODE_ALWAYS.equals(aodMode));
 +
 +        final String refreshMode = getRefreshRateMode();
 +        mRefreshRate.setValue(refreshMode);
@@ -608,10 +1427,8 @@ index 0000000000000000000000000000000000000000..39c93e6fe129b5d8fd9c3c35531a4521
 +    @Override
 +    public boolean onPreferenceChange(Preference preference, Object newValue) {
 +        switch (preference.getKey()) {
-+            case KEY_AOD:
-+                return Settings.Secure.putIntForUser(getContentResolver(),
-+                        Settings.Secure.DOZE_ALWAYS_ON, (Boolean) newValue ? 1 : 0,
-+                        UserHandle.myUserId());
++            case KEY_AOD_MODE:
++                return setAodMode((String) newValue);
 +            case KEY_DT2W:
 +                return setDt2w((Boolean) newValue);
 +            case KEY_AOD_SCHEDULE:
@@ -644,6 +1461,71 @@ index 0000000000000000000000000000000000000000..39c93e6fe129b5d8fd9c3c35531a4521
 +                Settings.Secure.DOUBLE_TAP_TO_WAKE, enabled ? 1 : 0,
 +                UserHandle.myUserId());
 +        return stored && setPersistentBoolean(PROP_DT2W, enabled);
++    }
++
++    private String getAodMode(int user) {
++        return getAodMode(
++                Settings.Secure.getIntForUser(getContentResolver(),
++                        Settings.Secure.DOZE_ALWAYS_ON, 0, user) != 0,
++                Settings.Secure.getIntForUser(getContentResolver(),
++                        Settings.Secure.DOZE_ENABLED, 1, user) != 0);
++    }
++
++    static String getAodMode(boolean alwaysOn, boolean dozeEnabled) {
++        if (alwaysOn) {
++            return AOD_MODE_ALWAYS;
++        }
++        return dozeEnabled ? AOD_MODE_PULSE : AOD_MODE_OFF;
++    }
++
++    private boolean setAodMode(String mode) {
++        final int dozeEnabled;
++        final int alwaysOn;
++        switch (mode) {
++            case AOD_MODE_OFF:
++                dozeEnabled = 0;
++                alwaysOn = 0;
++                break;
++            case AOD_MODE_PULSE:
++                dozeEnabled = 1;
++                alwaysOn = 0;
++                break;
++            case AOD_MODE_ALWAYS:
++                dozeEnabled = 1;
++                alwaysOn = 1;
++                break;
++            default:
++                return false;
++        }
++
++        final int user = UserHandle.myUserId();
++        // Enable ambient display before AOD when increasing the mode, but clear AOD first when
++        // reducing it so the display cannot remain latched on between observer callbacks.
++        final boolean dozeStored;
++        final boolean alwaysStored;
++        if (alwaysOn != 0) {
++            dozeStored = Settings.Secure.putIntForUser(getContentResolver(),
++                    Settings.Secure.DOZE_ENABLED, dozeEnabled, user);
++            alwaysStored = Settings.Secure.putIntForUser(getContentResolver(),
++                    Settings.Secure.DOZE_ALWAYS_ON, alwaysOn, user);
++        } else {
++            alwaysStored = Settings.Secure.putIntForUser(getContentResolver(),
++                    Settings.Secure.DOZE_ALWAYS_ON, alwaysOn, user);
++            dozeStored = Settings.Secure.putIntForUser(getContentResolver(),
++                    Settings.Secure.DOZE_ENABLED, dozeEnabled, user);
++        }
++        if (alwaysStored && dozeStored) {
++            updateAodModeSummary(mode);
++            mAodSchedule.setEnabled(AOD_MODE_ALWAYS.equals(mode));
++        }
++        return alwaysStored && dozeStored;
++    }
++
++    private void updateAodModeSummary(String mode) {
++        final int index = mAodMode.findIndexOfValue(mode);
++        if (index >= 0) {
++            mAodMode.setSummary(mAodMode.getEntries()[index]);
++        }
 +    }
 +
 +    private boolean setPersistentBoolean(String property, boolean enabled) {
@@ -791,6 +1673,41 @@ index d3c2536a9e9aedc17949620bc50cf070a10314da..85ec2d919e923430cf86e076f0e0ffeb
 +        assertThat(passwordsCategory).isNotNull();
 +    }
  }
+diff --git a/tests/robotests/src/com/android/settings/dashboard/DashboardFragmentTest.java b/tests/robotests/src/com/android/settings/dashboard/DashboardFragmentTest.java
+index bedfc59b0dbddbcaab553f8d7297b3c939d81939..3f469421f5a80bd28925b66d7a8a613eeb0cb1a3 100644
+--- a/tests/robotests/src/com/android/settings/dashboard/DashboardFragmentTest.java
++++ b/tests/robotests/src/com/android/settings/dashboard/DashboardFragmentTest.java
+@@ -241,8 +241,9 @@ public class DashboardFragmentTest {
+     }
+ 
+     @Test
+-    @Config(qualifiers = "mcc999")
+     public void displayTilesAsPreference_shouldNotAddSuppressedTiles() {
++        ReflectionHelpers.setField(mTestFragment, "mSuppressInjectedTileKeys",
++                Arrays.asList("injected_tile_key", "injected_tile_key2"));
+         when(mFakeFeatureFactory.dashboardFeatureProvider
+                 .getTilesForCategory(nullable(String.class)))
+                 .thenReturn(mDashboardCategory);
+@@ -257,6 +258,19 @@ public class DashboardFragmentTest {
+         verify(mTestFragment.mScreen, never()).addPreference(nullable(Preference.class));
+     }
+ 
++    @Test
++    public void displayTile_componentSuppressedWithoutMetadataKey_returnsFalse() {
++        ReflectionHelpers.setField(mTestFragment, "mSuppressInjectedTileKeys",
++                Arrays.asList("pkg/suppressed_class"));
++        final ActivityInfo activityInfo = new ActivityInfo();
++        activityInfo.packageName = "pkg";
++        activityInfo.name = "suppressed_class";
++        activityInfo.metaData = new Bundle();
++        final ActivityTile tile = new ActivityTile(activityInfo, mDashboardCategory.key);
++
++        assertThat(mTestFragment.displayTile(tile)).isFalse();
++    }
++
+     @Test
+     public void onAttach_shouldCreatePlaceholderPreferenceController() {
+         final AbstractPreferenceController controller = mTestFragment.use(
 diff --git a/tests/robotests/src/com/android/settings/display/ColorModeApiScreenTest.kt b/tests/robotests/src/com/android/settings/display/ColorModeApiScreenTest.kt
 index 13eb866025748a58064ef3cab35ee9fd43a92ed7..4bf816ed1f7604be151127614214ea73b47993a5 100644
 --- a/tests/robotests/src/com/android/settings/display/ColorModeApiScreenTest.kt
@@ -866,6 +1783,109 @@ index 6602d4225e508e09c8a2267df8806b2c02c0be5e..933948073d6e06bb014171dfeee23ef5
 +        assertThat(preferenceScreenCreator.isAvailable(context)).isFalse()
 +    }
  }
+diff --git a/tests/robotests/src/com/android/settings/display/MtkPqColorModeManagerTest.java b/tests/robotests/src/com/android/settings/display/MtkPqColorModeManagerTest.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..620b34e18b1ab0bc3097c0c677ce3982612eb836
+--- /dev/null
++++ b/tests/robotests/src/com/android/settings/display/MtkPqColorModeManagerTest.java
+@@ -0,0 +1,97 @@
++/*
++ * Copyright (C) 2026 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package com.android.settings.display;
++
++import static com.google.common.truth.Truth.assertThat;
++
++import android.content.Context;
++import android.provider.Settings;
++
++import androidx.test.core.app.ApplicationProvider;
++
++import org.junit.After;
++import org.junit.Before;
++import org.junit.Test;
++import org.junit.runner.RunWith;
++import org.robolectric.RobolectricTestRunner;
++
++import java.util.concurrent.atomic.AtomicInteger;
++
++@RunWith(RobolectricTestRunner.class)
++public class MtkPqColorModeManagerTest {
++    private Context mContext;
++
++    @Before
++    public void setUp() {
++        mContext = ApplicationProvider.getApplicationContext();
++        Settings.Secure.putString(
++                mContext.getContentResolver(), MtkPqColorModeManager.SETTING_KEY, null);
++    }
++
++    @After
++    public void tearDown() {
++        Settings.Secure.putString(
++                mContext.getContentResolver(), MtkPqColorModeManager.SETTING_KEY, null);
++    }
++
++    @Test
++    public void getColorMode_withoutStoredValue_returnsVibrant() {
++        assertThat(MtkPqColorModeManager.getColorMode(mContext))
++                .isEqualTo(MtkPqColorModeManager.MODE_VIBRANT);
++    }
++
++    @Test
++    public void setColorMode_invalidMode_doesNotCallHalOrPersist() {
++        final AtomicInteger calls = new AtomicInteger();
++
++        final boolean result = MtkPqColorModeManager.setColorMode(
++                mContext, 3, mode -> {
++                    calls.incrementAndGet();
++                    return true;
++                });
++
++        assertThat(result).isFalse();
++        assertThat(calls.get()).isEqualTo(0);
++        assertThat(MtkPqColorModeManager.getColorMode(mContext))
++                .isEqualTo(MtkPqColorModeManager.MODE_VIBRANT);
++    }
++
++    @Test
++    public void setColorMode_halFailure_doesNotPersist() {
++        final boolean result = MtkPqColorModeManager.setColorMode(
++                mContext, MtkPqColorModeManager.MODE_NATURAL, mode -> false);
++
++        assertThat(result).isFalse();
++        assertThat(MtkPqColorModeManager.getColorMode(mContext))
++                .isEqualTo(MtkPqColorModeManager.MODE_VIBRANT);
++    }
++
++    @Test
++    public void setColorMode_halSuccess_persistsMode() {
++        final AtomicInteger appliedMode = new AtomicInteger(-1);
++
++        final boolean result = MtkPqColorModeManager.setColorMode(
++                mContext, MtkPqColorModeManager.MODE_NATURAL, mode -> {
++                    appliedMode.set(mode);
++                    return true;
++                });
++
++        assertThat(result).isTrue();
++        assertThat(appliedMode.get()).isEqualTo(MtkPqColorModeManager.MODE_NATURAL);
++        assertThat(MtkPqColorModeManager.getColorMode(mContext))
++                .isEqualTo(MtkPqColorModeManager.MODE_NATURAL);
++    }
++}
 diff --git a/tests/robotests/src/com/android/settings/display/colors/ColorModePreferenceControllerTest.kt b/tests/robotests/src/com/android/settings/display/colors/ColorModePreferenceControllerTest.kt
 index 4371bae49105da08e791125d0841c356a8671cdc..a7f378c9a453aba71b3e1813613ba5882469d5c6 100644
 --- a/tests/robotests/src/com/android/settings/display/colors/ColorModePreferenceControllerTest.kt
@@ -931,3 +1951,246 @@ index 4371bae49105da08e791125d0841c356a8671cdc..a7f378c9a453aba71b3e1813613ba588
 -}
 \ No newline at end of file
 +}
+diff --git a/tests/robotests/src/com/android/settings/fuelgauge/BatteryHealthDetailPreferenceControllerTest.java b/tests/robotests/src/com/android/settings/fuelgauge/BatteryHealthDetailPreferenceControllerTest.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..3b3a2778d16ee98c3eee04a998846c29958c7147
+--- /dev/null
++++ b/tests/robotests/src/com/android/settings/fuelgauge/BatteryHealthDetailPreferenceControllerTest.java
+@@ -0,0 +1,80 @@
++/*
++ * Copyright (C) 2026 The Android Open Source Project
++ * SPDX-License-Identifier: Apache-2.0
++ */
++package com.android.settings.fuelgauge;
++
++import static com.google.common.truth.Truth.assertThat;
++
++import static org.mockito.ArgumentMatchers.any;
++import static org.mockito.Mockito.doReturn;
++import static org.mockito.Mockito.spy;
++
++import android.content.Context;
++import android.content.Intent;
++import android.os.BatteryManager;
++
++import androidx.test.core.app.ApplicationProvider;
++
++import com.android.settings.R;
++
++import org.junit.Before;
++import org.junit.Test;
++import org.junit.runner.RunWith;
++import org.robolectric.RobolectricTestRunner;
++
++@RunWith(RobolectricTestRunner.class)
++public final class BatteryHealthDetailPreferenceControllerTest {
++    private Context mContext;
++    private Intent mBatteryIntent;
++
++    @Before
++    public void setUp() {
++        mContext = spy(ApplicationProvider.getApplicationContext());
++        mBatteryIntent = new Intent()
++                .putExtra(BatteryManager.EXTRA_FULL_CHARGE_CAPACITY_UAH, 6_993_000)
++                .putExtra(BatteryManager.EXTRA_DESIGN_CAPACITY_UAH, 8_000_000)
++                .putExtra(BatteryManager.EXTRA_CYCLE_COUNT, 111)
++                .putExtra(BatteryManager.EXTRA_HEALTH, BatteryManager.BATTERY_HEALTH_GOOD);
++        doReturn(mBatteryIntent).when(mContext).registerReceiver(any(), any());
++    }
++
++    @Test
++    public void maximumCapacity_usesFullAndDesignCapacity() {
++        assertThat(controller(BatteryHealthDetailPreferenceController.KEY_MAXIMUM_CAPACITY)
++                .getSummary()).isEqualTo("87%");
++    }
++
++    @Test
++    public void capacities_areFormattedInMah() {
++        assertThat(controller(BatteryHealthDetailPreferenceController.KEY_FULL_CHARGE_CAPACITY)
++                .getSummary()).isEqualTo("6,993 mAh");
++        assertThat(controller(BatteryHealthDetailPreferenceController.KEY_DESIGN_CAPACITY)
++                .getSummary()).isEqualTo("8,000 mAh");
++    }
++
++    @Test
++    public void cycleCountAndCondition_areReported() {
++        assertThat(controller(BatteryHealthDetailPreferenceController.KEY_CYCLE_COUNT)
++                .getSummary()).isEqualTo("111");
++        assertThat(controller(BatteryHealthDetailPreferenceController.KEY_CONDITION)
++                .getSummary()).isEqualTo(
++                        mContext.getText(R.string.battery_health_condition_good));
++    }
++
++    @Test
++    public void missingGaugeData_isUnavailable() {
++        doReturn(new Intent()).when(mContext).registerReceiver(any(), any());
++
++        assertThat(controller(BatteryHealthDetailPreferenceController.KEY_MAXIMUM_CAPACITY)
++                .getSummary()).isEqualTo(
++                        mContext.getText(R.string.battery_cycle_count_not_available));
++        assertThat(controller(BatteryHealthDetailPreferenceController.KEY_CONDITION)
++                .getSummary()).isEqualTo(
++                        mContext.getText(R.string.battery_cycle_count_not_available));
++    }
++
++    private BatteryHealthDetailPreferenceController controller(String key) {
++        return new BatteryHealthDetailPreferenceController(mContext, key);
++    }
++}
+diff --git a/tests/robotests/src/com/android/settings/fuelgauge/GoogleBatteryHealthPreferenceControllerTest.java b/tests/robotests/src/com/android/settings/fuelgauge/GoogleBatteryHealthPreferenceControllerTest.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..32570dad04ce5ed7102b47d2cdb8a49cd19bc471
+--- /dev/null
++++ b/tests/robotests/src/com/android/settings/fuelgauge/GoogleBatteryHealthPreferenceControllerTest.java
+@@ -0,0 +1,95 @@
++/*
++ * Copyright (C) 2026 The Android Open Source Project
++ * SPDX-License-Identifier: Apache-2.0
++ */
++package com.android.settings.fuelgauge;
++
++import static com.google.common.truth.Truth.assertThat;
++
++import static org.mockito.ArgumentMatchers.any;
++import static org.mockito.ArgumentMatchers.anyInt;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.never;
++import static org.mockito.Mockito.verify;
++import static org.mockito.Mockito.when;
++
++import android.content.Context;
++import android.content.Intent;
++import android.content.pm.PackageManager;
++import android.content.pm.ResolveInfo;
++
++import androidx.preference.Preference;
++
++import com.android.settings.core.BasePreferenceController;
++
++import org.junit.Before;
++import org.junit.Test;
++import org.junit.runner.RunWith;
++import org.mockito.ArgumentCaptor;
++import org.mockito.Mock;
++import org.mockito.MockitoAnnotations;
++import org.robolectric.RobolectricTestRunner;
++
++@RunWith(RobolectricTestRunner.class)
++public final class GoogleBatteryHealthPreferenceControllerTest {
++    private static final String KEY = "battery_health_google_settings";
++
++    @Mock private Context mContext;
++    @Mock private PackageManager mPackageManager;
++
++    @Before
++    public void setUp() {
++        MockitoAnnotations.initMocks(this);
++        when(mContext.getPackageManager()).thenReturn(mPackageManager);
++    }
++
++    @Test
++    public void getAvailabilityStatus_activityMissing_returnsUnsupported() {
++        final GoogleBatteryHealthPreferenceController controller =
++                new GoogleBatteryHealthPreferenceController(mContext, KEY);
++
++        assertThat(controller.getAvailabilityStatus())
++                .isEqualTo(BasePreferenceController.UNSUPPORTED_ON_DEVICE);
++    }
++
++    @Test
++    public void getAvailabilityStatus_activityPresent_returnsAvailableUnsearchable() {
++        when(mPackageManager.resolveActivity(any(Intent.class), anyInt()))
++                .thenReturn(new ResolveInfo());
++        final GoogleBatteryHealthPreferenceController controller =
++                new GoogleBatteryHealthPreferenceController(mContext, KEY);
++
++        assertThat(controller.getAvailabilityStatus())
++                .isEqualTo(BasePreferenceController.AVAILABLE_UNSEARCHABLE);
++    }
++
++    @Test
++    public void handlePreferenceTreeClick_correctKey_launchesGoogleBatteryHealth() {
++        when(mPackageManager.resolveActivity(any(Intent.class), anyInt()))
++                .thenReturn(new ResolveInfo());
++        final GoogleBatteryHealthPreferenceController controller =
++                new GoogleBatteryHealthPreferenceController(mContext, KEY);
++        final Preference preference = mock(Preference.class);
++        when(preference.getKey()).thenReturn(KEY);
++
++        assertThat(controller.handlePreferenceTreeClick(preference)).isTrue();
++        final ArgumentCaptor<Intent> intentCaptor = ArgumentCaptor.forClass(Intent.class);
++        verify(mContext).startActivity(intentCaptor.capture());
++        assertThat(intentCaptor.getValue().getComponent())
++                .isEqualTo(GoogleBatteryHealthPreferenceController
++                        .GOOGLE_BATTERY_HEALTH_COMPONENT);
++    }
++
++    @Test
++    public void handlePreferenceTreeClick_wrongKey_doesNotLaunch() {
++        when(mPackageManager.resolveActivity(any(Intent.class), anyInt()))
++                .thenReturn(new ResolveInfo());
++        final GoogleBatteryHealthPreferenceController controller =
++                new GoogleBatteryHealthPreferenceController(mContext, KEY);
++        final Preference preference = mock(Preference.class);
++        when(preference.getKey()).thenReturn("other");
++
++        assertThat(controller.handlePreferenceTreeClick(preference)).isFalse();
++        verify(mContext, never()).startActivity(any(Intent.class));
++    }
++}
+diff --git a/tests/robotests/src/com/android/settings/tb132fu/Tb132fuSettingsFragmentTest.java b/tests/robotests/src/com/android/settings/tb132fu/Tb132fuSettingsFragmentTest.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..5015f009170e715fa0322fbf4a539f2172bc9273
+--- /dev/null
++++ b/tests/robotests/src/com/android/settings/tb132fu/Tb132fuSettingsFragmentTest.java
+@@ -0,0 +1,29 @@
++/*
++ * Copyright (C) 2026 The Android Open Source Project
++ * SPDX-License-Identifier: Apache-2.0
++ */
++package com.android.settings.tb132fu;
++
++import static com.google.common.truth.Truth.assertThat;
++
++import org.junit.Test;
++import org.junit.runner.RunWith;
++import org.robolectric.RobolectricTestRunner;
++
++@RunWith(RobolectricTestRunner.class)
++public final class Tb132fuSettingsFragmentTest {
++    @Test
++    public void aodMode_alwaysOnWins() {
++        assertThat(Tb132fuSettingsFragment.getAodMode(true, false)).isEqualTo("always");
++    }
++
++    @Test
++    public void aodMode_dozeEnabledUsesPulse() {
++        assertThat(Tb132fuSettingsFragment.getAodMode(false, true)).isEqualTo("pulse");
++    }
++
++    @Test
++    public void aodMode_bothDisabledUsesOff() {
++        assertThat(Tb132fuSettingsFragment.getAodMode(false, false)).isEqualTo("off");
++    }
++}
+diff --git a/tests/unit/src/com/android/settings/display/ColorModePreferenceFragmentTest.java b/tests/unit/src/com/android/settings/display/ColorModePreferenceFragmentTest.java
+index b3a2770baf8e04d4f7d563731976dded65249396..e2d75b5434d27b071dd08790cc25466e72618c3c 100644
+--- a/tests/unit/src/com/android/settings/display/ColorModePreferenceFragmentTest.java
++++ b/tests/unit/src/com/android/settings/display/ColorModePreferenceFragmentTest.java
+@@ -18,7 +18,6 @@ package com.android.settings.display;
+ import static com.google.common.truth.Truth.assertThat;
+ 
+ import static org.mockito.ArgumentMatchers.anyInt;
+-import static org.mockito.Mockito.doNothing;
+ import static org.mockito.Mockito.doReturn;
+ import static org.mockito.Mockito.spy;
+ import static org.mockito.Mockito.verify;
+@@ -54,7 +53,7 @@ public class ColorModePreferenceFragmentTest {
+     public void setup() {
+         mContext = spy(ApplicationProvider.getApplicationContext());
+         mFragment = spy(new ColorModePreferenceFragment());
+-        doNothing().when(mFragment).setColorMode(anyInt());
++        doReturn(true).when(mFragment).setColorMode(anyInt());
+     }
+ 
+     @Test

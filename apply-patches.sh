@@ -61,7 +61,7 @@ while IFS=$'\t' read -r project upstream base_revision topic_head qualified_tree
             echo "$project base tree does not match its qualified no-op tree." >&2
             exit 1
         }
-        echo "$project: no net R1 patch required (qualified topic $topic_head)."
+        echo "$project: no net R2 patch required (qualified topic $topic_head)."
         continue
     fi
 
@@ -79,7 +79,7 @@ while IFS=$'\t' read -r project upstream base_revision topic_head qualified_tree
     temporary_index_dir=
 
     [[ "$observed_tree" == "$qualified_tree" ]] || {
-        echo "$project applied tree does not match its qualified R1 tree." >&2
+        echo "$project applied tree does not match its qualified R2 tree." >&2
         echo "Expected: $qualified_tree" >&2
         echo "Observed: $observed_tree" >&2
         exit 1
@@ -88,5 +88,5 @@ while IFS=$'\t' read -r project upstream base_revision topic_head qualified_tree
     echo "$project: applied $patch_file"
 done < PROJECTS.tsv
 
-echo 'All Pure Pixel 17 R1 platform patches applied successfully.'
+echo 'All Pure Pixel 17 R2 platform patches applied successfully.'
 echo 'No commit, build, flash, reset, clean, or device operation was performed.'

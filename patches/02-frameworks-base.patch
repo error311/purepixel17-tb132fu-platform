@@ -26,6 +26,33 @@ index 7402ca5cfa101be450462df32ab3f247c6d679d6..7579c59bc4334008b71f6928ce0befba
          return app;
      }
  
+diff --git a/core/java/android/os/BatteryManager.java b/core/java/android/os/BatteryManager.java
+index 903c7637a8131d4190349f7dafbb6279440e55fe..71d774a53db193587ef85ce749e49d5f21e59cb1 100644
+--- a/core/java/android/os/BatteryManager.java
++++ b/core/java/android/os/BatteryManager.java
+@@ -166,6 +166,22 @@ public class BatteryManager {
+      */
+     public static final String EXTRA_CYCLE_COUNT = "android.os.extra.CYCLE_COUNT";
+ 
++    /**
++     * Extra for {@link android.content.Intent#ACTION_BATTERY_CHANGED}:
++     * estimated full-charge capacity in microampere-hours.
++     * @hide
++     */
++    public static final String EXTRA_FULL_CHARGE_CAPACITY_UAH =
++            "android.os.extra.FULL_CHARGE_CAPACITY_UAH";
++
++    /**
++     * Extra for {@link android.content.Intent#ACTION_BATTERY_CHANGED}:
++     * rated design capacity in microampere-hours.
++     * @hide
++     */
++    public static final String EXTRA_DESIGN_CAPACITY_UAH =
++            "android.os.extra.DESIGN_CAPACITY_UAH";
++
+     /**
+      * Extra for {@link android.content.Intent#ACTION_BATTERY_CHANGED}:
+      * Int value representing the battery charging status.
 diff --git a/core/java/android/view/View.java b/core/java/android/view/View.java
 index a250d4945bfed7f0f0ec81b83441ffcb589a786a..0c8fcde0d86cc258298198495757857987623aa0 100644
 --- a/core/java/android/view/View.java
@@ -751,6 +778,28 @@ index 275cbe980d3cf8ba5cc06a53b2cf6f927de03fec..c011c268afdbea3a62e60b8447dd7ddb
              verify(mockFlashlightDialogDelegate, never()).showDialog()
          }
  
+diff --git a/packages/SystemUI/multivalentTests/src/com/android/systemui/shade/NotificationPanelViewControllerTest.java b/packages/SystemUI/multivalentTests/src/com/android/systemui/shade/NotificationPanelViewControllerTest.java
+index 099f676b52df8d841579f66fcf37e98f24df36bd..8c92717aa48898cce0e4943c861e136c20d4cbcd 100644
+--- a/packages/SystemUI/multivalentTests/src/com/android/systemui/shade/NotificationPanelViewControllerTest.java
++++ b/packages/SystemUI/multivalentTests/src/com/android/systemui/shade/NotificationPanelViewControllerTest.java
+@@ -197,4 +197,17 @@ public class NotificationPanelViewControllerTest extends NotificationPanelViewCo
+         verify(mSysUIStateDisplaysInteractor).setFlagsExclusivelyToDisplay(eq(DISPLAY_ID), any());
+     }
+ 
++    @Test
++    public void lockscreenIntercept_updatesBouncerSideBeforeUnlockSwipeIsHandled() {
++        when(mKeyguardStateController.isShowing()).thenReturn(true);
++        mNotificationPanelViewController.setExpandedFraction(0.5f);
++        final MotionEvent down = MotionEvent.obtain(
++                0L, 0L, MotionEvent.ACTION_DOWN, 900f, 400f, 0);
++
++        mNotificationPanelViewController.handleExternalInterceptTouch(down);
++
++        verify(mStatusBarKeyguardViewManager).updateKeyguardPosition(900f);
++        down.recycle();
++    }
++
+ }
 diff --git a/packages/SystemUI/res/drawable/ic_tb132fu_precision_pen.xml b/packages/SystemUI/res/drawable/ic_tb132fu_precision_pen.xml
 new file mode 100644
 index 0000000000000000000000000000000000000000..8f436e2fd5ab39dc69da30cd830ef163c04ca784
@@ -1065,6 +1114,37 @@ index 9ad7bc01bdbb7215afe62d08303449cc49f74de5..ee319f231047997ecbde7eb9290b1d61
                          }
                      } else { // preserve old behavior at the cost of some redundancy
                          if (
+diff --git a/packages/SystemUI/src/com/android/systemui/shade/NotificationPanelViewController.java b/packages/SystemUI/src/com/android/systemui/shade/NotificationPanelViewController.java
+index c50979f390f13e60184564c4f77b03c16b575b01..4bfb226d0a0dc97b7a4bb92952cbaa62c52989a8 100644
+--- a/packages/SystemUI/src/com/android/systemui/shade/NotificationPanelViewController.java
++++ b/packages/SystemUI/src/com/android/systemui/shade/NotificationPanelViewController.java
+@@ -3781,6 +3781,14 @@ public final class NotificationPanelViewController implements
+                 return false;
+             }
+ 
++            // The lockscreen's initial DOWN is delivered through interception before an upward
++            // unlock swipe is handed to onTouchEvent. Remember it here so the large-screen
++            // bouncer can choose its side before its first frame is composed.
++            if (event.getActionMasked() == MotionEvent.ACTION_DOWN
++                    && mKeyguardStateController.isShowing()) {
++                mStatusBarKeyguardViewManager.updateKeyguardPosition(event.getX());
++            }
++
+             // Logging every motion event is very costly, even when tracing/logcat
+             // endpoints are disabled. Uncomment the following line if full touch
+             // event history is needed.
+@@ -4039,11 +4047,6 @@ public final class NotificationPanelViewController implements
+                 handled = true;
+             }
+ 
+-            if (event.getActionMasked() == MotionEvent.ACTION_DOWN && isFullyExpanded()
+-                    && mKeyguardStateController.isShowing()) {
+-                mStatusBarKeyguardViewManager.updateKeyguardPosition(event.getX());
+-            }
+-
+             handled |= handleTouch(event);
+             return !mDozing || handled;
+         }
 diff --git a/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelDateSmartspaceDataProvider.java b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelDateSmartspaceDataProvider.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..bdee80241ee0a865658a2dee99612820294e28be
@@ -1980,6 +2060,20 @@ index 43a93d2d1fbf7ec2789cbeb1a34fdcd0aa1e0ccc..f35005bd6c48cc5a5ccc23a3b136041f
      public int getPulseDuration() {
          return getPulseInDuration() + getPulseVisibleDuration() + getPulseOutDuration();
      }
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBarKeyguardViewManager.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBarKeyguardViewManager.java
+index be4c8ea08e51201817bc6ce8277730ad90b6cde4..73f8c16b0363aec03be80970ecd2ded8716fd2f3 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBarKeyguardViewManager.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBarKeyguardViewManager.java
+@@ -1829,6 +1829,9 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
+     /** Update keyguard position based on a tapped X coordinate. */
+     public void updateKeyguardPosition(float x) {
+         mPrimaryBouncerInteractor.setKeyguardPosition(x);
++        // The Android 17 large-screen bouncer reads its preferred side from BouncerRepository,
++        // rather than the legacy PrimaryBouncerRepository position above.
++        mBouncerInteractor.get().recordKeyguardTouchPosition(x);
+     }
+ 
+     private static class DismissWithActionRequest {
 diff --git a/packages/SystemUI/src/com/android/systemui/stylus/Tb132fuPenChargerStartable.kt b/packages/SystemUI/src/com/android/systemui/stylus/Tb132fuPenChargerStartable.kt
 new file mode 100644
 index 0000000000000000000000000000000000000000..8d9216db8161a7e60b10ec793631e12fe4655946
@@ -2170,6 +2264,18 @@ index 0000000000000000000000000000000000000000..8d9216db8161a7e60b10ec793631e12f
 +        private const val BATTERY_RETRY_DELAY_MS = 600L
 +    }
 +}
+diff --git a/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/StatusBarKeyguardViewManagerTest.java b/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/StatusBarKeyguardViewManagerTest.java
+index a8c1ed0c1d6098a18543f6a06aed7d68482bfc6e..701cadb221bf5e0fbdd61674574e4264e194991e 100644
+--- a/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/StatusBarKeyguardViewManagerTest.java
++++ b/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/StatusBarKeyguardViewManagerTest.java
+@@ -598,6 +598,7 @@ public class StatusBarKeyguardViewManagerTest extends SysuiTestCase {
+         mStatusBarKeyguardViewManager.updateKeyguardPosition(1.0f);
+ 
+         verify(mPrimaryBouncerInteractor).setKeyguardPosition(1.0f);
++        verify(mBouncerInteractor).recordKeyguardTouchPosition(1.0f);
+     }
+ 
+     @Test
 diff --git a/ravenwood/texts/ravenwood-annotation-allowed-classes.txt b/ravenwood/texts/ravenwood-annotation-allowed-classes.txt
 index a3a16547e852ff7bee5cff04bcbcdba521b7506c..8e0b7cc9163a444acc4be0c586652bce0d1945d9 100644
 --- a/ravenwood/texts/ravenwood-annotation-allowed-classes.txt
@@ -2190,6 +2296,32 @@ index a3a16547e852ff7bee5cff04bcbcdba521b7506c..8e0b7cc9163a444acc4be0c586652bce
  com.android.server.utils.TimingsTraceAndSlog
  com.google.android.collect.Lists
  com.google.android.collect.Maps
+diff --git a/services/core/java/com/android/server/BatteryService.java b/services/core/java/com/android/server/BatteryService.java
+index e0b36ab6919477bc37aa4006d5014815d3eeffc1..2de7f330d13d95c3e8eabb13109975b59029ec05 100644
+--- a/services/core/java/com/android/server/BatteryService.java
++++ b/services/core/java/com/android/server/BatteryService.java
+@@ -1037,6 +1037,10 @@ public final class BatteryService extends SystemService {
+                 mHealthInfo.maxChargingVoltageMicrovolts);
+         intent.putExtra(BatteryManager.EXTRA_CHARGE_COUNTER, mHealthInfo.batteryChargeCounterUah);
+         intent.putExtra(BatteryManager.EXTRA_CYCLE_COUNT, mHealthInfo.batteryCycleCount);
++        intent.putExtra(BatteryManager.EXTRA_FULL_CHARGE_CAPACITY_UAH,
++                mHealthInfo.batteryFullChargeUah);
++        intent.putExtra(BatteryManager.EXTRA_DESIGN_CAPACITY_UAH,
++                mHealthInfo.batteryFullChargeDesignCapacityUah);
+         intent.putExtra(BatteryManager.EXTRA_CHARGING_STATUS, mHealthInfo.chargingState);
+         intent.putExtra(BatteryManager.EXTRA_CAPACITY_LEVEL, mHealthInfo.batteryCapacityLevel);
+         if (DEBUG) {
+@@ -1129,6 +1133,10 @@ public final class BatteryService extends SystemService {
+         event.putInt(BatteryManager.EXTRA_CHARGE_COUNTER, mHealthInfo.batteryChargeCounterUah);
+         event.putLong(BatteryManager.EXTRA_EVENT_TIMESTAMP, now);
+         event.putInt(BatteryManager.EXTRA_CYCLE_COUNT, mHealthInfo.batteryCycleCount);
++        event.putInt(BatteryManager.EXTRA_FULL_CHARGE_CAPACITY_UAH,
++                mHealthInfo.batteryFullChargeUah);
++        event.putInt(BatteryManager.EXTRA_DESIGN_CAPACITY_UAH,
++                mHealthInfo.batteryFullChargeDesignCapacityUah);
+         event.putInt(BatteryManager.EXTRA_CHARGING_STATUS, mHealthInfo.chargingState);
+         event.putInt(BatteryManager.EXTRA_CAPACITY_LEVEL, mHealthInfo.batteryCapacityLevel);
+ 
 diff --git a/services/core/java/com/android/server/policy/PhoneWindowManager.java b/services/core/java/com/android/server/policy/PhoneWindowManager.java
 index 1af1825d32cf9f77118d952a9a1dc9ec7fd04a5d..c0eb8b8767abe8216abf48e864a7b803c4f499a6 100644
 --- a/services/core/java/com/android/server/policy/PhoneWindowManager.java
@@ -2291,10 +2423,10 @@ index 505530cc23786cb015c30dd4044ddc4c327a0905..aedc60b96d88d2ef7de845148cbbab5c
  
 diff --git a/services/core/java/com/android/server/power/Tb132fuAmbientController.java b/services/core/java/com/android/server/power/Tb132fuAmbientController.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..67c9d04b207e112a0a59a5f2cbcd78b9a2bfc10f
+index 0000000000000000000000000000000000000000..4477393195b3442e591c6949a32d32068ca0ab18
 --- /dev/null
 +++ b/services/core/java/com/android/server/power/Tb132fuAmbientController.java
-@@ -0,0 +1,205 @@
+@@ -0,0 +1,215 @@
 +/*
 + * Copyright (C) 2026 The Android Open Source Project
 + * SPDX-License-Identifier: Apache-2.0
@@ -2391,6 +2523,9 @@ index 0000000000000000000000000000000000000000..67c9d04b207e112a0a59a5f2cbcd78b9
 +        resolver.registerContentObserver(Settings.Secure.getUriFor(
 +                        SETTING_AOD_TWILIGHT_SCHEDULE), false, mSettingsObserver,
 +                UserHandle.USER_ALL);
++        resolver.registerContentObserver(Settings.Secure.getUriFor(
++                        Settings.Secure.DOZE_ALWAYS_ON), false, mSettingsObserver,
++                UserHandle.USER_ALL);
 +        final IntentFilter timeChangedFilter = new IntentFilter();
 +        timeChangedFilter.addAction(Intent.ACTION_TIME_CHANGED);
 +        timeChangedFilter.addAction(Intent.ACTION_TIMEZONE_CHANGED);
@@ -2409,15 +2544,18 @@ index 0000000000000000000000000000000000000000..67c9d04b207e112a0a59a5f2cbcd78b9
 +    }
 +
 +    private void updateSettings() {
-+        final boolean enabled = Settings.Secure.getIntForUser(
++        final boolean configured = Settings.Secure.getIntForUser(
 +                mContext.getContentResolver(), SETTING_AOD_TWILIGHT_SCHEDULE, 1,
 +                ActivityManager.getCurrentUser()) != 0;
-+        mScheduleEnabled = enabled;
++        final boolean alwaysOn = Settings.Secure.getIntForUser(
++                mContext.getContentResolver(), Settings.Secure.DOZE_ALWAYS_ON, 0,
++                ActivityManager.getCurrentUser()) != 0;
++        mScheduleEnabled = shouldEnableSchedule(configured, alwaysOn);
 +
-+        if (mTwilightManager != null && enabled && !mTwilightListening) {
++        if (mTwilightManager != null && mScheduleEnabled && !mTwilightListening) {
 +            mTwilightManager.registerListener(this, mHandler);
 +            mTwilightListening = true;
-+        } else if (mTwilightManager != null && !enabled && mTwilightListening) {
++        } else if (mTwilightManager != null && !mScheduleEnabled && mTwilightListening) {
 +            mTwilightManager.unregisterListener(this);
 +            mTwilightListening = false;
 +        }
@@ -2475,6 +2613,10 @@ index 0000000000000000000000000000000000000000..67c9d04b207e112a0a59a5f2cbcd78b9
 +
 +    static boolean shouldSuppressAod(boolean scheduleEnabled, boolean isNight) {
 +        return scheduleEnabled && isNight;
++    }
++
++    static boolean shouldEnableSchedule(boolean configured, boolean alwaysOn) {
++        return configured && alwaysOn;
 +    }
 +
 +    private static boolean isFallbackNight() {
@@ -2664,10 +2806,10 @@ index 6bd823b53e8a7c929f1d90477cdb8d900beac51c..29811a31f9409a19a2301ce3d4c8b0d4
  
 diff --git a/services/tests/servicestests/src/com/android/server/power/Tb132fuAmbientControllerTest.java b/services/tests/servicestests/src/com/android/server/power/Tb132fuAmbientControllerTest.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..08ef93b94c8a8fd3213eb910688f0cf2f3c14e4d
+index 0000000000000000000000000000000000000000..21063f421ea45c1e2b247bb5479036ba18940c4a
 --- /dev/null
 +++ b/services/tests/servicestests/src/com/android/server/power/Tb132fuAmbientControllerTest.java
-@@ -0,0 +1,85 @@
+@@ -0,0 +1,92 @@
 +/*
 + * Copyright (C) 2026 The Android Open Source Project
 + * SPDX-License-Identifier: Apache-2.0
@@ -2683,6 +2825,13 @@ index 0000000000000000000000000000000000000000..08ef93b94c8a8fd3213eb910688f0cf2
 +import java.time.ZonedDateTime;
 +
 +public final class Tb132fuAmbientControllerTest {
++    @Test
++    public void schedule_isActiveOnlyForAlwaysOnMode() {
++        assertThat(Tb132fuAmbientController.shouldEnableSchedule(true, true)).isTrue();
++        assertThat(Tb132fuAmbientController.shouldEnableSchedule(true, false)).isFalse();
++        assertThat(Tb132fuAmbientController.shouldEnableSchedule(false, true)).isFalse();
++    }
++
 +    @Test
 +    public void schedule_suppressesOnlyAtNight() {
 +        assertThat(Tb132fuAmbientController.shouldSuppressAod(true, true)).isTrue();

@@ -4,14 +4,14 @@ This is the Android platform side of Pure Pixel 17 for the Lenovo Tab P11 Pro
 (2nd Gen), model TB132FU.
 
 The device needs more than a device tree and kernel to run Android 17 properly.
-These patches are the framework and system changes used by the R1 build. They
+These patches are the framework and system changes used by the R2 build. They
 are kept here separately because they belong to existing AOSP projects rather
 than `device/lenovo/tb132fu`.
 
 The other two source repositories are:
 
 - [TB132FU device tree](https://github.com/error311/android_device_lenovo_tb132fu)
-- [TB132FU kernel #13](https://github.com/error311/tb132fu-kernel/tree/tb132fu-purepixel17-r1-k13)
+- [TB132FU kernel #14](https://github.com/error311/tb132fu-kernel/tree/tb132fu-purepixel17-r2-k14)
 
 ## What is included
 
@@ -23,19 +23,21 @@ The patch set covers:
 - TB132FU Settings and SystemUI features
 - pen, keyboard-cover and AOD behavior
 - refresh-rate, cursor and display behavior
+- battery-health details and MediaTek picture-quality color modes
+- AOD mode handling and landscape unlock-side placement
 - the two small platform hooks used to fix the Pixel Launcher landscape QSB
   return animation
 
-These are the final R1 diffs, not the full bring-up history. Temporary tests and
+These are the final R2 diffs, not the full bring-up history. Temporary tests and
 reverted experiments were left out. `system/apex` is listed in `PROJECTS.tsv`
 because it was part of the bring-up, but its final tree matches clean AOSP and
 there is no patch to apply.
 
-## R1 base
+## R2 base
 
 - AOSP branch: `android17-release`
 - Android build: `CP2A.260605.016`
-- Release tag: `purepixel17-r1-platform`
+- Release tag: `purepixel17-r2-platform`
 - Project revisions and expected trees: `PROJECTS.tsv`
 - Patch checksums: `PATCHES.sha256`
 
@@ -64,7 +66,7 @@ cd /path/to/purepixel17-tb132fu-platform
 ```
 
 The script intentionally refuses to patch a dirty or mismatched source tree.
-It checks the patch hashes and confirms that the result matches the exact R1
+It checks the patch hashes and confirms that the result matches the exact R2
 Git tree. It does not commit anything, erase source, start a build or touch a
 connected device.
 
