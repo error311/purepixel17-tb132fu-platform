@@ -1,3 +1,4 @@
+bb06c4988d4a03486e87b79b257b666faae3d8ae9fc2ea6b2ed7ac6713dc8d38  patches/00-build-release.patch
 6e3c241ddc4967a1d1916c2b737202d78d669dcdb4455a124fe72f105e7629e6  patches/01-build-soong.patch
 f8292db0b5b3f3783e29bcdcae52051f5ca3e7059dd8f6645dc3e75890823295  patches/02-frameworks-base.patch
 ec3b24d82a7fb06263f8f62579087da4ad4e489e24249916fedf25917e128923  patches/03-frameworks-native.patch

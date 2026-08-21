@@ -17,6 +17,7 @@ The other two source repositories are:
 
 The patch set covers:
 
+- the audited August 2026 platform security-level declaration
 - Android 17 support for the tablet's legacy 4.19 kernel
 - BPF, ION and VINTF compatibility
 - Bluetooth and charger fixes
@@ -37,6 +38,7 @@ there is no patch to apply.
 
 - AOSP branch: `android17-release`
 - Android build: `CP2A.260605.016`
+- Android platform security patch: `2026-08-01`
 - Release tag: `purepixel17-r2-platform`
 - Project revisions and expected trees: `PROJECTS.tsv`
 - Patch checksums: `PATCHES.sha256`
@@ -56,7 +58,7 @@ cp manifest/tb132fu-platform-bases.xml \
   /path/to/aosp/.repo/local_manifests/tb132fu-platform-bases.xml
 
 cd /path/to/aosp
-repo sync build/soong frameworks/base frameworks/native hardware/interfaces \
+repo sync build/release build/soong frameworks/base frameworks/native hardware/interfaces \
   kernel/configs packages/apps/Settings packages/modules/Bluetooth \
   packages/modules/Connectivity system/apex system/bpf system/bpfprogs \
   system/core system/memory/libion system/sepolicy

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
+  <extend-project name="platform/build/release" path="build/release" revision="c85f4aebe46714235599a9bd6430a0fe30c6e8d5" />
   <extend-project name="platform/build/soong" path="build/soong" revision="6722dd8833db7482df1a2543ca3fcf67ddf0f7b1" />
   <extend-project name="platform/frameworks/base" path="frameworks/base" revision="94b4c163b7dfe5ce3607f7bb8456f9573f7de57d" />
   <extend-project name="platform/frameworks/native" path="frameworks/native" revision="ae266dcb706d083868578cfedce381ef44488a07" />

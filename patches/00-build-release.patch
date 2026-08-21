@@ -1,0 +1,10 @@
+diff --git a/flag_values/cp2a/RELEASE_PLATFORM_SECURITY_PATCH.textproto b/flag_values/cp2a/RELEASE_PLATFORM_SECURITY_PATCH.textproto
+index 417b0159749b4fd173502cb361e03057f61d2137..9b5ffed4faebcd539766be7336fe4f277408e43f 100644
+--- a/flag_values/cp2a/RELEASE_PLATFORM_SECURITY_PATCH.textproto
++++ b/flag_values/cp2a/RELEASE_PLATFORM_SECURITY_PATCH.textproto
+@@ -1,4 +1,4 @@
+ name: "RELEASE_PLATFORM_SECURITY_PATCH"
+ value: {
+-  string_value: "2026-06-05"
++  string_value: "2026-08-01"
+ }
