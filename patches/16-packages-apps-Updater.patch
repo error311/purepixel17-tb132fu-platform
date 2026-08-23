@@ -1,0 +1,783 @@
+diff --git a/app/src/main/java/org/lineageos/updater/UpdaterApplication.kt b/app/src/main/java/org/lineageos/updater/UpdaterApplication.kt
+index f8fd572136a66e5b8e867543e8c0217d429b9081..9cdb94cd6281df28c1ab036820c54be126fdc3ba 100644
+--- a/app/src/main/java/org/lineageos/updater/UpdaterApplication.kt
++++ b/app/src/main/java/org/lineageos/updater/UpdaterApplication.kt
+@@ -28,7 +28,7 @@ class UpdaterApplication : Application() {
+ 
+ 
+     val batteryMonitor by lazy {
+-        BatteryMonitor(applicationContext, coroutineScope, userPreferencesRepository)
++        BatteryMonitor(applicationContext, coroutineScope)
+     }
+     val networkMonitor by lazy { NetworkMonitor(applicationContext, coroutineScope) }
+     val notificationHelper by lazy { NotificationHelper(applicationContext) }
+diff --git a/app/src/main/java/org/lineageos/updater/controller/ABUpdateInstaller.java b/app/src/main/java/org/lineageos/updater/controller/ABUpdateInstaller.java
+index b012b2d484af664f237416626c2d0fadd1a61d9a..4708111a0cf8651854e02bad94bc84fee3b38a85 100644
+--- a/app/src/main/java/org/lineageos/updater/controller/ABUpdateInstaller.java
++++ b/app/src/main/java/org/lineageos/updater/controller/ABUpdateInstaller.java
+@@ -14,10 +14,8 @@ import android.util.Log;
+ 
+ import androidx.preference.PreferenceManager;
+ 
+-import org.lineageos.updater.UpdaterApplication;
+ import org.lineageos.updater.data.Update;
+ import org.lineageos.updater.data.UpdateStatus;
+-import org.lineageos.updater.data.UserPreferencesRepository;
+ import org.lineageos.updater.download.SingleRangeHttpFetcher;
+ import org.lineageos.updater.misc.Constants;
+ import org.lineageos.updater.misc.Utils;
+@@ -43,7 +41,6 @@ class ABUpdateInstaller {
+     private static ABUpdateInstaller sInstance = null;
+ 
+     private final UpdaterController mUpdaterController;
+-    private final UserPreferencesRepository mUserPreferencesRepository;
+     private final Context mContext;
+     private String mDownloadId;
+ 
+@@ -140,34 +137,16 @@ class ABUpdateInstaller {
+         return TextUtils.equals(waitingId, downloadId);
+     }
+ 
+-    private boolean shouldEnablePerformanceMode(boolean userPreferenceEnabled) {
+-        return ((UpdaterApplication) mContext).getBatteryMonitor()
+-                .getCurrentBatteryState().isAcCharging()
+-                || userPreferenceEnabled;
+-    }
+-
+-    private void applyPerformanceMode(boolean userPreferenceEnabled) {
+-        try {
+-            mUpdateEngine.setPerformanceMode(shouldEnablePerformanceMode(userPreferenceEnabled));
+-        } catch (Throwable e) {
+-            Log.w(TAG, "Could not set performance mode", e);
+-        }
+-    }
+-
+-    private ABUpdateInstaller(Context context, UpdaterController updaterController,
+-            UserPreferencesRepository userPreferencesRepository) {
++    private ABUpdateInstaller(Context context, UpdaterController updaterController) {
+         mUpdaterController = updaterController;
+-        mUserPreferencesRepository = userPreferencesRepository;
+         mContext = context.getApplicationContext();
+         mUpdateEngine = new UpdateEngine();
+     }
+ 
+-    static synchronized ABUpdateInstaller getInstance(Context context,
+-            UpdaterController updaterController,
+-            UserPreferencesRepository userPreferencesRepository) {
++    static synchronized ABUpdateInstaller getInstance(
++            Context context, UpdaterController updaterController) {
+         if (sInstance == null) {
+-            sInstance = new ABUpdateInstaller(context, updaterController,
+-                    userPreferencesRepository);
++            sInstance = new ABUpdateInstaller(context, updaterController);
+         }
+         return sInstance;
+     }
+@@ -272,8 +251,6 @@ class ABUpdateInstaller {
+             }
+         }
+ 
+-        applyPerformanceMode(mUserPreferencesRepository.getAbPerfModeBlocking());
+-
+         try {
+             mUpdateEngine.applyPayload(url, offset, size, headerKeyValuePairs);
+         } catch (ServiceSpecificException e) {
+@@ -319,7 +296,6 @@ class ABUpdateInstaller {
+             return;
+         }
+ 
+-        applyPerformanceMode(mUserPreferencesRepository.getAbPerfModeBlocking());
+     }
+ 
+     private void installationDone(boolean needsReboot) {
+diff --git a/app/src/main/java/org/lineageos/updater/controller/UpdateInstaller.java b/app/src/main/java/org/lineageos/updater/controller/UpdateInstaller.java
+index de873500d6dee3303621d69b6465965ca0b8ba32..b25f5ad4be1e9c69b60a1a7a329f5cf414e1758e 100644
+--- a/app/src/main/java/org/lineageos/updater/controller/UpdateInstaller.java
++++ b/app/src/main/java/org/lineageos/updater/controller/UpdateInstaller.java
+@@ -6,6 +6,10 @@ package org.lineageos.updater.controller;
+ 
+ import android.content.Context;
+ import android.content.SharedPreferences;
++import android.os.IRecoverySystem;
++import android.os.PowerManager;
++import android.os.RemoteException;
++import android.os.ServiceManager;
+ import android.util.Log;
+ 
+ import androidx.preference.PreferenceManager;
+@@ -22,11 +26,16 @@ import java.io.IOException;
+ import java.nio.file.attribute.PosixFilePermission;
+ import java.nio.file.Files;
+ import java.util.HashSet;
++import java.util.Locale;
+ import java.util.Set;
+ 
+ class UpdateInstaller {
+ 
+     private static final String TAG = "UpdateInstaller";
++    // Recovery mounts the metadata filesystem at /cache. RecoverySystem and
++    // uncrypt create this file as /metadata/ota/purepixel/block.map while
++    // Android is running; this is the same inode through recovery's mount.
++    private static final String RECOVERY_BLOCK_MAP = "/cache/ota/purepixel/block.map";
+ 
+     private static UpdateInstaller sInstance = null;
+     private static String sInstallingUpdate = null;
+@@ -89,7 +98,49 @@ class UpdateInstaller {
+ 
+     private void installPackage(File update, String downloadId) {
+         try {
+-            android.os.RecoverySystem.installPackage(mContext, update);
++            // Prepare the recovery block map while Android and /data are fully
++            // available. Relying on ShutdownThread to run uncrypt during the
++            // reboot leaves cacheless non-A/B devices vulnerable to entering
++            // recovery before the map is durably available. The processed
++            // install path also fails closed if uncrypt did not create it.
++            android.os.RecoverySystem.processPackage(mContext, update, null);
++
++            // Persist the cleanup identifier before setting the BCB. A
++            // successful recovery install reboots straight back to Android,
++            // where UpdaterReceiver removes the downloaded package.
++            SharedPreferences preferences =
++                    PreferenceManager.getDefaultSharedPreferences(mContext);
++            if (!preferences.edit()
++                    .putString(Constants.PREF_NEEDS_REBOOT_ID, downloadId)
++                    .commit()) {
++                throw new IOException("Could not persist OTA cleanup state");
++            }
++            // Lenovo's cacheless recovery pre-mounts /cache, while Android
++            // creates the map on the metadata filesystem. The recovery fstab
++            // aliases that same filesystem at /cache, so hand recovery the
++            // cache-visible path after uncrypt has completed successfully.
++            String command = "--update_package=@" + RECOVERY_BLOCK_MAP + "\n"
++                    + "--locale=" + Locale.getDefault().toLanguageTag() + "\n";
++            IRecoverySystem recovery = IRecoverySystem.Stub.asInterface(
++                    ServiceManager.getService(Context.RECOVERY_SERVICE));
++            if (recovery == null || !recovery.setupBcb(command)) {
++                preferences.edit().remove(Constants.PREF_NEEDS_REBOOT_ID).apply();
++                throw new IOException("Setup BCB failed");
++            }
++
++            PowerManager power = mContext.getSystemService(PowerManager.class);
++            if (power == null) {
++                recovery.clearBcb();
++                preferences.edit().remove(Constants.PREF_NEEDS_REBOOT_ID).apply();
++                throw new IOException("Power manager unavailable");
++            }
++            power.reboot(PowerManager.REBOOT_RECOVERY);
++            throw new IOException("Reboot failed");
++        } catch (RemoteException e) {
++            Log.e(TAG, "Could not prepare recovery update", e);
++            mUpdaterController.setUpdate(downloadId, mUpdaterController.getUpdate(downloadId)
++                    .withStatus(UpdateStatus.INSTALLATION_FAILED));
++            mUpdaterController.notifyUpdateChange(downloadId);
+         } catch (IOException e) {
+             Log.e(TAG, "Could not install update", e);
+             mUpdaterController.setUpdate(downloadId, mUpdaterController.getUpdate(downloadId)
+diff --git a/app/src/main/java/org/lineageos/updater/controller/UpdaterService.java b/app/src/main/java/org/lineageos/updater/controller/UpdaterService.java
+index 58eb81032d3c710d217c29c1d61d11a4c2817033..9eca7d9c827732f85eb130ce317e65f70eed3420 100644
+--- a/app/src/main/java/org/lineageos/updater/controller/UpdaterService.java
++++ b/app/src/main/java/org/lineageos/updater/controller/UpdaterService.java
+@@ -28,6 +28,7 @@ import org.lineageos.updater.UpdatesActivity;
+ import org.lineageos.updater.data.Update;
+ import org.lineageos.updater.data.UpdateStatus;
+ import org.lineageos.updater.data.UserPreferencesRepository;
++import org.lineageos.updater.deviceinfo.DeviceInfoUtils;
+ import org.lineageos.updater.misc.Utils;
+ import org.lineageos.updater.notifications.NotificationHelper;
+ import org.lineageos.updater.util.InstallUtils;
+@@ -162,8 +163,8 @@ public class UpdaterService extends Service {
+         if (intent == null || intent.getAction() == null) {
+             if (ABUpdateInstaller.isInstallingUpdate(this)) {
+                 // The service is being restarted.
+-                ABUpdateInstaller installer = ABUpdateInstaller.getInstance(this,
+-                        mUpdaterController, mUserPreferencesRepository);
++                ABUpdateInstaller installer = ABUpdateInstaller.getInstance(
++                        this, mUpdaterController);
+                 installer.reconnect();
+             }
+         } else if (ACTION_POST_REBOOT_CLEANUP.equals(intent.getAction())) {
+@@ -183,6 +184,10 @@ public class UpdaterService extends Service {
+                 Log.e(TAG, "Unknown download action");
+             }
+         } else if (ACTION_INSTALL_UPDATE.equals(intent.getAction())) {
++            if (!DeviceInfoUtils.isInstallEnabled()) {
++                Log.e(TAG, "On-device installation is disabled for this product");
++                return START_NOT_STICKY;
++            }
+             String downloadId = intent.getStringExtra(EXTRA_DOWNLOAD_ID);
+             Update update = mUpdaterController.getUpdate(downloadId);
+             if (update == null) {
+@@ -200,8 +205,8 @@ public class UpdaterService extends Service {
+             }
+             try {
+                 if (canStreamUpdate || new OtaMetadataParser(update.getFile()).isABUpdate()) {
+-                    ABUpdateInstaller installer = ABUpdateInstaller.getInstance(this,
+-                            mUpdaterController, mUserPreferencesRepository);
++                    ABUpdateInstaller installer = ABUpdateInstaller.getInstance(
++                            this, mUpdaterController);
+                     if (canStreamUpdate) {
+                         installer.installStreaming(downloadId);
+                     } else {
+@@ -224,22 +229,22 @@ public class UpdaterService extends Service {
+                         mUpdaterController);
+                 installer.cancel();
+             } else if (ABUpdateInstaller.isInstallingUpdate(this)) {
+-                ABUpdateInstaller installer = ABUpdateInstaller.getInstance(this,
+-                        mUpdaterController, mUserPreferencesRepository);
++                ABUpdateInstaller installer = ABUpdateInstaller.getInstance(
++                        this, mUpdaterController);
+                 installer.reconnect();
+                 installer.cancel();
+             }
+         } else if (ACTION_INSTALL_SUSPEND.equals(intent.getAction())) {
+             if (ABUpdateInstaller.isInstallingUpdate(this)) {
+-                ABUpdateInstaller installer = ABUpdateInstaller.getInstance(this,
+-                        mUpdaterController, mUserPreferencesRepository);
++                ABUpdateInstaller installer = ABUpdateInstaller.getInstance(
++                        this, mUpdaterController);
+                 installer.reconnect();
+                 installer.suspend();
+             }
+         } else if (ACTION_INSTALL_RESUME.equals(intent.getAction())) {
+             if (ABUpdateInstaller.isInstallingUpdateSuspended(this)) {
+-                ABUpdateInstaller installer = ABUpdateInstaller.getInstance(this,
+-                        mUpdaterController, mUserPreferencesRepository);
++                ABUpdateInstaller installer = ABUpdateInstaller.getInstance(
++                        this, mUpdaterController);
+                 installer.reconnect();
+                 installer.resume();
+             }
+diff --git a/app/src/main/java/org/lineageos/updater/data/Update.kt b/app/src/main/java/org/lineageos/updater/data/Update.kt
+index 194dc020db63ed4252c8e5a47ae3d9a361bf5ac5..5cc1d489022cf7eb65eac881837c69f090fee748 100644
+--- a/app/src/main/java/org/lineageos/updater/data/Update.kt
++++ b/app/src/main/java/org/lineageos/updater/data/Update.kt
+@@ -31,8 +31,10 @@ data class Update(
+     val timestamp: Long = 0,
+     val type: String? = null,
+     val version: String = "",
++    val changelogUrl: String? = null,
+ ) {
+     fun withAvailableOnline(v: Boolean) = copy(isAvailableOnline = v)
++    fun withChangelogUrl(v: String?) = copy(changelogUrl = v)
+     fun withDownloadId(v: String) = copy(downloadId = v)
+     fun withDownloadUrl(v: String?) = copy(downloadUrl = v)
+     fun withEta(v: Long) = copy(eta = v)
+@@ -76,6 +78,7 @@ data class Update(
+         private var timestamp: Long = 0,
+         private var type: String? = null,
+         private var version: String = "",
++        private var changelogUrl: String? = null,
+     ) {
+         constructor(update: Update) : this(
+             update.isAvailableOnline, update.downloadId, update.downloadUrl,
+@@ -84,9 +87,10 @@ data class Update(
+             update.payloadMetadataOffset, update.payloadMetadataSize, update.payloadOffset,
+             update.payloadSize, update.payloadPropertiesOffset, update.payloadPropertiesSize,
+             update.progress, update.speed, update.status, update.timestamp, update.type,
+-            update.version,
++            update.version, update.changelogUrl,
+         )
+ 
++        fun setChangelogUrl(v: String?) = apply { changelogUrl = v }
+         fun setAvailableOnline(v: Boolean) = apply { isAvailableOnline = v }
+         fun setDownloadId(v: String) = apply { downloadId = v }
+         fun setDownloadUrl(v: String?) = apply { downloadUrl = v }
+@@ -114,7 +118,7 @@ data class Update(
+             isAvailableOnline, downloadId, downloadUrl, eta, file, fileSize,
+             isFinalizing, installProgress, name, osPatchLevel, osSdkLevel, payloadMetadataOffset,
+             payloadMetadataSize, payloadOffset, payloadSize, payloadPropertiesOffset,
+-            payloadPropertiesSize, progress, speed, status, timestamp, type, version,
++            payloadPropertiesSize, progress, speed, status, timestamp, type, version, changelogUrl,
+         )
+     }
+ 
+diff --git a/app/src/main/java/org/lineageos/updater/data/source/network/NetworkUpdate.kt b/app/src/main/java/org/lineageos/updater/data/source/network/NetworkUpdate.kt
+index 8e2ff5b38f75c22d3ab6290ea59d107842420435..ea1683612d6a10fe1a845a839802e9990118b57e 100644
+--- a/app/src/main/java/org/lineageos/updater/data/source/network/NetworkUpdate.kt
++++ b/app/src/main/java/org/lineageos/updater/data/source/network/NetworkUpdate.kt
+@@ -32,6 +32,7 @@ data class NetworkUpdate(
+ @Serializable
+ @JsonIgnoreUnknownKeys
+ data class NetworkUpdateFile(
++    @SerialName("changelog_url") val changelogUrl: String? = null,
+     // @SerialName("date") val date: String? = null,
+     // @SerialName("datetime") val datetime: Long? = null,
+     @SerialName("filename") val filename: String,
+@@ -68,6 +69,7 @@ fun NetworkUpdate.toUpdate(): Update {
+     val payloadPropertiesRange = packageFileRanges[Constants.AB_PAYLOAD_PROPERTIES_PATH]
+ 
+     return Update(
++        changelogUrl = file.changelogUrl,
+         downloadId = file.sha256,
+         name = file.filename,
+         timestamp = datetime,
+diff --git a/app/src/main/java/org/lineageos/updater/data/source/network/UpdatesNetworkDataSource.kt b/app/src/main/java/org/lineageos/updater/data/source/network/UpdatesNetworkDataSource.kt
+index 2f1407f73d8fbc8c894aa34130fa2620a5cfdc39..e071eda0061a5c4e080598447d92d58829db43d7 100644
+--- a/app/src/main/java/org/lineageos/updater/data/source/network/UpdatesNetworkDataSource.kt
++++ b/app/src/main/java/org/lineageos/updater/data/source/network/UpdatesNetworkDataSource.kt
+@@ -30,7 +30,9 @@ class UpdatesNetworkDataSource(private val context: Context) {
+ 
+     private val client = OkHttpClient.Builder()
+         .callTimeout(10, TimeUnit.SECONDS)
+-        .followRedirects(false)
++        // SourceForge's stable /download endpoint redirects to an HTTPS mirror.
++        .followRedirects(true)
++        .followSslRedirects(true)
+         .build()
+ 
+     fun fetchUpdates(): List<NetworkUpdate> {
+diff --git a/app/src/main/java/org/lineageos/updater/deviceinfo/DeviceInfoUtils.kt b/app/src/main/java/org/lineageos/updater/deviceinfo/DeviceInfoUtils.kt
+index 126a7a4c7aebb20dad33a1bec26063ff0eee36d0..31ba5b3b3ecac8e47973945dde36e906380e504b 100644
+--- a/app/src/main/java/org/lineageos/updater/deviceinfo/DeviceInfoUtils.kt
++++ b/app/src/main/java/org/lineageos/updater/deviceinfo/DeviceInfoUtils.kt
+@@ -12,16 +12,10 @@ import com.android.settingslib.DeviceInfoUtils as SettingsLibDeviceInfoUtils
+ object DeviceInfoUtils : SettingsLibDeviceInfoUtils() {
+ 
+     private const val PROP_AB_DEVICE = "ro.build.ab_update"
+-    private const val PROP_ALLOW_MAJOR_UPGRADES = "lineage.updater.allow_major_upgrades"
+     private const val PROP_BUILD_DATE = "ro.build.date.utc"
+-    private const val PROP_BUILD_VERSION = "ro.lineage.build.version"
+     private const val PROP_BUILD_VERSION_INCREMENTAL = "ro.build.version.incremental"
+-    private const val PROP_DEVICE = "ro.lineage.device"
+     private const val PROP_NEXT_DEVICE = "ro.updater.next_device"
+-    private const val PROP_RELEASE_TYPE = "ro.lineage.releasetype"
+-    private const val PROP_UPDATER_ALLOW_DOWNGRADING = "lineage.updater.allow_downgrading"
+-    private const val PROP_UPDATER_URI = "lineage.updater.uri"
+-    private const val PROP_UPDATE_RECOVERY = "persist.vendor.recovery_update"
++    private const val PROP_INSTALL_ENABLED = "ro.updater.install_enabled"
+ 
+     // Read-only
+     val androidVersion: String = Build.VERSION.RELEASE
+@@ -34,35 +28,38 @@ object DeviceInfoUtils : SettingsLibDeviceInfoUtils() {
+     val buildDateTimestamp: Long = SystemProperties.getLong(PROP_BUILD_DATE, 0)
+ 
+     @JvmStatic
+-    val buildVersion: String = SystemProperties.get(PROP_BUILD_VERSION, "")
++    val buildVersion: String = Build.VERSION.RELEASE
+ 
+     @JvmStatic
+     val buildVersionIncremental: String = SystemProperties.get(PROP_BUILD_VERSION_INCREMENTAL, "")
+ 
+     @JvmStatic
+-    val device: String = SystemProperties.get(PROP_NEXT_DEVICE, SystemProperties.get(PROP_DEVICE))
++    val device: String = SystemProperties.get(PROP_NEXT_DEVICE, Build.DEVICE)
+ 
+     @JvmStatic
+     val isABDevice: Boolean = SystemProperties.getBoolean(PROP_AB_DEVICE, false)
+ 
+     @JvmStatic
+-    val releaseType: String = SystemProperties.get(PROP_RELEASE_TYPE)
++    val isInstallEnabled: Boolean = SystemProperties.getBoolean(PROP_INSTALL_ENABLED, true)
++
++    @JvmStatic
++    val releaseType: String = "stable"
+ 
+     // Mutable at runtime
+     @JvmStatic
+     val isDowngradingAllowed: Boolean
+-        get() = SystemProperties.getBoolean(PROP_UPDATER_ALLOW_DOWNGRADING, false)
++        get() = false
+ 
+     @JvmStatic
+     val isMajorUpdateAllowed: Boolean
+-        get() = SystemProperties.getBoolean(PROP_ALLOW_MAJOR_UPGRADES, false)
++        get() = false
+ 
+     @JvmStatic
+     var isRecoveryUpdateEnabled: Boolean
+-        get() = SystemProperties.getBoolean(PROP_UPDATE_RECOVERY, false)
+-        set(value) = SystemProperties.set(PROP_UPDATE_RECOVERY, value.toString())
++        get() = false
++        set(_) = Unit
+ 
+     @JvmStatic
+     val updaterUri: String
+-        get() = SystemProperties.get(PROP_UPDATER_URI, "")
++        get() = ""
+ }
+diff --git a/app/src/main/java/org/lineageos/updater/preferences/PreferencesScreen.kt b/app/src/main/java/org/lineageos/updater/preferences/PreferencesScreen.kt
+index 4f3a2a4fab62288d93019f66287ffd5ef3380adc..168f92e5c39cd11621ae239f37b4b072f6b64e65 100644
+--- a/app/src/main/java/org/lineageos/updater/preferences/PreferencesScreen.kt
++++ b/app/src/main/java/org/lineageos/updater/preferences/PreferencesScreen.kt
+@@ -28,7 +28,6 @@ import org.lineageos.updater.UpdaterApplication
+ import org.lineageos.updater.data.CheckInterval
+ import org.lineageos.updater.data.UserPreferencesRepository
+ import org.lineageos.updater.deviceinfo.DeviceInfoUtils
+-import org.lineageos.updater.util.BatteryMonitor
+ import java.io.File
+ 
+ @Composable
+@@ -36,26 +35,20 @@ fun PreferencesScreen() {
+     val context = LocalContext.current
+     val application = remember(context) { context.applicationContext as UpdaterApplication }
+     val repository = application.userPreferencesRepository
+-    val batteryMonitor = application.batteryMonitor
+     val isABDevice = remember { DeviceInfoUtils.isABDevice }
+     val showRecoveryUpdate = remember { installRecoveryScriptExists() }
+     RegularScaffold(title = stringResource(R.string.display_name)) {
+-        PreferencesContent(repository, batteryMonitor, isABDevice, showRecoveryUpdate)
++        PreferencesContent(repository, isABDevice, showRecoveryUpdate)
+     }
+ }
+ 
+ @Composable
+ private fun PreferencesContent(
+     repository: UserPreferencesRepository,
+-    batteryMonitor: BatteryMonitor,
+     isABDevice: Boolean,
+     showRecoveryUpdate: Boolean,
+ ) {
+     val coroutineScope = rememberCoroutineScope()
+-    val abPerfMode by repository.abPerfModeFlow.collectAsStateWithLifecycle(false)
+-    val batteryState by batteryMonitor.batteryState.collectAsStateWithLifecycle(
+-        batteryMonitor.currentBatteryState
+-    )
+     val autoDelete by repository.autoDeleteFlow.collectAsStateWithLifecycle(true)
+     val streamUpdates by repository.streamUpdatesFlow.collectAsStateWithLifecycle(true)
+     val checkInterval by repository.checkIntervalFlow.collectAsStateWithLifecycle(CheckInterval.default)
+@@ -69,8 +62,6 @@ private fun PreferencesContent(
+     val autoDeleteUpdatesSummary = stringResource(R.string.menu_auto_delete_updates_summary)
+     val streamUpdatesSummary = stringResource(R.string.menu_stream_updates_summary)
+     val meteredNetworkWarningSummary = stringResource(R.string.menu_metered_network_warning_summary)
+-    val abPerfModeSummary = stringResource(R.string.menu_ab_perf_mode_summary)
+-    val abPerfModeChargingSummary = stringResource(R.string.menu_ab_perf_mode_summary_charging)
+     val updateRecoverySummary = stringResource(R.string.menu_update_recovery_summary)
+     val selectedCheckInterval = remember(checkInterval) {
+         object : IntState {
+@@ -143,24 +134,6 @@ private fun PreferencesContent(
+             }
+         })
+ 
+-        if (isABDevice) {
+-            SwitchPreference(object : SwitchPreferenceModel {
+-                override val title = stringResource(R.string.menu_ab_perf_mode)
+-                override val summary = {
+-                    if (batteryState.isAcCharging) {
+-                        abPerfModeChargingSummary
+-                    } else {
+-                        abPerfModeSummary
+-                    }
+-                }
+-                override val changeable = { !batteryState.isAcCharging }
+-                override val checked = { batteryState.isAcCharging || abPerfMode }
+-                override val onCheckedChange: (Boolean) -> Unit = { value ->
+-                    coroutineScope.launch { repository.setAbPerfMode(value) }
+-                }
+-            })
+-        }
+-
+         if (showRecoveryUpdate) {
+             SwitchPreference(object : SwitchPreferenceModel {
+                 override val title = stringResource(R.string.menu_update_recovery)
+diff --git a/app/src/main/java/org/lineageos/updater/updates/UpdateList.kt b/app/src/main/java/org/lineageos/updater/updates/UpdateList.kt
+index f98439363ae7a44b5ad4978aaf4f3f28213441ba..2af5a116c01001fd3492333e07635cba1358964b 100644
+--- a/app/src/main/java/org/lineageos/updater/updates/UpdateList.kt
++++ b/app/src/main/java/org/lineageos/updater/updates/UpdateList.kt
+@@ -8,6 +8,7 @@ package org.lineageos.updater.updates
+ import androidx.compose.animation.AnimatedVisibility
+ import androidx.compose.foundation.layout.Column
+ import androidx.compose.runtime.Composable
++import androidx.compose.runtime.LaunchedEffect
+ import androidx.compose.runtime.getValue
+ import androidx.compose.runtime.mutableStateOf
+ import androidx.compose.runtime.saveable.rememberSaveable
+@@ -39,6 +40,13 @@ fun UpdateList(
+ 
+     var expanded by rememberSaveable { mutableStateOf(false) }
+     var expandedItemIds by rememberSaveable { mutableStateOf(emptySet<String>()) }
++    val newestItemId = items.firstOrNull()?.downloadId
++
++    LaunchedEffect(newestItemId) {
++        if (newestItemId != null) {
++            expandedItemIds += newestItemId
++        }
++    }
+     val activeItems = items.filter { it.progress != null }
+     val collapsedVisibleItems =
+         (listOf(items.first()) + activeItems).distinctBy { it.downloadId }
+diff --git a/app/src/main/java/org/lineageos/updater/updates/action/UpdateAction.kt b/app/src/main/java/org/lineageos/updater/updates/action/UpdateAction.kt
+index 90bc450a8f15c17e36e3b392ba1f2a8b1551b593..b9e1d30dbdf5edcd63b14ef58306eb47f9e39fc7 100644
+--- a/app/src/main/java/org/lineageos/updater/updates/action/UpdateAction.kt
++++ b/app/src/main/java/org/lineageos/updater/updates/action/UpdateAction.kt
+@@ -23,6 +23,7 @@ enum class UpdateActionType(@param:StringRes val titleRes: Int) {
+     REBOOT(R.string.reboot),
+     SHOW_INFO(R.string.action_info),
+     OPEN_GUIDE(R.string.action_open_guide),
++    VIEW_CHANGELOG(R.string.show_changelog),
+ 
+     DELETE(R.string.menu_delete_update),
+     EXPORT(R.string.menu_export_update),
+diff --git a/app/src/main/java/org/lineageos/updater/updates/action/UpdateActionHandler.kt b/app/src/main/java/org/lineageos/updater/updates/action/UpdateActionHandler.kt
+index 8c0ab12dc77a3a51db9ca3bf1a4b4cd2c696a6ac..4b15e0d6e7cce9864cc2450d3114a8f7fc12aac9 100644
+--- a/app/src/main/java/org/lineageos/updater/updates/action/UpdateActionHandler.kt
++++ b/app/src/main/java/org/lineageos/updater/updates/action/UpdateActionHandler.kt
+@@ -165,6 +165,19 @@ class UpdateActionHandler(
+                         }
+                     }
+ 
++                    InstallUtils.BlockedReason.MANUAL_INSTALL_REQUIRED -> {
++                        activity.startActivity(
++                            Intent(
++                                Intent.ACTION_VIEW,
++                                activity.getString(
++                                    R.string.blocked_update_info_url,
++                                    DeviceInfoUtils.device,
++                                ).toUri(),
++                            )
++                        )
++                        return
++                    }
++
+                     InstallUtils.BlockedReason.NONE -> return
+                 }
+ 
+@@ -194,6 +207,10 @@ class UpdateActionHandler(
+                 )
+             )
+ 
++            UpdateActionType.VIEW_CHANGELOG -> update.changelogUrl?.let { url ->
++                activity.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
++            }
++
+             UpdateActionType.VIEW_DOWNLOADS -> activity.startActivity(
+                 Intent(
+                     Intent.ACTION_VIEW,
+diff --git a/app/src/main/java/org/lineageos/updater/updates/state/UpdateItemStateMapper.kt b/app/src/main/java/org/lineageos/updater/updates/state/UpdateItemStateMapper.kt
+index 1b97368a411c14eda3ea7ab897e33f110ae9a7c2..80797e85cd3741a0d52f508f77086ec405d9faf3 100644
+--- a/app/src/main/java/org/lineageos/updater/updates/state/UpdateItemStateMapper.kt
++++ b/app/src/main/java/org/lineageos/updater/updates/state/UpdateItemStateMapper.kt
+@@ -151,7 +151,9 @@ class UpdateItemStateMapper(
+         }
+         val actions = UpdateActions(
+             primary = buttonActions.primary,
+-            secondary = buttonActions.secondary,
++            secondary = buttonActions.secondary ?: update.changelogUrl?.let {
++                action(UpdateActionType.VIEW_CHANGELOG)
++            },
+             overflow = buildList {
+                 if (state.canExport) {
+                     add(action(UpdateActionType.EXPORT, enabled = !state.isBusy))
+@@ -191,6 +193,7 @@ class UpdateItemStateMapper(
+             installNote = when (state.installBlockedReason) {
+                 InstallUtils.BlockedReason.DOWNGRADE -> R.string.list_downgrade_blocked
+                 InstallUtils.BlockedReason.VERSION_UNSUPPORTED -> R.string.list_major_upgrade_recovery_install
++                InstallUtils.BlockedReason.MANUAL_INSTALL_REQUIRED -> R.string.list_manual_install_required
+                 InstallUtils.BlockedReason.NONE -> R.string.list_full_install
+             },
+             progress = progress,
+diff --git a/app/src/main/java/org/lineageos/updater/updates/state/UpdateOperationState.kt b/app/src/main/java/org/lineageos/updater/updates/state/UpdateOperationState.kt
+index 0d8d3eb3dc69dd98afaefee6f93929ff9c22b895..c31ecb31df652e3d1d1c0d5ca10b9d2e3431f082 100644
+--- a/app/src/main/java/org/lineageos/updater/updates/state/UpdateOperationState.kt
++++ b/app/src/main/java/org/lineageos/updater/updates/state/UpdateOperationState.kt
+@@ -64,7 +64,8 @@ data class UpdateOperationState(
+         get() = phase == UpdateOperationPhase.FINALIZING
+ 
+     val requiresManualInstall: Boolean
+-        get() = installBlockedReason == InstallUtils.BlockedReason.VERSION_UNSUPPORTED
++        get() = installBlockedReason == InstallUtils.BlockedReason.VERSION_UNSUPPORTED ||
++                installBlockedReason == InstallUtils.BlockedReason.MANUAL_INSTALL_REQUIRED
+ 
+     @get:StringRes
+     val titleRes: Int?
+diff --git a/app/src/main/java/org/lineageos/updater/util/BatteryMonitor.kt b/app/src/main/java/org/lineageos/updater/util/BatteryMonitor.kt
+index ab9096fc91af9b8cb48fbc6dbb5f86d2ba7781dc..e667e699135ab921504062608c12c17ca160a340 100644
+--- a/app/src/main/java/org/lineageos/updater/util/BatteryMonitor.kt
++++ b/app/src/main/java/org/lineageos/updater/util/BatteryMonitor.kt
+@@ -10,20 +10,16 @@ import android.content.Context
+ import android.content.Intent
+ import android.content.IntentFilter
+ import android.os.BatteryManager
+-import android.os.UpdateEngine
+ import kotlinx.coroutines.CoroutineScope
+ import kotlinx.coroutines.channels.awaitClose
+ import kotlinx.coroutines.flow.SharedFlow
+ import kotlinx.coroutines.flow.SharingStarted
+ import kotlinx.coroutines.flow.callbackFlow
+-import kotlinx.coroutines.flow.onEach
+ import kotlinx.coroutines.flow.stateIn
+-import org.lineageos.updater.data.UserPreferencesRepository
+ 
+ class BatteryMonitor(
+     private val appContext: Context,
+     coroutineScope: CoroutineScope,
+-    userPreferencesRepository: UserPreferencesRepository,
+ ) {
+     data class BatteryState(
+         val level: Int,
+@@ -46,42 +42,12 @@ class BatteryMonitor(
+             ?.let { fromIntent(it) }
+             ?: BATTERYLESS_STATE
+ 
+-    // Null on non-AB devices where update_engine is absent.
+-    private val updateEngine: UpdateEngine? = try {
+-        UpdateEngine()
+-    } catch (_: Exception) {
+-        null
+-    }
+-
+-    private val abPerfMode = userPreferencesRepository.abPerfModeFlow
+-        .onEach {
+-            try {
+-                updateEngine?.setPerformanceMode(currentBatteryState.isAcCharging || it)
+-            } catch (_: Throwable) {
+-                // Ignored
+-            }
+-        }
+-        .stateIn(
+-            scope = coroutineScope,
+-            started = SharingStarted.Eagerly,
+-            initialValue = false,
+-        )
+-
+     val batteryState: SharedFlow<BatteryState> = callbackFlow {
+         var previousState = currentBatteryState
+ 
+         val receiver = object : BroadcastReceiver() {
+             override fun onReceive(context: Context, intent: Intent) {
+                 val state = fromIntent(intent)
+-                // On AC, maximize background updates; otherwise respect the user preference.
+-                // Guard on isAcCharging change to avoid redundant IPC on every battery level tick.
+-                if (state.isAcCharging != previousState.isAcCharging) {
+-                    try {
+-                        updateEngine?.setPerformanceMode(state.isAcCharging || abPerfMode.value)
+-                    } catch (_: Throwable) {
+-                        // Ignored
+-                    }
+-                }
+                 previousState = state
+                 trySend(state)
+             }
+diff --git a/app/src/main/java/org/lineageos/updater/util/InstallUtils.kt b/app/src/main/java/org/lineageos/updater/util/InstallUtils.kt
+index 4a0da3cb077a54e492d3aededb09e0e19f67716d..fe7c1cfe851fe36de32432e52c9ecf2db5feb007 100644
+--- a/app/src/main/java/org/lineageos/updater/util/InstallUtils.kt
++++ b/app/src/main/java/org/lineageos/updater/util/InstallUtils.kt
+@@ -18,11 +18,13 @@ object InstallUtils {
+     }.getOrDefault(false)
+ 
+     enum class BlockedReason {
+-        NONE, DOWNGRADE, VERSION_UNSUPPORTED
++        NONE, DOWNGRADE, VERSION_UNSUPPORTED, MANUAL_INSTALL_REQUIRED
+     }
+ 
+     @JvmStatic
+     fun getBlockedReason(update: Update) = when {
++        !DeviceInfoUtils.isInstallEnabled -> BlockedReason.MANUAL_INSTALL_REQUIRED
++
+         !DeviceInfoUtils.isDowngradingAllowed &&
+                 (update.timestamp < DeviceInfoUtils.buildDateTimestamp ||
+                         update.osSdkLevel < DeviceInfoUtils.sdkLevel) -> BlockedReason.DOWNGRADE
+diff --git a/app/src/main/res/values/config.xml b/app/src/main/res/values/config.xml
+index b4f696a568376d4e57a9e608d5169eb6fb24919d..54b671c0c761a6ca8b5d1f60affe23f9bbd4efda 100644
+--- a/app/src/main/res/values/config.xml
++++ b/app/src/main/res/values/config.xml
+@@ -5,17 +5,17 @@
+ -->
+ <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+     <!-- Base background of the header card. -->
+-    <color name="brand_primary">#167C80</color>
++    <color name="brand_primary">#1A73E8</color>
+ 
+     <!-- Tiled pattern overlay color for the header card. -->
+-    <color name="brand_pattern">#48A0A3</color>
++    <color name="brand_pattern">#4285F4</color>
+ 
+     <!-- Content color on the header (text, icons, mark). Always white on teal. -->
+     <color name="on_brand_surface">#FFFFFF</color>
+ 
+     <!-- Sheen gradient color -->
+-    <color name="brand_sheen">#EADDFF</color>
++    <color name="brand_sheen">#D2E3FC</color>
+ 
+     <!-- URL template for opening the device-specific downloads page from the update menu. -->
+-    <string name="menu_downloads_url" translatable="false">https://download.lineageos.org/devices/<xliff:g id="device_name">%1$s</xliff:g>/builds</string>
++    <string name="menu_downloads_url" translatable="false">https://sourceforge.net/projects/purepixel17-tb132fu/files/</string>
+ </resources>
+diff --git a/app/src/main/res/values/strings.xml b/app/src/main/res/values/strings.xml
+index df56e15283e927c3147e62f2d6d450d3249e7e70..9fe116c3696986b0b4934e9dfd681229cf2de98e 100644
+--- a/app/src/main/res/values/strings.xml
++++ b/app/src/main/res/values/strings.xml
+@@ -4,7 +4,7 @@
+      SPDX-License-Identifier: Apache-2.0
+ -->
+ <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+-    <string name="app_name">Updater</string>
++    <string name="app_name">Pure Pixel Updater</string>
+ 
+     <!-- This is matched with system_update_settings_list_item_title
+          from the Settings app. -->
+@@ -12,11 +12,11 @@
+ 
+     <!-- Directory where the update files will be downloaded and stored.
+          WARNING: The application can and will delete any unknown file. -->
+-    <string name="download_path" translatable="false">/data/lineageos_updates/</string>
++    <string name="download_path" translatable="false">/data/purepixel_updates/</string>
+ 
+     <!-- Directory where the downloads will be exported to.
+          The path is relative to the root of the external storage.-->
+-    <string name="export_path" translatable="false">LineageOS updates/</string>
++    <string name="export_path" translatable="false">Pure Pixel updates/</string>
+ 
+     <!--
+         Optional placeholders replaced at runtime:
+@@ -24,7 +24,7 @@
+           {type} - Build type
+           {incr} - Incremental version
+     -->
+-    <string name="updater_server_url" translatable="false">https://download.lineageos.org/api/v2/devices/{device}/builds</string>
++    <string name="updater_server_url" translatable="false">https://sourceforge.net/projects/purepixel17-tb132fu/files/ota/{device}.json/download</string>
+ 
+     <string name="verification_failed_notification">Verification failed</string>
+     <string name="verifying_download_notification">Verifying update</string>
+@@ -91,7 +91,7 @@
+     <string name="menu_stream_updates_summary">Install updates while downloading. Disable to save update packages for export.</string>
+     <string name="menu_delete_update">Delete</string>
+     <string name="menu_export_update">Export update</string>
+-    <string name="menu_changelog_url" translatable="false">https://download.lineageos.org/<xliff:g id="device_name">%1$s</xliff:g>/changes</string>
++    <string name="menu_changelog_url" translatable="false">https://sourceforge.net/projects/purepixel17-tb132fu/files/</string>
+     <string name="menu_view_downloads">View on <xliff:g id="brand_name" example="LineageOS">%1$s</xliff:g> Downloads</string>
+     <string name="menu_metered_network_warning">Metered network warning</string>
+     <string name="menu_metered_network_warning_summary">Warn before downloading over mobile data</string>
+@@ -112,27 +112,28 @@
+     <string name="header_android_version">Android <xliff:g id="version" example="16">%1$s</xliff:g></string>
+ 
+     <!-- Banner -->
+-    <string name="brand_name" translatable="false">LineageOS</string>
+-    <string name="header_build_version" translatable="false">LineageOS <xliff:g id="version" example="23.2">%1$s</xliff:g></string>
++    <string name="brand_name" translatable="false">Pure Pixel</string>
++    <string name="header_build_version" translatable="false">Pure Pixel <xliff:g id="version" example="17">%1$s</xliff:g></string>
+     <string name="build_date">Build date</string>
+     <string name="security_update">Security update</string>
+     <string name="show_changelog">Recent changes</string>
+     <string name="report_issues">Report issues</string>
+-    <string name="report_issue_url" translatable="false">https://wiki.lineageos.org/how-to/bugreport/</string>
++    <string name="report_issue_url" translatable="false">https://xdaforums.com/t/4798867/</string>
+     <string name="header_review_updates">Review updates and recent changes on</string>
+-    <string name="header_download_url" translatable="false">download.lineageos.org</string>
++    <string name="header_download_url" translatable="false">sourceforge.net</string>
+     <string name="found_bug">Found a bug? Report it with our bug report guide:</string>
+ 
+     <string name="updates_zero_state_title">No updates available</string>
+     <string name="updates_zero_state_description">New builds for this device will appear here when available.</string>
+ 
+-    <string name="list_build_version">LineageOS <xliff:g id="version" example="14.1">%1$s</xliff:g></string>
+-    <string name="list_build_version_date">LineageOS <xliff:g id="version" example="14.1">%1$s</xliff:g> - <xliff:g id="date" example="July 11, 2017">%2$s</xliff:g></string>
++    <string name="list_build_version">Pure Pixel <xliff:g id="version" example="17">%1$s</xliff:g></string>
++    <string name="list_build_version_date">Pure Pixel <xliff:g id="version" example="17">%1$s</xliff:g> - <xliff:g id="date" example="August 21, 2026">%2$s</xliff:g></string>
+     <string name="list_update_size">Update size: <xliff:g id="size" example="1.34 GB">%1$s</xliff:g></string>
+     <string name="list_security_update">Security update: <xliff:g id="date" example="Jan 2026">%1$s</xliff:g></string>
+     <string name="list_major_android_upgrade">Major Android upgrade</string>
+     <string name="list_full_install">Full install: Safe to install over any previous build</string>
+     <string name="list_major_upgrade_recovery_install">Major <xliff:g id="brand_name" example="LineageOS">%1$s</xliff:g> version upgrades must be installed manually. Refer to your device\'s guide to continue.</string>
++    <string name="list_manual_install_required">This tablet requires the guarded computer installer. On-device installation is disabled to protect the bootloader.</string>
+     <string name="list_downgrade_blocked">This build is older than the installed system and cannot be applied.</string>
+     <string name="list_download_progress_newer"><xliff:g id="filesize_without_unit" example="12.2">%1$s</xliff:g> of <xliff:g id="filesize_without_unit" example="310 MB">%2$s</xliff:g></string>
+     <string name="list_download_progress_eta_newer"><xliff:g id="filesize_without_unit" example="12.2">%1$s</xliff:g> of <xliff:g id="filesize_without_unit" example="310 MB">%2$s</xliff:g> (<xliff:g id="eta" example="3 minutes left">%3$s</xliff:g>)</string>
+@@ -174,7 +175,7 @@
+ 
+     <string name="blocked_update_dialog_title">Update blocked</string>
+     <string name="blocked_update_dialog_message">This update cannot be installed using the updater app.  Please read <xliff:g id="info_url">%1$s</xliff:g> for more information.</string>
+-    <string name="blocked_update_info_url" translatable="false">https://wiki.lineageos.org/devices/<xliff:g id="device_name">%1$s</xliff:g>/upgrade/</string>
++    <string name="blocked_update_info_url" translatable="false">https://xdaforums.com/t/4798867/</string>
+ 
+     <string name="blocked_update_dialog_title_downgrade">Downgrade blocked</string>
+     <string name="blocked_update_dialog_message_downgrade">This update is older than the current system and cannot be installed.</string>

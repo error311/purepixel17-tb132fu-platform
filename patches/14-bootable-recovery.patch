@@ -1,0 +1,84 @@
+diff --git a/install/install.cpp b/install/install.cpp
+index ea9535cc0abdb491d0b9ef01b89ea21de4e58cbd..0c42859c9a2401b5b69ee0562ae965646c444442 100644
+--- a/install/install.cpp
++++ b/install/install.cpp
+@@ -665,20 +665,18 @@ InstallResult InstallPackage(Package* package, const std::string_view package_id
+   int time_total = static_cast<int>(duration.count());
+ 
+   bool has_cache = volume_for_mount_point("/cache") != nullptr;
+-  // Skip logging the uncrypt_status on devices without /cache.
+-  if (has_cache) {
+-    static constexpr const char* UNCRYPT_STATUS = "/cache/recovery/uncrypt_status";
+-    if (ensure_path_mounted(UNCRYPT_STATUS) != 0) {
+-      LOG(WARNING) << "Can't mount " << UNCRYPT_STATUS;
++  const char* uncrypt_status = has_cache ? "/cache/recovery/uncrypt_status"
++                                         : "/metadata/ota/purepixel/uncrypt_status";
++  if (ensure_path_mounted(uncrypt_status) != 0) {
++    LOG(WARNING) << "Can't mount " << uncrypt_status;
++  } else {
++    std::string status;
++    if (!android::base::ReadFileToString(uncrypt_status, &status)) {
++      PLOG(WARNING) << "failed to read uncrypt status";
++    } else if (!android::base::StartsWith(status, "uncrypt_")) {
++      LOG(WARNING) << "corrupted uncrypt_status: " << status;
+     } else {
+-      std::string uncrypt_status;
+-      if (!android::base::ReadFileToString(UNCRYPT_STATUS, &uncrypt_status)) {
+-        PLOG(WARNING) << "failed to read uncrypt status";
+-      } else if (!android::base::StartsWith(uncrypt_status, "uncrypt_")) {
+-        LOG(WARNING) << "corrupted uncrypt_status: " << uncrypt_status;
+-      } else {
+-        log_buffer.push_back(android::base::Trim(uncrypt_status));
+-      }
++      log_buffer.push_back(android::base::Trim(status));
+     }
+   }
+ 
+@@ -771,15 +769,19 @@ bool SetupPackageMount(const std::string& package_path, bool* should_use_fuse) {
+   *should_use_fuse = true;
+   if (package_path[0] == '@') {
+     auto block_map_path = package_path.substr(1);
+-    if (!CheckPathCanonical(block_map_path)) {
+-      LOG(ERROR) << "Block map path " << package_path << " not canonical, abort installation.";
+-      return false;
+-    }
+-
++    // Cacheless devices may keep uncrypt's block map on /metadata. Unlike
++    // /cache, that volume is not mounted by setup_install_mounts(), so trying
++    // to canonicalize the pathname first fails with ENOENT even though the
++    // map is durable on disk. Mount the containing volume before resolving
++    // and validating the pathname.
+     if (ensure_path_mounted(block_map_path) != 0) {
+       LOG(ERROR) << "Failed to mount " << block_map_path;
+       return false;
+     }
++    if (!CheckPathCanonical(block_map_path)) {
++      LOG(ERROR) << "Block map path " << package_path << " not canonical, abort installation.";
++      return false;
++    }
+     auto block_map_data = BlockMapData::ParseBlockMapFile(block_map_path);
+     if (!CheckPathCanonical(block_map_data.path())) {
+       LOG(ERROR) << "Block map " << package_path << " contains non-canonical path "
+diff --git a/uncrypt/uncrypt.cpp b/uncrypt/uncrypt.cpp
+index c798e31d641d03bf20efbde6b3fcbe72783669d9..f975b1a2505816e506f504fea81bfa34291bb19a 100644
+--- a/uncrypt/uncrypt.cpp
++++ b/uncrypt/uncrypt.cpp
+@@ -132,12 +132,12 @@ static constexpr int FIBMAP_RETRY_LIMIT = 3;
+ // (for applying updates for non-A/B devices, or factory resets for all
+ // devices).
+ //
+-// UNCRYPT service still needs files on /cache partition (UNCRYPT_PATH_FILE
+-// and CACHE_BLOCK_MAP). It will be working (and needed) only for non-A/B
+-// devices, on which /cache partitions always exist.
+-static const std::string CACHE_BLOCK_MAP = "/cache/recovery/block.map";
+-static const std::string UNCRYPT_PATH_FILE = "/cache/recovery/uncrypt_file";
+-static const std::string UNCRYPT_STATUS = "/cache/recovery/uncrypt_status";
++// TB132FU is a cacheless non-A/B target. Store the small uncrypt control files
++// on the unencrypted metadata partition so both Android and recovery can read
++// the same handoff across the recovery reboot.
++static const std::string CACHE_BLOCK_MAP = "/metadata/ota/purepixel/block.map";
++static const std::string UNCRYPT_PATH_FILE = "/metadata/ota/purepixel/uncrypt_file";
++static const std::string UNCRYPT_STATUS = "/metadata/ota/purepixel/uncrypt_status";
+ static const std::string UNCRYPT_SOCKET = "uncrypt";
+ 
+ static Fstab fstab;

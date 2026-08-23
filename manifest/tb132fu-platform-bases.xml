@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
+  <remote name="lineage" fetch="https://github.com/LineageOS/" />
+  <remote name="evolution-x" fetch="https://github.com/Evolution-X/" />
+  <extend-project name="platform/bootable/recovery" path="bootable/recovery" revision="080f671785c84ae1ac38797fe1fa7364d158fab4" />
+  <extend-project name="platform/build" path="build/make" revision="5ce6f787337d0223710bf7d4a16dbe6d2a35f777" />
   <extend-project name="platform/build/release" path="build/release" revision="c85f4aebe46714235599a9bd6430a0fe30c6e8d5" />
   <extend-project name="platform/build/soong" path="build/soong" revision="6722dd8833db7482df1a2543ca3fcf67ddf0f7b1" />
   <extend-project name="platform/frameworks/base" path="frameworks/base" revision="94b4c163b7dfe5ce3607f7bb8456f9573f7de57d" />
@@ -15,4 +19,6 @@
   <extend-project name="platform/system/core" path="system/core" revision="545d2487e38192a2ce25040897ced877cf6b4f53" />
   <extend-project name="platform/system/memory/libion" path="system/memory/libion" revision="2f9196be89b3851049b565b6c338f707e50440ba" />
   <extend-project name="platform/system/sepolicy" path="system/sepolicy" revision="e066568e98d86db31a9346d30977f3632fa7073c" />
+  <project name="android_packages_apps_Updater" path="packages/apps/Updater" remote="lineage" revision="7796b02456f3c51881d9a1f2ef8d71f454542d15" />
+  <project name="packages_apps_FaceUnlock" path="packages/apps/FaceUnlock" remote="evolution-x" revision="44e4aa4e3d37eca48de4e143712377505b15c1cc" />
 </manifest>

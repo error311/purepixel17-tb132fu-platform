@@ -26,6 +26,8 @@ The patch set covers:
 - refresh-rate, cursor and display behavior
 - battery-health details and MediaTek picture-quality color modes
 - AOD mode handling and landscape unlock-side placement
+- optional camera-based convenience face unlock
+- cacheless, signed A-only recovery updates on the active slot
 - the two small platform hooks used to fix the Pixel Launcher landscape QSB
   return animation
 
@@ -59,7 +61,8 @@ cp manifest/tb132fu-platform-bases.xml \
 
 cd /path/to/aosp
 repo sync build/release build/soong frameworks/base frameworks/native hardware/interfaces \
-  kernel/configs packages/apps/Settings packages/modules/Bluetooth \
+  bootable/recovery build/make kernel/configs packages/apps/FaceUnlock \
+  packages/apps/Settings packages/apps/Updater packages/modules/Bluetooth \
   packages/modules/Connectivity system/apex system/bpf system/bpfprogs \
   system/core system/memory/libion system/sepolicy
 

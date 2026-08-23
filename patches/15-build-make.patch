@@ -1,0 +1,253 @@
+diff --git a/tools/releasetools/blockimgdiff.py b/tools/releasetools/blockimgdiff.py
+index 8087fcde290d3aa628aa641047a8e2fa131ff384..9c58b0475c64542a83c8403c6b2a60d697c59133 100644
+--- a/tools/releasetools/blockimgdiff.py
++++ b/tools/releasetools/blockimgdiff.py
+@@ -575,10 +575,15 @@ class BlockImageDiff(object):
+     OPTIONS = common.OPTIONS
+     if OPTIONS.cache_size is not None:
+       max_allowed = OPTIONS.cache_size * OPTIONS.stash_threshold
+-      logger.info(
+-          "max stashed blocks: %d  (%d bytes), limit: %d bytes (%.2f%%)\n",
+-          max_stashed_blocks, self._max_stashed_size, max_allowed,
+-          self._max_stashed_size * 100.0 / max_allowed)
++      if max_allowed > 0:
++        logger.info(
++            "max stashed blocks: %d  (%d bytes), limit: %d bytes (%.2f%%)\n",
++            max_stashed_blocks, self._max_stashed_size, max_allowed,
++            self._max_stashed_size * 100.0 / max_allowed)
++      else:
++        assert self._max_stashed_size == 0
++        logger.info(
++            "max stashed blocks: 0  (0 bytes), cacheless zero-stash mode\n")
+     else:
+       logger.info(
+           "max stashed blocks: %d  (%d bytes), limit: <unknown>\n",
+@@ -642,7 +647,8 @@ class BlockImageDiff(object):
+         if sh not in stashes:
+           stashed_blocks_after += sr.size()
+ 
+-        if max_allowed_blocks and stashed_blocks_after > max_allowed_blocks:
++        if (max_allowed_blocks is not None and
++            stashed_blocks_after > max_allowed_blocks):
+           # We cannot stash this one for a later command. Find out the command
+           # that will use this stash and replace the command with "new".
+           use_cmd = stash_map[stash_raw_id][2]
+@@ -662,7 +668,7 @@ class BlockImageDiff(object):
+       if xf.style == "diff":
+         assert xf.tgt_ranges and xf.src_ranges
+         if xf.src_ranges.overlaps(xf.tgt_ranges):
+-          if (max_allowed_blocks and
++          if (max_allowed_blocks is not None and
+               stashed_blocks + xf.src_ranges.size() > max_allowed_blocks):
+             replaced_cmds.append(xf)
+             logger.info("%10d  %9s  %s", xf.src_ranges.size(), "implicit", xf)
+diff --git a/tools/releasetools/common.py b/tools/releasetools/common.py
+index 24c4db6ff39efba0200582d2034902cbddaa80e7..e239e5f25fd3b3999a30c413f07b7d791b142e4a 100644
+--- a/tools/releasetools/common.py
++++ b/tools/releasetools/common.py
+@@ -1270,17 +1270,20 @@ def _FindAndLoadRecoveryFstab(info_dict, input_file, read_helper):
+   # ../RAMDISK/system/etc/recovery.fstab. This function has to handle both
+   # cases, since it may load the info_dict from an old build (e.g. when
+   # generating incremental OTAs from that build).
+-  if info_dict.get('no_recovery') != 'true':
+-    recovery_fstab_path = 'RECOVERY/RAMDISK/system/etc/recovery.fstab'
++  # Recovery-as-boot targets still have a complete recovery ramdisk even when
++  # they have no dedicated recovery partition. Prefer that explicit layout so
++  # non-A/B packages can load the correct fstab from BOOT/RAMDISK.
++  if info_dict.get('recovery_as_boot') == 'true':
++    recovery_fstab_path = 'BOOT/RAMDISK/system/etc/recovery.fstab'
+     if not DoesInputFileContain(input_file, recovery_fstab_path):
+-      recovery_fstab_path = 'RECOVERY/RAMDISK/etc/recovery.fstab'
++      recovery_fstab_path = 'BOOT/RAMDISK/etc/recovery.fstab'
+     return LoadRecoveryFSTab(
+         read_helper, info_dict['fstab_version'], recovery_fstab_path)
+ 
+-  if info_dict.get('recovery_as_boot') == 'true':
+-    recovery_fstab_path = 'BOOT/RAMDISK/system/etc/recovery.fstab'
++  if info_dict.get('no_recovery') != 'true':
++    recovery_fstab_path = 'RECOVERY/RAMDISK/system/etc/recovery.fstab'
+     if not DoesInputFileContain(input_file, recovery_fstab_path):
+-      recovery_fstab_path = 'BOOT/RAMDISK/etc/recovery.fstab'
++      recovery_fstab_path = 'RECOVERY/RAMDISK/etc/recovery.fstab'
+     return LoadRecoveryFSTab(
+         read_helper, info_dict['fstab_version'], recovery_fstab_path)
+ 
+@@ -3968,6 +3971,12 @@ class DynamicPartitionsDifference(object):
+       progress_dict = {}
+ 
+     self._remove_all_before_apply = False
++    # Some devices use dynamic partitions but intentionally preserve an OEM
++    # super layout that is not fully represented by the custom-ROM target
++    # files. Their recovery OTA may update mapped logical partitions, but must
++    # not recreate the super metadata from an incomplete partition inventory.
++    self._skip_metadata_update = (
++        info_dict.get("skip_dynamic_partition_metadata_update") == "true")
+     if source_info_dict is None:
+       self._remove_all_before_apply = True
+       source_info_dict = {}
+@@ -4055,16 +4064,28 @@ class DynamicPartitionsDifference(object):
+         u.block_difference.WriteScript(script, output_zip, progress=u.progress,
+                                        write_verify_script=False)
+ 
+-    op_list_path = MakeTempFile()
+-    with open(op_list_path, 'w') as f:
+-      for line in self._op_list:
+-        f.write('{}\n'.format(line))
++    if self._skip_metadata_update:
++      script.Comment('Preserve existing dynamic partition metadata')
++      # Recovery may already have these logical partitions mapped read-only.
++      # map_partition() reuses an ACTIVE mapper, so block_image_update() would
++      # fail to open it for writing. The normal metadata-update path destroys
++      # the mappings as a side effect. Preserve-layout OTAs must explicitly
++      # unmap them first so map_partition() recreates writable mappings without
++      # changing the OEM super metadata.
++      for p, u in self._partition_updates.items():
++        if u.tgt_size:
++          script.AppendExtra('assert(unmap_partition("%s"));' % p)
++    else:
++      op_list_path = MakeTempFile()
++      with open(op_list_path, 'w') as f:
++        for line in self._op_list:
++          f.write('{}\n'.format(line))
+ 
+-    ZipWrite(output_zip, op_list_path, "dynamic_partitions_op_list")
++      ZipWrite(output_zip, op_list_path, "dynamic_partitions_op_list")
+ 
+-    script.Comment('Update dynamic partition metadata')
+-    script.AppendExtra('assert(update_dynamic_partitions('
+-                       'package_extract_file("dynamic_partitions_op_list")));')
++      script.Comment('Update dynamic partition metadata')
++      script.AppendExtra('assert(update_dynamic_partitions('
++                         'package_extract_file("dynamic_partitions_op_list")));')
+ 
+     if write_verify_script:
+       for p, u in self._partition_updates.items():
+diff --git a/tools/releasetools/non_ab_ota.py b/tools/releasetools/non_ab_ota.py
+index 667891c65e4c70193231654846b9707db250cd36..567d7bb4b7cd47d0e1058cbfb344300e2c9c66cf 100644
+--- a/tools/releasetools/non_ab_ota.py
++++ b/tools/releasetools/non_ab_ota.py
+@@ -140,7 +140,8 @@ def WriteFullOTAPackage(input_zip, output_file):
+       metadata=metadata,
+       info_dict=OPTIONS.info_dict)
+ 
+-  assert HasRecoveryPatch(input_zip, info_dict=OPTIONS.info_dict)
++  assert (target_info.get("recovery_as_boot") == "true" or
++          HasRecoveryPatch(input_zip, info_dict=OPTIONS.info_dict))
+ 
+   # Assertions (e.g. downgrade check, device properties check).
+   ts = target_info.GetBuildProp("ro.build.date.utc")
+@@ -175,9 +176,9 @@ def WriteFullOTAPackage(input_zip, output_file):
+   #    complete script normally
+   #    (allow recovery to mark itself finished and reboot)
+ 
+-  recovery_img = common.GetBootableImage("recovery.img", "recovery.img",
+-                                         OPTIONS.input_tmp, "RECOVERY")
+   if OPTIONS.two_step:
++    recovery_img = common.GetBootableImage("recovery.img", "recovery.img",
++                                           OPTIONS.input_tmp, "RECOVERY")
+     if not target_info.get("multistage_support"):
+       assert False, "two-step packages not supported by this build"
+     fs = target_info["fstab"]["/misc"]
+@@ -401,8 +402,10 @@ else if get_stage("%(bcb_dev)s") != "3/3" then
+   WriteFingerprintAssertion(script, target_info, source_info)
+ 
+   # Check the required cache size (i.e. stashed blocks).
+-  required_cache_sizes = [diff.required_cache for diff in
+-                          block_diff_dict.values()]
++  required_cache_sizes = [
++      diff.required_cache for diff in block_diff_dict.values()
++      if diff.required_cache > 0
++  ]
+   if updating_boot:
+     boot_type, boot_device_expr = common.GetTypeAndDeviceExpr("/boot",
+                                                               source_info)
+@@ -541,7 +544,8 @@ endif;
+ def GenerateNonAbOtaPackage(target_file, output_file, source_file=None):
+   """Generates a non-A/B OTA package."""
+   # Check the loaded info dicts first.
+-  if OPTIONS.info_dict.get("no_recovery") == "true":
++  if (OPTIONS.info_dict.get("no_recovery") == "true" and
++      OPTIONS.info_dict.get("recovery_as_boot") != "true"):
+     raise common.ExternalError(
+         "--- target build has specified no recovery ---")
+ 
+diff --git a/tools/releasetools/test_blockimgdiff.py b/tools/releasetools/test_blockimgdiff.py
+index 0987dcfeab84c7aebf58393d23df3427f4ba7d8b..9e9ff4bc265bbf08baa0756e374dd52f6b8e7909 100644
+--- a/tools/releasetools/test_blockimgdiff.py
++++ b/tools/releasetools/test_blockimgdiff.py
+@@ -136,6 +136,29 @@ class BlockImageDiffTest(ReleaseToolsTestCase):
+     common.OPTIONS.cache_size = 6 * 4096
+     self.assertEqual((10, 0), block_image_diff.ReviseStashSize())
+ 
++  def test_ReviseStashSize_zero_threshold_converts_implicit_stash(self):
++    """A zero stash limit must convert an overlapping diff to new data."""
++    src = EmptyImage()
++    tgt = EmptyImage()
++    block_image_diff = BlockImageDiff(tgt, src, version=3)
++
++    transfers = block_image_diff.transfers
++    transfer = Transfer(
++        "overlap", "overlap", RangeSet("0-5"), RangeSet("0-5"),
++        "targethash", "sourcehash", "diff", transfers)
++
++    old_cache_size = common.OPTIONS.cache_size
++    old_stash_threshold = common.OPTIONS.stash_threshold
++    try:
++      common.OPTIONS.cache_size = 2 * 1024 * 1024 * 1024
++      common.OPTIONS.stash_threshold = 0
++      self.assertEqual((6, 0), block_image_diff.ReviseStashSize())
++      self.assertEqual("new", transfer.style)
++      self.assertFalse(transfer.src_ranges)
++    finally:
++      common.OPTIONS.cache_size = old_cache_size
++      common.OPTIONS.stash_threshold = old_stash_threshold
++
+   def test_ReviseStashSize_bug_33687949(self):
+     """ReviseStashSize() should "free" the used stash _after_ the command.
+ 
+diff --git a/tools/releasetools/test_common.py b/tools/releasetools/test_common.py
+index f9c6aaed13dd16a68de3c6572eecc7b4d0457df6..52f5d9f349d182a1c4ed439359da358c222b8e51 100644
+--- a/tools/releasetools/test_common.py
++++ b/tools/releasetools/test_common.py
+@@ -1836,6 +1836,41 @@ unmap_partition("vendor");
+     self.assertLess(add_vendor, resize_vendor,
+                     "Should resize vendor after adding it")
+ 
++  def test_full_preserves_existing_dynamic_partition_metadata(self):
++    target_info = common.LoadDictionaryFromLines("""
++dynamic_partition_list=system product system_ext
++super_partition_groups=main_a
++super_main_a_group_size={group_size}
++super_main_a_partition_list=system product system_ext
++skip_dynamic_partition_metadata_update=true
++""".format(group_size=12 * GiB).split("\n"))
++    block_diffs = [
++        MockBlockDifference("system", FakeSparseImage(2 * GiB)),
++        MockBlockDifference("product", FakeSparseImage(3 * GiB)),
++        MockBlockDifference("system_ext", FakeSparseImage(1 * GiB)),
++    ]
++
++    dp_diff = common.DynamicPartitionsDifference(target_info, block_diffs)
++    with zipfile.ZipFile(self.output_path, 'w', allowZip64=True) as output_zip:
++      dp_diff.WriteScript(self.script, output_zip, write_verify_script=True)
++
++    script = str(self.script)
++    self.assertIn("patch(system);", script)
++    self.assertIn("patch(product);", script)
++    self.assertIn("patch(system_ext);", script)
++    self.assertIn('assert(unmap_partition("system"));', script)
++    self.assertIn('assert(unmap_partition("product"));', script)
++    self.assertIn('assert(unmap_partition("system_ext"));', script)
++    self.assertLess(script.index('assert(unmap_partition("system"));'),
++                    script.index("patch(system);"))
++    self.assertLess(script.index('assert(unmap_partition("product"));'),
++                    script.index("patch(product);"))
++    self.assertLess(script.index('assert(unmap_partition("system_ext"));'),
++                    script.index("patch(system_ext);"))
++    self.assertNotIn("update_dynamic_partitions", script)
++    with zipfile.ZipFile(self.output_path, allowZip64=True) as output_zip:
++      self.assertNotIn("dynamic_partitions_op_list", output_zip.namelist())
++
+   def test_inc_groups(self):
+     source_info = common.LoadDictionaryFromLines("""
+ super_partition_groups=group_foo group_bar group_baz
