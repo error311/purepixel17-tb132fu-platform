@@ -121,7 +121,8 @@ index a250d4945..0c8fcde0d 100644
      private static final boolean DBG = false;
  
 +    // TB132FU's Android 17 transient taskbar profile resolves the taskbar-to-hotseat Home
-+    // endpoint to -44 px in landscape even though the live hotseat row is centered at -56 px.
++    // endpoint to -44 px even though the live hotseat row is centered at -57 px. The same
++    // 13 px mismatch is measured for the icon row in portrait and landscape.
 +    // Keep this in the open platform rather than modifying the Google-signed Pixel Launcher.
 +    // The narrow input range excludes the persistent taskbar endpoint and other taskbar states.
 +    private static final boolean TB132FU_TASKBAR_HOME_HANDOFF_FIX =
@@ -131,7 +132,7 @@ index a250d4945..0c8fcde0d 100644
 +    private static final String PIXEL_LAUNCHER_PACKAGE =
 +            "com.google.android.apps.nexuslauncher";
 +    private static final float TB132FU_TASKBAR_STOCK_HOME_ENDPOINT_PX = 44f;
-+    private static final float TB132FU_TASKBAR_FIXED_HOME_ENDPOINT_PX = 56f;
++    private static final float TB132FU_TASKBAR_FIXED_HOME_ENDPOINT_PX = 57f;
 +
      /** @hide */
      public static boolean DEBUG_DRAW = false;
@@ -143,13 +144,11 @@ index a250d4945..0c8fcde0d 100644
 +        if (TB132FU_TASKBAR_HOME_HANDOFF_FIX
 +                && translationY < 0f
 +                && translationY >= -TB132FU_TASKBAR_STOCK_HOME_ENDPOINT_PX
-+                && getResources().getConfiguration().orientation
-+                        == Configuration.ORIENTATION_LANDSCAPE
 +                && PIXEL_LAUNCHER_PACKAGE.equals(getContext().getPackageName())
 +                && TB132FU_TASKBAR_VIEW_CLASS.equals(getClass().getName())) {
-+            // Apply the same proportional animation as a -56 px AnimatedFloat endpoint. This
-+            // keeps the outgoing taskbar row coincident with the live hotseat before its alpha
-+            // owner changes, without moving nav buttons or changing taskbar window dimensions.
++            // Apply the same proportional animation as a -57 px AnimatedFloat endpoint. This
++            // keeps the outgoing taskbar icons coincident with the live hotseat before their
++            // alpha owner changes, without moving nav buttons or changing taskbar dimensions.
 +            translationY *= TB132FU_TASKBAR_FIXED_HOME_ENDPOINT_PX
 +                    / TB132FU_TASKBAR_STOCK_HOME_ENDPOINT_PX;
 +        }
