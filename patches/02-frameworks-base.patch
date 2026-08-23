@@ -581,34 +581,6 @@ index 000000000..ee8f32c09
 +
 +    public void tryToResetIme() {}
 +}
-diff --git a/core/res/res/values/config.xml b/core/res/res/values/config.xml
-index 60d91ff2b..59da367dd 100644
---- a/core/res/res/values/config.xml
-+++ b/core/res/res/values/config.xml
-@@ -600,6 +600,11 @@
-          true here reverses that logic. -->
-     <bool name="config_reverseDefaultRotation">false</bool>
- 
-+    <!-- Initial logical rotation of the default display, in degrees. This does
-+         not change the display's natural orientation or disable sensor-based
-+         rotation. Supported values are 0, 90, 180, and 270. -->
-+    <integer name="config_defaultDisplayRotation">0</integer>
-+
-     <!-- Sets the minimum and maximum tilt tolerance for each possible rotation.
-          This array consists of 4 pairs of values which specify the minimum and maximum
-          tilt angle at which the device will transition into each rotation.
-diff --git a/core/res/res/values/symbols.xml b/core/res/res/values/symbols.xml
-index f20a2b6a0..e41133ff4 100644
---- a/core/res/res/values/symbols.xml
-+++ b/core/res/res/values/symbols.xml
-@@ -1910,6 +1910,7 @@
-   <java-symbol type="bool" name="config_lockDayNightMode" />
-   <java-symbol type="bool" name="config_lockUiMode" />
-   <java-symbol type="bool" name="config_reverseDefaultRotation" />
-+  <java-symbol type="integer" name="config_defaultDisplayRotation" />
-   <java-symbol type="bool" name="config_perDisplayFocusEnabled" />
-   <java-symbol type="bool" name="config_enableMotionPrediction" />
-   <java-symbol type="integer" name="config_motionPredictionOffsetNanos" />
 diff --git a/core/tests/coretests/src/com/android/internal/util/PixelTabletAppPropsTest.java b/core/tests/coretests/src/com/android/internal/util/PixelTabletAppPropsTest.java
 new file mode 100644
 index 000000000..707383b7d
@@ -5999,27 +5971,6 @@ index 000000000..f5489560d
 +        }
 +    }
 +}
-diff --git a/services/core/java/com/android/server/wm/DisplayRotation.java b/services/core/java/com/android/server/wm/DisplayRotation.java
-index c0cc25fcf..c2b8e52a6 100644
---- a/services/core/java/com/android/server/wm/DisplayRotation.java
-+++ b/services/core/java/com/android/server/wm/DisplayRotation.java
-@@ -333,6 +333,7 @@ public class DisplayRotation {
-     @Surface.Rotation
-     private int readDefaultDisplayRotation(DisplayAddress displayAddress,
-             DisplayContent displayContent) {
-+        final int configuredRotation = readRotation(R.integer.config_defaultDisplayRotation);
-         String syspropValue = "";
-         if (displayAddress != null
-                 && displayAddress.getPhysicalDisplayId() != DisplayAddress.INVALID_DISPLAY_ID) {
-@@ -351,7 +352,7 @@ public class DisplayRotation {
-         } else if (syspropValue.equals("ORIENTATION_270")) {
-             return Surface.ROTATION_270;
-         }
--        return Surface.ROTATION_0;
-+        return configuredRotation >= 0 ? configuredRotation : Surface.ROTATION_0;
-     }
- 
-     private int readRotation(int resID) {
 diff --git a/services/java/com/android/server/SystemServer.java b/services/java/com/android/server/SystemServer.java
 index 3ea580823..be7d1dcc5 100644
 --- a/services/java/com/android/server/SystemServer.java
