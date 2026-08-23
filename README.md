@@ -4,7 +4,7 @@ This is the Android platform side of Pure Pixel 17 for the Lenovo Tab P11 Pro
 (2nd Gen), model TB132FU.
 
 The device needs more than a device tree and kernel to run Android 17 properly.
-These patches are the framework and system changes used by the R2 build. They
+These patches are the framework and system changes used by the R3 build. They
 are kept here separately because they belong to existing AOSP projects rather
 than `device/lenovo/tb132fu`.
 
@@ -27,21 +27,23 @@ The patch set covers:
 - battery-health details and MediaTek picture-quality color modes
 - AOD mode handling and landscape unlock-side placement
 - optional camera-based convenience face unlock
+- themed face-enrollment feedback and tablet wording
+- pen attach, detach and battery-status polish
 - cacheless, signed A-only recovery updates on the active slot
-- the two small platform hooks used to fix the Pixel Launcher landscape QSB
-  return animation
+- the small platform hooks used to synchronize the Pixel Launcher landscape
+  QSB return animation and its live dock owner
 
-These are the final R2 diffs, not the full bring-up history. Temporary tests and
+These are the R3 diffs, not the full bring-up history. Temporary tests and
 reverted experiments were left out. `system/apex` is listed in `PROJECTS.tsv`
 because it was part of the bring-up, but its final tree matches clean AOSP and
 there is no patch to apply.
 
-## R2 base
+## R3 base
 
 - AOSP branch: `android17-release`
 - Android build: `CP2A.260605.016`
 - Android platform security patch: `2026-08-01`
-- Release tag: `purepixel17-r2-platform`
+- Release branch: `purepixel17-tb132fu-r3`
 - Project revisions and expected trees: `PROJECTS.tsv`
 - Patch checksums: `PATCHES.sha256`
 
@@ -71,7 +73,7 @@ cd /path/to/purepixel17-tb132fu-platform
 ```
 
 The script intentionally refuses to patch a dirty or mismatched source tree.
-It checks the patch hashes and confirms that the result matches the exact R2
+It checks the patch hashes and confirms that the result matches the exact R3
 Git tree. It does not commit anything, erase source, start a build or touch a
 connected device.
 

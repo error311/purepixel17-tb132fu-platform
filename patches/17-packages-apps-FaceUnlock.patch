@@ -1,5 +1,5 @@
 diff --git a/AndroidManifest.xml b/AndroidManifest.xml
-index 4bcd2270acd490eac8b9f7084aff6398dd83cf10..b1c1cfe630dc5991262046a6f4b0c38ade54d9f3 100644
+index 4bcd227..b1c1cfe 100644
 --- a/AndroidManifest.xml
 +++ b/AndroidManifest.xml
 @@ -1,7 +1,6 @@
@@ -19,7 +19,7 @@ index 4bcd2270acd490eac8b9f7084aff6398dd83cf10..b1c1cfe630dc5991262046a6f4b0c38a
              android:theme="@style/SudThemeGlifV4.DayNight" />
  
 diff --git a/overlay/res/values-af/strings.xml b/overlay/res/values-af/strings.xml
-index 4c828773a14ba022e7d54c9c438fa217d0b6de88..a4696431b580760d8ed24f499737bf01a118d405 100644
+index 4c82877..a469643 100644
 --- a/overlay/res/values-af/strings.xml
 +++ b/overlay/res/values-af/strings.xml
 @@ -17,21 +17,7 @@
@@ -112,7 +112,7 @@ index 4c828773a14ba022e7d54c9c438fa217d0b6de88..a4696431b580760d8ed24f499737bf01
      <string name="security_settings_face_settings_use_face_category">Gebruik Gesigslot:</string>
  </resources>
 diff --git a/overlay/res/values-am/strings.xml b/overlay/res/values-am/strings.xml
-index 45324e79fa7e5c8399f706cb90fdda71113b3cbf..8af5ba7bddcca8224e2c0bbe295fb2c538f6cbe4 100644
+index 45324e7..8af5ba7 100644
 --- a/overlay/res/values-am/strings.xml
 +++ b/overlay/res/values-am/strings.xml
 @@ -17,21 +17,7 @@
@@ -205,7 +205,7 @@ index 45324e79fa7e5c8399f706cb90fdda71113b3cbf..8af5ba7bddcca8224e2c0bbe295fb2c5
      <string name="security_settings_face_settings_use_face_category">በመልክ መክፈት ይጠቀሙ ለ፦</string>
  </resources>
 diff --git a/overlay/res/values-ar-rXB/strings.xml b/overlay/res/values-ar-rXB/strings.xml
-index 9e87038b6d4b5bf4cd13cf68d479850e31dbdad6..aded80f202f8c46b32cff27db6d39b2ef481c00e 100644
+index 9e87038..aded80f 100644
 --- a/overlay/res/values-ar-rXB/strings.xml
 +++ b/overlay/res/values-ar-rXB/strings.xml
 @@ -17,21 +17,7 @@
@@ -295,7 +295,7 @@ index 9e87038b6d4b5bf4cd13cf68d479850e31dbdad6..aded80f202f8c46b32cff27db6d39b2e
      <string name="security_settings_face_settings_use_face_category">‏‮Use‬‏ ‏‮Face‬‏ ‏‮Unlock‬‏ ‏‮for‬‏</string>
  </resources>
 diff --git a/overlay/res/values-ar/strings.xml b/overlay/res/values-ar/strings.xml
-index d36143c1aedf39234ad3c073811cd6b2ad5c55ab..a2b6f24c2a354df2f9a89b9d814c50870c73f65e 100644
+index d36143c..a2b6f24 100644
 --- a/overlay/res/values-ar/strings.xml
 +++ b/overlay/res/values-ar/strings.xml
 @@ -17,21 +17,7 @@
@@ -388,7 +388,7 @@ index d36143c1aedf39234ad3c073811cd6b2ad5c55ab..a2b6f24c2a354df2f9a89b9d814c5087
      <string name="security_settings_face_settings_use_face_category">استخدام \"فتح الجهاز بالتعرف على الوجه\" من أجل</string>
  </resources>
 diff --git a/overlay/res/values-as/strings.xml b/overlay/res/values-as/strings.xml
-index 959d34b3764bf4222b3b141a2e0ee0cad2f27af4..b22056c96a5c5a2e2310c8ae64a016d28306a857 100644
+index 959d34b..b22056c 100644
 --- a/overlay/res/values-as/strings.xml
 +++ b/overlay/res/values-as/strings.xml
 @@ -17,21 +17,7 @@
@@ -481,7 +481,7 @@ index 959d34b3764bf4222b3b141a2e0ee0cad2f27af4..b22056c96a5c5a2e2310c8ae64a016d2
      <string name="security_settings_face_settings_use_face_category">ইয়াৰ বাবে ফেচ আনলক ব্যৱহাৰ কৰক</string>
  </resources>
 diff --git a/overlay/res/values-az/strings.xml b/overlay/res/values-az/strings.xml
-index 5f4749e1dcecd5998d9165fc25224a30e762f3e5..b1aef1bf5437593bc453940fb9fa062b49043656 100644
+index 5f4749e..b1aef1b 100644
 --- a/overlay/res/values-az/strings.xml
 +++ b/overlay/res/values-az/strings.xml
 @@ -17,21 +17,7 @@
@@ -574,7 +574,7 @@ index 5f4749e1dcecd5998d9165fc25224a30e762f3e5..b1aef1bf5437593bc453940fb9fa062b
      <string name="security_settings_face_settings_use_face_category">Üz ilə kiliddən çıxarmadan istifadə edin:</string>
  </resources>
 diff --git a/overlay/res/values-b+sr+Latn/strings.xml b/overlay/res/values-b+sr+Latn/strings.xml
-index 9906579fa4f968b9732434996aff447305f3900e..36bf5461e5d49e09670139e4e92ff4184d2c0655 100644
+index 9906579..36bf546 100644
 --- a/overlay/res/values-b+sr+Latn/strings.xml
 +++ b/overlay/res/values-b+sr+Latn/strings.xml
 @@ -17,21 +17,7 @@
@@ -667,7 +667,7 @@ index 9906579fa4f968b9732434996aff447305f3900e..36bf5461e5d49e09670139e4e92ff418
      <string name="security_settings_face_settings_use_face_category">Koristi otključavanje licem:</string>
  </resources>
 diff --git a/overlay/res/values-be/strings.xml b/overlay/res/values-be/strings.xml
-index 0f4b75a97fe19a62875a7ec330486ef1ef349410..d5467ba4612a7436b01d81d5fd2cd35ebb798c3a 100644
+index 0f4b75a..d5467ba 100644
 --- a/overlay/res/values-be/strings.xml
 +++ b/overlay/res/values-be/strings.xml
 @@ -17,21 +17,7 @@
@@ -760,7 +760,7 @@ index 0f4b75a97fe19a62875a7ec330486ef1ef349410..d5467ba4612a7436b01d81d5fd2cd35e
      <string name="security_settings_face_settings_use_face_category">Налады распазнавання</string>
  </resources>
 diff --git a/overlay/res/values-bg/strings.xml b/overlay/res/values-bg/strings.xml
-index 58c159fd1bd2b9d89faa6734358ed7ffcc071379..cc53ed84b34d714cabfcfee0aa7e3c9756efedfc 100644
+index 58c159f..cc53ed8 100644
 --- a/overlay/res/values-bg/strings.xml
 +++ b/overlay/res/values-bg/strings.xml
 @@ -17,21 +17,7 @@
@@ -853,7 +853,7 @@ index 58c159fd1bd2b9d89faa6734358ed7ffcc071379..cc53ed84b34d714cabfcfee0aa7e3c97
      <string name="security_settings_face_settings_use_face_category">Откл. с лице с цел</string>
  </resources>
 diff --git a/overlay/res/values-bn/strings.xml b/overlay/res/values-bn/strings.xml
-index aafaaa0fca4311f116b3ab9fe1a8fd40822cc27d..7a8758eccc39693297eacc53a530490df8f81a37 100644
+index aafaaa0..7a8758e 100644
 --- a/overlay/res/values-bn/strings.xml
 +++ b/overlay/res/values-bn/strings.xml
 @@ -17,21 +17,7 @@
@@ -946,7 +946,7 @@ index aafaaa0fca4311f116b3ab9fe1a8fd40822cc27d..7a8758eccc39693297eacc53a530490d
      <string name="security_settings_face_settings_use_face_category">"এর জন্যে 'ফেস আনলক' ব্যবহার করুন"</string>
  </resources>
 diff --git a/overlay/res/values-bs/strings.xml b/overlay/res/values-bs/strings.xml
-index ebad99a4de747983fccf3c307b13807438f36578..26d4fffd6990ce0ec1055789477f6fd6ca3e86b5 100644
+index ebad99a..26d4fff 100644
 --- a/overlay/res/values-bs/strings.xml
 +++ b/overlay/res/values-bs/strings.xml
 @@ -17,21 +17,7 @@
@@ -1039,7 +1039,7 @@ index ebad99a4de747983fccf3c307b13807438f36578..26d4fffd6990ce0ec1055789477f6fd6
      <string name="security_settings_face_settings_use_face_category">Otključavanje licem za</string>
  </resources>
 diff --git a/overlay/res/values-ca/strings.xml b/overlay/res/values-ca/strings.xml
-index 5739217ff8cfb613e27608754c87f080e442239b..49d83286aa13216f38c50931a14a34b8410e135a 100644
+index 5739217..49d8328 100644
 --- a/overlay/res/values-ca/strings.xml
 +++ b/overlay/res/values-ca/strings.xml
 @@ -17,21 +17,7 @@
@@ -1132,7 +1132,7 @@ index 5739217ff8cfb613e27608754c87f080e442239b..49d83286aa13216f38c50931a14a34b8
      <string name="security_settings_face_settings_use_face_category">Desbloq. facial per</string>
  </resources>
 diff --git a/overlay/res/values-cs/strings.xml b/overlay/res/values-cs/strings.xml
-index 5ed3b8d484757dd86b7e6eb477991456d765e4f0..f128be9a572c0b76e849474a0bf64fb47ad53b22 100644
+index 5ed3b8d..f128be9 100644
 --- a/overlay/res/values-cs/strings.xml
 +++ b/overlay/res/values-cs/strings.xml
 @@ -17,21 +17,7 @@
@@ -1225,7 +1225,7 @@ index 5ed3b8d484757dd86b7e6eb477991456d765e4f0..f128be9a572c0b76e849474a0bf64fb4
      <string name="security_settings_face_settings_use_face_category">Pomocí odemknutí obličejem</string>
  </resources>
 diff --git a/overlay/res/values-da/strings.xml b/overlay/res/values-da/strings.xml
-index 6bfb3438280ba276e7f9fc00b5f3fee66aa3171c..010d3b2e04a5e8a852291eedd3cda3c2e67c8fae 100644
+index 6bfb343..010d3b2 100644
 --- a/overlay/res/values-da/strings.xml
 +++ b/overlay/res/values-da/strings.xml
 @@ -17,21 +17,7 @@
@@ -1318,7 +1318,7 @@ index 6bfb3438280ba276e7f9fc00b5f3fee66aa3171c..010d3b2e04a5e8a852291eedd3cda3c2
      <string name="security_settings_face_settings_use_face_category">Brug ansigtslås til</string>
  </resources>
 diff --git a/overlay/res/values-de/strings.xml b/overlay/res/values-de/strings.xml
-index 771da0e865104ebe2f7e727e25b8015eac3aca0a..7d8eef20f1ac99ae0412b2aa4ea18ad05663bc91 100644
+index 771da0e..7d8eef2 100644
 --- a/overlay/res/values-de/strings.xml
 +++ b/overlay/res/values-de/strings.xml
 @@ -17,21 +17,7 @@
@@ -1411,7 +1411,7 @@ index 771da0e865104ebe2f7e727e25b8015eac3aca0a..7d8eef20f1ac99ae0412b2aa4ea18ad0
      <string name="security_settings_face_settings_use_face_category">Gesichtsentsperrung für</string>
  </resources>
 diff --git a/overlay/res/values-el/strings.xml b/overlay/res/values-el/strings.xml
-index f176f0724a44d799fa618d1e16f302cc09235479..f4d29db1c0a6bad1cf5a853d581e9e3976a31ab6 100644
+index f176f07..f4d29db 100644
 --- a/overlay/res/values-el/strings.xml
 +++ b/overlay/res/values-el/strings.xml
 @@ -17,21 +17,7 @@
@@ -1504,7 +1504,7 @@ index f176f0724a44d799fa618d1e16f302cc09235479..f4d29db1c0a6bad1cf5a853d581e9e39
      <string name="security_settings_face_settings_use_face_category">Ξεκλ. με το πρόσωπ.</string>
  </resources>
 diff --git a/overlay/res/values-en-rAU/strings.xml b/overlay/res/values-en-rAU/strings.xml
-index e37e5b160956ffda6e192904f0e50decae78f14c..3752757a1ea049dcdeb3ba7930d148196eedf0cf 100644
+index e37e5b1..3752757 100644
 --- a/overlay/res/values-en-rAU/strings.xml
 +++ b/overlay/res/values-en-rAU/strings.xml
 @@ -17,21 +17,7 @@
@@ -1597,7 +1597,7 @@ index e37e5b160956ffda6e192904f0e50decae78f14c..3752757a1ea049dcdeb3ba7930d14819
      <string name="security_settings_face_settings_use_face_category">Use Face Unlock to</string>
  </resources>
 diff --git a/overlay/res/values-en-rCA/strings.xml b/overlay/res/values-en-rCA/strings.xml
-index 0334f1e3d2a26685b94b21d1f13557edd3624a14..77abcc43f4294b3839dc10c89e3e5507f3164d59 100644
+index 0334f1e..77abcc4 100644
 --- a/overlay/res/values-en-rCA/strings.xml
 +++ b/overlay/res/values-en-rCA/strings.xml
 @@ -17,21 +17,7 @@
@@ -1690,7 +1690,7 @@ index 0334f1e3d2a26685b94b21d1f13557edd3624a14..77abcc43f4294b3839dc10c89e3e5507
      <string name="security_settings_face_settings_use_face_category">Use Face Unlock to</string>
  </resources>
 diff --git a/overlay/res/values-en-rGB/strings.xml b/overlay/res/values-en-rGB/strings.xml
-index e37e5b160956ffda6e192904f0e50decae78f14c..3752757a1ea049dcdeb3ba7930d148196eedf0cf 100644
+index e37e5b1..3752757 100644
 --- a/overlay/res/values-en-rGB/strings.xml
 +++ b/overlay/res/values-en-rGB/strings.xml
 @@ -17,21 +17,7 @@
@@ -1783,7 +1783,7 @@ index e37e5b160956ffda6e192904f0e50decae78f14c..3752757a1ea049dcdeb3ba7930d14819
      <string name="security_settings_face_settings_use_face_category">Use Face Unlock to</string>
  </resources>
 diff --git a/overlay/res/values-en-rIN/strings.xml b/overlay/res/values-en-rIN/strings.xml
-index e37e5b160956ffda6e192904f0e50decae78f14c..3752757a1ea049dcdeb3ba7930d148196eedf0cf 100644
+index e37e5b1..3752757 100644
 --- a/overlay/res/values-en-rIN/strings.xml
 +++ b/overlay/res/values-en-rIN/strings.xml
 @@ -17,21 +17,7 @@
@@ -1876,7 +1876,7 @@ index e37e5b160956ffda6e192904f0e50decae78f14c..3752757a1ea049dcdeb3ba7930d14819
      <string name="security_settings_face_settings_use_face_category">Use Face Unlock to</string>
  </resources>
 diff --git a/overlay/res/values-en-rXA/strings.xml b/overlay/res/values-en-rXA/strings.xml
-index 7d686554fd4285f4c9a22ec4fe8e6eaeb3cd865e..e2f6d7532bdb78fb687f7edf69859cb666ade4cc 100644
+index 7d68655..e2f6d75 100644
 --- a/overlay/res/values-en-rXA/strings.xml
 +++ b/overlay/res/values-en-rXA/strings.xml
 @@ -17,21 +17,7 @@
@@ -1963,7 +1963,7 @@ index 7d686554fd4285f4c9a22ec4fe8e6eaeb3cd865e..e2f6d7532bdb78fb687f7edf69859cb6
      <string name="security_settings_face_settings_use_face_category">[Ûšé Fåçé Ûñļöçķ ƒöŕ one two three]</string>
  </resources>
 diff --git a/overlay/res/values-es-rUS/strings.xml b/overlay/res/values-es-rUS/strings.xml
-index 48afbd0034e7e4684ae1b0afff3dc2815a3171bf..800d6cf8876021109ef3441da215f603d83c81ff 100644
+index 48afbd0..800d6cf 100644
 --- a/overlay/res/values-es-rUS/strings.xml
 +++ b/overlay/res/values-es-rUS/strings.xml
 @@ -17,21 +17,7 @@
@@ -2056,7 +2056,7 @@ index 48afbd0034e7e4684ae1b0afff3dc2815a3171bf..800d6cf8876021109ef3441da215f603
      <string name="security_settings_face_settings_use_face_category">Desbloq. facial para</string>
  </resources>
 diff --git a/overlay/res/values-es/strings.xml b/overlay/res/values-es/strings.xml
-index 0b39dc325df2b65840790dc1ac3c0300b552ff59..30e8330d06347dd59ebd9ebd30f336713ef91a03 100644
+index 0b39dc3..30e8330 100644
 --- a/overlay/res/values-es/strings.xml
 +++ b/overlay/res/values-es/strings.xml
 @@ -17,21 +17,7 @@
@@ -2149,7 +2149,7 @@ index 0b39dc325df2b65840790dc1ac3c0300b552ff59..30e8330d06347dd59ebd9ebd30f33671
      <string name="security_settings_face_settings_use_face_category">Usar Desbloqueo facial para</string>
  </resources>
 diff --git a/overlay/res/values-et/strings.xml b/overlay/res/values-et/strings.xml
-index 31d3c46d55389d0298ae2790c656da353784d25b..b2e3e285f29ac98946ed453afc040a1ea88a4fcc 100644
+index 31d3c46..b2e3e28 100644
 --- a/overlay/res/values-et/strings.xml
 +++ b/overlay/res/values-et/strings.xml
 @@ -17,21 +17,7 @@
@@ -2242,7 +2242,7 @@ index 31d3c46d55389d0298ae2790c656da353784d25b..b2e3e285f29ac98946ed453afc040a1e
      <string name="security_settings_face_settings_use_face_category">Kasuta näoga avamist</string>
  </resources>
 diff --git a/overlay/res/values-eu/strings.xml b/overlay/res/values-eu/strings.xml
-index d043617b34f4dad28ed78581088639ed88ac94be..5ca4f5d90e2922ed9c9696c07be7683c9251e1c4 100644
+index d043617..5ca4f5d 100644
 --- a/overlay/res/values-eu/strings.xml
 +++ b/overlay/res/values-eu/strings.xml
 @@ -17,21 +17,7 @@
@@ -2335,7 +2335,7 @@ index d043617b34f4dad28ed78581088639ed88ac94be..5ca4f5d90e2922ed9c9696c07be7683c
      <string name="security_settings_face_settings_use_face_category">Erabili hauetarako:</string>
  </resources>
 diff --git a/overlay/res/values-fa/strings.xml b/overlay/res/values-fa/strings.xml
-index b599f6319b704e775633ec6d0761da6ed9cc67dd..8fd6ec1836d030c589ea7586dfe4c4ea32410e6e 100644
+index b599f63..8fd6ec1 100644
 --- a/overlay/res/values-fa/strings.xml
 +++ b/overlay/res/values-fa/strings.xml
 @@ -17,21 +17,7 @@
@@ -2428,7 +2428,7 @@ index b599f6319b704e775633ec6d0761da6ed9cc67dd..8fd6ec1836d030c589ea7586dfe4c4ea
      <string name="security_settings_face_settings_use_face_category">«قفل‌گشایی با چهره» برای</string>
  </resources>
 diff --git a/overlay/res/values-fi/strings.xml b/overlay/res/values-fi/strings.xml
-index aa65c3fa0a068ea60bfe34f73b6397f70735f8cf..3046eedc206d473f08b5d02b3fc5bb28e664efc6 100644
+index aa65c3f..3046eed 100644
 --- a/overlay/res/values-fi/strings.xml
 +++ b/overlay/res/values-fi/strings.xml
 @@ -17,21 +17,7 @@
@@ -2521,7 +2521,7 @@ index aa65c3fa0a068ea60bfe34f73b6397f70735f8cf..3046eedc206d473f08b5d02b3fc5bb28
      <string name="security_settings_face_settings_use_face_category">Kasvojentunnistus</string>
  </resources>
 diff --git a/overlay/res/values-fr-rCA/strings.xml b/overlay/res/values-fr-rCA/strings.xml
-index 64841dddfd5046d4c33d9a55a2fc9dd2a33d6ab7..f3e9ac41b97dbd3e6a2c4cd0dcb83291bcf05014 100644
+index 64841dd..f3e9ac4 100644
 --- a/overlay/res/values-fr-rCA/strings.xml
 +++ b/overlay/res/values-fr-rCA/strings.xml
 @@ -17,21 +17,7 @@
@@ -2614,7 +2614,7 @@ index 64841dddfd5046d4c33d9a55a2fc9dd2a33d6ab7..f3e9ac41b97dbd3e6a2c4cd0dcb83291
      <string name="security_settings_face_settings_use_face_category">Utiliser pour</string>
  </resources>
 diff --git a/overlay/res/values-fr/strings.xml b/overlay/res/values-fr/strings.xml
-index 6d7907c442dae371cb709c2d39a22ad051680a52..9dac18b462cb6be089c4db6344e27ee7c2541610 100644
+index 6d7907c..9dac18b 100644
 --- a/overlay/res/values-fr/strings.xml
 +++ b/overlay/res/values-fr/strings.xml
 @@ -17,21 +17,7 @@
@@ -2707,7 +2707,7 @@ index 6d7907c442dae371cb709c2d39a22ad051680a52..9dac18b462cb6be089c4db6344e27ee7
      <string name="security_settings_face_settings_use_face_category">Utiliser pour</string>
  </resources>
 diff --git a/overlay/res/values-gl/strings.xml b/overlay/res/values-gl/strings.xml
-index 8b4edd43341129f00637be7ca6cc03f07324767e..0bd152a2d28f19b05c514651534b2c6e11d23ef0 100644
+index 8b4edd4..0bd152a 100644
 --- a/overlay/res/values-gl/strings.xml
 +++ b/overlay/res/values-gl/strings.xml
 @@ -17,21 +17,7 @@
@@ -2800,7 +2800,7 @@ index 8b4edd43341129f00637be7ca6cc03f07324767e..0bd152a2d28f19b05c514651534b2c6e
      <string name="security_settings_face_settings_use_face_category">Desbloq. facial para</string>
  </resources>
 diff --git a/overlay/res/values-gu/strings.xml b/overlay/res/values-gu/strings.xml
-index fda73d508e2f8695b45e4a9e29ec3507d05f1085..10a0cb00e2143ced2f52bc362987fb1488523bec 100644
+index fda73d5..10a0cb0 100644
 --- a/overlay/res/values-gu/strings.xml
 +++ b/overlay/res/values-gu/strings.xml
 @@ -17,21 +17,7 @@
@@ -2893,7 +2893,7 @@ index fda73d508e2f8695b45e4a9e29ec3507d05f1085..10a0cb00e2143ced2f52bc362987fb14
      <string name="security_settings_face_settings_use_face_category">આ માટે ફેસ અનલૉક</string>
  </resources>
 diff --git a/overlay/res/values-hi/strings.xml b/overlay/res/values-hi/strings.xml
-index 1c45d8a5d5ab020d7bf9d6df26b00f92f8b90335..5ad4832b873425278b1c3dac23eec4e1d16ed4ed 100644
+index 1c45d8a..5ad4832 100644
 --- a/overlay/res/values-hi/strings.xml
 +++ b/overlay/res/values-hi/strings.xml
 @@ -17,21 +17,7 @@
@@ -2986,7 +2986,7 @@ index 1c45d8a5d5ab020d7bf9d6df26b00f92f8b90335..5ad4832b873425278b1c3dac23eec4e1
      <string name="security_settings_face_settings_use_face_category">फ़ेस अनलॉक की सुविधा का इस्तेमाल करके</string>
  </resources>
 diff --git a/overlay/res/values-hr/strings.xml b/overlay/res/values-hr/strings.xml
-index 7469425a208c1acc4dc4b7ff286ca6918134ef1b..d8cf0ec13eb9b7808902f51519e97189e212df6a 100644
+index 7469425..d8cf0ec 100644
 --- a/overlay/res/values-hr/strings.xml
 +++ b/overlay/res/values-hr/strings.xml
 @@ -17,21 +17,7 @@
@@ -3079,7 +3079,7 @@ index 7469425a208c1acc4dc4b7ff286ca6918134ef1b..d8cf0ec13eb9b7808902f51519e97189
      <string name="security_settings_face_settings_use_face_category">Koristi otključ. licem za</string>
  </resources>
 diff --git a/overlay/res/values-hu/strings.xml b/overlay/res/values-hu/strings.xml
-index 63546db3262d53413cfcefd933f0bc552d24c6cc..812c6896e4b6046b551cee99ce3da6f4f3bc8526 100644
+index 63546db..812c689 100644
 --- a/overlay/res/values-hu/strings.xml
 +++ b/overlay/res/values-hu/strings.xml
 @@ -17,21 +17,7 @@
@@ -3172,7 +3172,7 @@ index 63546db3262d53413cfcefd933f0bc552d24c6cc..812c6896e4b6046b551cee99ce3da6f4
      <string name="security_settings_face_settings_use_face_category">Arcalapú feloldás</string>
  </resources>
 diff --git a/overlay/res/values-hy/strings.xml b/overlay/res/values-hy/strings.xml
-index 53b3dd1659305105baabb88dfce5262cd377753b..758bb962413d4ac2ba72929b4dda42f12cdb8d5e 100644
+index 53b3dd1..758bb96 100644
 --- a/overlay/res/values-hy/strings.xml
 +++ b/overlay/res/values-hy/strings.xml
 @@ -17,21 +17,7 @@
@@ -3265,7 +3265,7 @@ index 53b3dd1659305105baabb88dfce5262cd377753b..758bb962413d4ac2ba72929b4dda42f1
      <string name="security_settings_face_settings_use_face_category">Դեմքով ապակողպում</string>
  </resources>
 diff --git a/overlay/res/values-in/strings.xml b/overlay/res/values-in/strings.xml
-index 16cd3df8cc2e5b80b3e5277c3430fa3d641b6fd8..9c6acc267364deea0d178d1cd8db24cdd7a98cfd 100644
+index 16cd3df..9c6acc2 100644
 --- a/overlay/res/values-in/strings.xml
 +++ b/overlay/res/values-in/strings.xml
 @@ -17,21 +17,7 @@
@@ -3358,7 +3358,7 @@ index 16cd3df8cc2e5b80b3e5277c3430fa3d641b6fd8..9c6acc267364deea0d178d1cd8db24cd
      <string name="security_settings_face_settings_use_face_category">Gunakan Face Unlock untuk</string>
  </resources>
 diff --git a/overlay/res/values-is/strings.xml b/overlay/res/values-is/strings.xml
-index 365bd969f94336452b3f08d284fc4843def199a7..6d5795b02c042b89774e1dae16271883c874ea68 100644
+index 365bd96..6d5795b 100644
 --- a/overlay/res/values-is/strings.xml
 +++ b/overlay/res/values-is/strings.xml
 @@ -17,21 +17,7 @@
@@ -3451,7 +3451,7 @@ index 365bd969f94336452b3f08d284fc4843def199a7..6d5795b02c042b89774e1dae16271883
      <string name="security_settings_face_settings_use_face_category">Nota andlitskenni til að</string>
  </resources>
 diff --git a/overlay/res/values-it/strings.xml b/overlay/res/values-it/strings.xml
-index 116df35f257c962c75223840dbbb4b6c6dcc6c22..cd16af234c1690fbd1ebedd995d9f44b9094ccb2 100644
+index 116df35..cd16af2 100644
 --- a/overlay/res/values-it/strings.xml
 +++ b/overlay/res/values-it/strings.xml
 @@ -17,21 +17,7 @@
@@ -3544,7 +3544,7 @@ index 116df35f257c962c75223840dbbb4b6c6dcc6c22..cd16af234c1690fbd1ebedd995d9f44b
      <string name="security_settings_face_settings_use_face_category">Usa lo sblocco con il volto per</string>
  </resources>
 diff --git a/overlay/res/values-iw/strings.xml b/overlay/res/values-iw/strings.xml
-index 6296d1c7a1bbb2d81ebb571830386f3322de38cb..c23bd3a4f4fcaa0138061d0bb0f341b1d92cad93 100644
+index 6296d1c..c23bd3a 100644
 --- a/overlay/res/values-iw/strings.xml
 +++ b/overlay/res/values-iw/strings.xml
 @@ -17,21 +17,7 @@
@@ -3637,7 +3637,7 @@ index 6296d1c7a1bbb2d81ebb571830386f3322de38cb..c23bd3a4f4fcaa0138061d0bb0f341b1
      <string name="security_settings_face_settings_use_face_category">פתיחה ע\"י זיהוי הפנים:</string>
  </resources>
 diff --git a/overlay/res/values-ja/strings.xml b/overlay/res/values-ja/strings.xml
-index 0a672199899f33a3885fa96cfeb570c77dd9bb44..20165cdf1957bfec290765c834f50d87846d1b68 100644
+index 0a67219..20165cd 100644
 --- a/overlay/res/values-ja/strings.xml
 +++ b/overlay/res/values-ja/strings.xml
 @@ -17,21 +17,7 @@
@@ -3729,7 +3729,7 @@ index 0a672199899f33a3885fa96cfeb570c77dd9bb44..20165cdf1957bfec290765c834f50d87
      <string name="security_settings_face_settings_use_face_category">顔認証の用途</string>
  </resources>
 diff --git a/overlay/res/values-ka/strings.xml b/overlay/res/values-ka/strings.xml
-index 06f6ea8a8aaa2eada813e3a2d0515390776640c0..2ae1ef96dae0b566ee3397116b563add389e4426 100644
+index 06f6ea8..2ae1ef9 100644
 --- a/overlay/res/values-ka/strings.xml
 +++ b/overlay/res/values-ka/strings.xml
 @@ -17,21 +17,7 @@
@@ -3822,7 +3822,7 @@ index 06f6ea8a8aaa2eada813e3a2d0515390776640c0..2ae1ef96dae0b566ee3397116b563add
      <string name="security_settings_face_settings_use_face_category">სახით განბლოკვის გამოყენება:</string>
  </resources>
 diff --git a/overlay/res/values-kk/strings.xml b/overlay/res/values-kk/strings.xml
-index d32978af5e739a6d6331d88dae0e0f6ac32c0f2f..e92c8ad9a9db7f69564bc46a30a8839e6c1933d0 100644
+index d32978a..e92c8ad 100644
 --- a/overlay/res/values-kk/strings.xml
 +++ b/overlay/res/values-kk/strings.xml
 @@ -17,21 +17,7 @@
@@ -3915,7 +3915,7 @@ index d32978af5e739a6d6331d88dae0e0f6ac32c0f2f..e92c8ad9a9db7f69564bc46a30a8839e
      <string name="security_settings_face_settings_use_face_category">Бет тану функциясы пайдаланылатын кездер</string>
  </resources>
 diff --git a/overlay/res/values-km/strings.xml b/overlay/res/values-km/strings.xml
-index 1fd088e25990928443e5f4d7be225d50585d2817..18dd98b27766f89ccbcbc26daf8ba3cca8e8d8f9 100644
+index 1fd088e..18dd98b 100644
 --- a/overlay/res/values-km/strings.xml
 +++ b/overlay/res/values-km/strings.xml
 @@ -17,21 +17,7 @@
@@ -4008,7 +4008,7 @@ index 1fd088e25990928443e5f4d7be225d50585d2817..18dd98b27766f89ccbcbc26daf8ba3cc
      <string name="security_settings_face_settings_use_face_category">ប្រើការដោះសោតាមទម្រង់មុខសម្រាប់</string>
  </resources>
 diff --git a/overlay/res/values-kn/strings.xml b/overlay/res/values-kn/strings.xml
-index e3f74b5ceb452c44e0862a11d313c756a2d89fb2..992d9be82ad1ed83de4fc711c41ad97dcab40635 100644
+index e3f74b5..992d9be 100644
 --- a/overlay/res/values-kn/strings.xml
 +++ b/overlay/res/values-kn/strings.xml
 @@ -17,21 +17,7 @@
@@ -4101,7 +4101,7 @@ index e3f74b5ceb452c44e0862a11d313c756a2d89fb2..992d9be82ad1ed83de4fc711c41ad97d
      <string name="security_settings_face_settings_use_face_category">ಫೇಸ್ ಅನ್‌ಲಾಕ್ ಬಳಸಿ</string>
  </resources>
 diff --git a/overlay/res/values-ko/strings.xml b/overlay/res/values-ko/strings.xml
-index e0ba120212bbab5443c0b5b51b4344764a3bf9d1..60154742f7a725e89b9d8b26010339549f1e6a34 100644
+index e0ba120..6015474 100644
 --- a/overlay/res/values-ko/strings.xml
 +++ b/overlay/res/values-ko/strings.xml
 @@ -17,21 +17,7 @@
@@ -4194,7 +4194,7 @@ index e0ba120212bbab5443c0b5b51b4344764a3bf9d1..60154742f7a725e89b9d8b2601033954
      <string name="security_settings_face_settings_use_face_category">다음에 얼굴 인식 잠금 해제 사용</string>
  </resources>
 diff --git a/overlay/res/values-ky/strings.xml b/overlay/res/values-ky/strings.xml
-index fb711edbcb55254ce89096e43bf93bc3aa76fb6f..76c00d921f6703aa2e1fa4acf5135b3a8a3a0c0d 100644
+index fb711ed..76c00d9 100644
 --- a/overlay/res/values-ky/strings.xml
 +++ b/overlay/res/values-ky/strings.xml
 @@ -17,21 +17,7 @@
@@ -4287,7 +4287,7 @@ index fb711edbcb55254ce89096e43bf93bc3aa76fb6f..76c00d921f6703aa2e1fa4acf5135b3a
      <string name="security_settings_face_settings_use_face_category">Жүзүнөн таанып ачуу:</string>
  </resources>
 diff --git a/overlay/res/values-lo/strings.xml b/overlay/res/values-lo/strings.xml
-index de153fa531acfa145bdfd9a467e5c2c5d227040d..6405b79d2673026d5e428ad42ce236ddd61e258e 100644
+index de153fa..6405b79 100644
 --- a/overlay/res/values-lo/strings.xml
 +++ b/overlay/res/values-lo/strings.xml
 @@ -17,21 +17,7 @@
@@ -4380,7 +4380,7 @@ index de153fa531acfa145bdfd9a467e5c2c5d227040d..6405b79d2673026d5e428ad42ce236dd
      <string name="security_settings_face_settings_use_face_category">ໃຊ້ການປົດລັອກດ້ວຍໜ້າສຳລັບ</string>
      </resources>
 diff --git a/overlay/res/values-lt/strings.xml b/overlay/res/values-lt/strings.xml
-index d0c063747e6c72c8f6440a8c4a49a209127c0862..9576a9441bf604b371646dc3971892fed6ad70a0 100644
+index d0c0637..9576a94 100644
 --- a/overlay/res/values-lt/strings.xml
 +++ b/overlay/res/values-lt/strings.xml
 @@ -17,21 +17,7 @@
@@ -4473,7 +4473,7 @@ index d0c063747e6c72c8f6440a8c4a49a209127c0862..9576a9441bf604b371646dc3971892fe
      <string name="security_settings_face_settings_use_face_category">Atrakinimą pagal veidą naudoti su</string>
  </resources>
 diff --git a/overlay/res/values-lv/strings.xml b/overlay/res/values-lv/strings.xml
-index 0d57e63137b98d8ab89053b12ab4a0926c3fdd55..821d2124cbb9aba7ef3de27d5485ff50febd3895 100644
+index 0d57e63..821d212 100644
 --- a/overlay/res/values-lv/strings.xml
 +++ b/overlay/res/values-lv/strings.xml
 @@ -17,21 +17,7 @@
@@ -4566,7 +4566,7 @@ index 0d57e63137b98d8ab89053b12ab4a0926c3fdd55..821d2124cbb9aba7ef3de27d5485ff50
      <string name="security_settings_face_settings_use_face_category">Autoriz. pēc sejas:</string>
  </resources>
 diff --git a/overlay/res/values-mk/strings.xml b/overlay/res/values-mk/strings.xml
-index 91a4d4d72509efe64dddaf8fed4355cb6ffd2632..cfa6be41ef5429bde316ea94f34411d58eedcc3b 100644
+index 91a4d4d..cfa6be4 100644
 --- a/overlay/res/values-mk/strings.xml
 +++ b/overlay/res/values-mk/strings.xml
 @@ -17,21 +17,7 @@
@@ -4659,7 +4659,7 @@ index 91a4d4d72509efe64dddaf8fed4355cb6ffd2632..cfa6be41ef5429bde316ea94f34411d5
      <string name="security_settings_face_settings_use_face_category">Користи „Отклучување со лик“ за</string>
  </resources>
 diff --git a/overlay/res/values-ml/strings.xml b/overlay/res/values-ml/strings.xml
-index 3b748f9012c49ea65f1a6d8be3ee4bcb1b3f5704..56a4e025369617f10889953cda79cbdcdabd8888 100644
+index 3b748f9..56a4e02 100644
 --- a/overlay/res/values-ml/strings.xml
 +++ b/overlay/res/values-ml/strings.xml
 @@ -17,21 +17,7 @@
@@ -4752,7 +4752,7 @@ index 3b748f9012c49ea65f1a6d8be3ee4bcb1b3f5704..56a4e025369617f10889953cda79cbdc
      <string name="security_settings_face_settings_use_face_category">ഇവയ്‌ക്ക് ഫെയ്‌സ് അൺലോക്ക് ഉപയോഗിക്കൂ</string>
  </resources>
 diff --git a/overlay/res/values-mn/strings.xml b/overlay/res/values-mn/strings.xml
-index 9a8ee67ad312675a029d4b68ec04f60c72dc0b25..b5d729acb25a1d32b729a2530dc07c0a18020865 100644
+index 9a8ee67..b5d729a 100644
 --- a/overlay/res/values-mn/strings.xml
 +++ b/overlay/res/values-mn/strings.xml
 @@ -17,21 +17,7 @@
@@ -4845,7 +4845,7 @@ index 9a8ee67ad312675a029d4b68ec04f60c72dc0b25..b5d729acb25a1d32b729a2530dc07c0a
      <string name="security_settings_face_settings_use_face_category">Царайгаар түгжээ тайлахыг дараахад ашиглах</string>
  </resources>
 diff --git a/overlay/res/values-mr/strings.xml b/overlay/res/values-mr/strings.xml
-index cf9ff88fafc18b360627f33aba17b78aca8468d4..55af4fdaa31d4f3dd065e8c552ed36504724e206 100644
+index cf9ff88..55af4fd 100644
 --- a/overlay/res/values-mr/strings.xml
 +++ b/overlay/res/values-mr/strings.xml
 @@ -17,21 +17,7 @@
@@ -4938,7 +4938,7 @@ index cf9ff88fafc18b360627f33aba17b78aca8468d4..55af4fdaa31d4f3dd065e8c552ed3650
      <string name="security_settings_face_settings_use_face_category">यासाठी फेस अनलॉक वापरा</string>
  </resources>
 diff --git a/overlay/res/values-ms/strings.xml b/overlay/res/values-ms/strings.xml
-index 83688e7b22aa34131775ab9f93be69db4ea27335..5a8ae66b164676513fec742ed4c5e3dc2ac88b6a 100644
+index 83688e7..5a8ae66 100644
 --- a/overlay/res/values-ms/strings.xml
 +++ b/overlay/res/values-ms/strings.xml
 @@ -17,21 +17,7 @@
@@ -5031,7 +5031,7 @@ index 83688e7b22aa34131775ab9f93be69db4ea27335..5a8ae66b164676513fec742ed4c5e3dc
      <string name="security_settings_face_settings_use_face_category">Guna ciri ini untuk</string>
  </resources>
 diff --git a/overlay/res/values-my/strings.xml b/overlay/res/values-my/strings.xml
-index 89960f2ce77d9d3de05920338f2f1d5c16b4c4cb..f59b3761c2863ced79c20449e0373b42a9b80d25 100644
+index 89960f2..f59b376 100644
 --- a/overlay/res/values-my/strings.xml
 +++ b/overlay/res/values-my/strings.xml
 @@ -17,21 +17,7 @@
@@ -5124,7 +5124,7 @@ index 89960f2ce77d9d3de05920338f2f1d5c16b4c4cb..f59b3761c2863ced79c20449e0373b42
      <string name="security_settings_face_settings_use_face_category">မျက်နှာလော့ခ်သုံးရန်</string>
  </resources>
 diff --git a/overlay/res/values-nb/strings.xml b/overlay/res/values-nb/strings.xml
-index bbe0bd85ae6b11b2c0e787655764116bb9970d16..4c79c891359342c493994aeb7142fa1ab8ed5e5a 100644
+index bbe0bd8..4c79c89 100644
 --- a/overlay/res/values-nb/strings.xml
 +++ b/overlay/res/values-nb/strings.xml
 @@ -17,21 +17,7 @@
@@ -5217,7 +5217,7 @@ index bbe0bd85ae6b11b2c0e787655764116bb9970d16..4c79c891359342c493994aeb7142fa1a
      <string name="security_settings_face_settings_use_face_category">Bruk ansiktslås til dette</string>
  </resources>
 diff --git a/overlay/res/values-ne/strings.xml b/overlay/res/values-ne/strings.xml
-index b1d2f0dca2380fb1cbe6ea566ac04408cf55de81..67c202c63bf3f628ec3d82767d589f486afdf17b 100644
+index b1d2f0d..67c202c 100644
 --- a/overlay/res/values-ne/strings.xml
 +++ b/overlay/res/values-ne/strings.xml
 @@ -17,21 +17,7 @@
@@ -5310,7 +5310,7 @@ index b1d2f0dca2380fb1cbe6ea566ac04408cf55de81..67c202c63bf3f628ec3d82767d589f48
      <string name="security_settings_face_settings_use_face_category">निम्न कार्य गर्न फेस अनलक प्रयोग गर्नुहोस्</string>
  </resources>
 diff --git a/overlay/res/values-nl/strings.xml b/overlay/res/values-nl/strings.xml
-index 614c31c59c5e2b7090b0f50b104a76717bdbfce3..d49287a03db84579bf0bf1c60399013b945e8a0c 100644
+index 614c31c..d49287a 100644
 --- a/overlay/res/values-nl/strings.xml
 +++ b/overlay/res/values-nl/strings.xml
 @@ -17,21 +17,7 @@
@@ -5403,7 +5403,7 @@ index 614c31c59c5e2b7090b0f50b104a76717bdbfce3..d49287a03db84579bf0bf1c60399013b
      <string name="security_settings_face_settings_use_face_category">Ontgrendelen via gezicht gebruiken voor</string>
  </resources>
 diff --git a/overlay/res/values-or/strings.xml b/overlay/res/values-or/strings.xml
-index beb874ef453e9476fce69a2f20f20fc57572d048..16605768de17fc82232ea9d27253c8fb4fd40930 100644
+index beb874e..1660576 100644
 --- a/overlay/res/values-or/strings.xml
 +++ b/overlay/res/values-or/strings.xml
 @@ -17,21 +17,7 @@
@@ -5496,7 +5496,7 @@ index beb874ef453e9476fce69a2f20f20fc57572d048..16605768de17fc82232ea9d27253c8fb
      <string name="security_settings_face_settings_use_face_category">ଏଥିପାଇଁ ଫେସ୍ ଅନଲକ୍ ବ୍ୟବହାର କରନ୍ତୁ</string>
  </resources>
 diff --git a/overlay/res/values-pa/strings.xml b/overlay/res/values-pa/strings.xml
-index 7389c87ccce2a8702ad50c8e40738f040156294e..368da8908605a3cf706ae0a2e6e1f9611dd58fba 100644
+index 7389c87..368da89 100644
 --- a/overlay/res/values-pa/strings.xml
 +++ b/overlay/res/values-pa/strings.xml
 @@ -17,21 +17,7 @@
@@ -5589,7 +5589,7 @@ index 7389c87ccce2a8702ad50c8e40738f040156294e..368da8908605a3cf706ae0a2e6e1f961
      <string name="security_settings_face_settings_use_face_category">ਫ਼ੇਸ ਅਣਲਾਕ ਇਸ ਲਈ ਵਰਤੋ</string>
  </resources>
 diff --git a/overlay/res/values-pl/strings.xml b/overlay/res/values-pl/strings.xml
-index 49d188ffa46452a85fab3c2b84f6571176f12b42..dee088a4d7178ae6dc467fbaba13105de40e159c 100644
+index 49d188f..dee088a 100644
 --- a/overlay/res/values-pl/strings.xml
 +++ b/overlay/res/values-pl/strings.xml
 @@ -17,21 +17,7 @@
@@ -5682,7 +5682,7 @@ index 49d188ffa46452a85fab3c2b84f6571176f12b42..dee088a4d7178ae6dc467fbaba13105d
      <string name="security_settings_face_settings_use_face_category">Używaj rozpoznawania twarzy do tych celów</string>
  </resources>
 diff --git a/overlay/res/values-pt-rBR/strings.xml b/overlay/res/values-pt-rBR/strings.xml
-index 7189c200a2cd92fa2d609004c2d1124024b325f2..e84aaa657d53cb24227a165547505480dda94a68 100644
+index 7189c20..e84aaa6 100644
 --- a/overlay/res/values-pt-rBR/strings.xml
 +++ b/overlay/res/values-pt-rBR/strings.xml
 @@ -33,21 +33,7 @@
@@ -5775,7 +5775,7 @@ index 7189c200a2cd92fa2d609004c2d1124024b325f2..e84aaa657d53cb24227a165547505480
      <string name="security_settings_face_settings_use_face_category">Usar desbloqueio facial para</string>
  </resources>
 diff --git a/overlay/res/values-pt-rPT/strings.xml b/overlay/res/values-pt-rPT/strings.xml
-index 8d161625162497927ee26642b7d5e0c3675e9c14..0bcc4cfff709e62a3e13d15ca8278ab1710171b5 100644
+index 8d16162..0bcc4cf 100644
 --- a/overlay/res/values-pt-rPT/strings.xml
 +++ b/overlay/res/values-pt-rPT/strings.xml
 @@ -17,21 +17,7 @@
@@ -5868,7 +5868,7 @@ index 8d161625162497927ee26642b7d5e0c3675e9c14..0bcc4cfff709e62a3e13d15ca8278ab1
      <string name="security_settings_face_settings_use_face_category">Usar desbloqueio facial para</string>
  </resources>
 diff --git a/overlay/res/values-pt/strings.xml b/overlay/res/values-pt/strings.xml
-index 4748815b5d075b3be44207734a8d3a6806dfb878..04e94f209af90dd392b13cd073b0dfc70e07ee11 100644
+index 4748815..04e94f2 100644
 --- a/overlay/res/values-pt/strings.xml
 +++ b/overlay/res/values-pt/strings.xml
 @@ -17,21 +17,7 @@
@@ -5961,7 +5961,7 @@ index 4748815b5d075b3be44207734a8d3a6806dfb878..04e94f209af90dd392b13cd073b0dfc7
      <string name="security_settings_face_settings_use_face_category">Usar desbloqueio facial para</string>
  </resources>
 diff --git a/overlay/res/values-ro/strings.xml b/overlay/res/values-ro/strings.xml
-index 3106e82f9f893a715c9b0db56d2fe0557ad319e0..990a8e1183a2fcb3116ed7711c43073f0f314609 100644
+index 3106e82..990a8e1 100644
 --- a/overlay/res/values-ro/strings.xml
 +++ b/overlay/res/values-ro/strings.xml
 @@ -17,21 +17,7 @@
@@ -6054,7 +6054,7 @@ index 3106e82f9f893a715c9b0db56d2fe0557ad319e0..990a8e1183a2fcb3116ed7711c43073f
      <string name="security_settings_face_settings_use_face_category">Folosește Deblocarea facială pentru</string>
  </resources>
 diff --git a/overlay/res/values-ru/strings.xml b/overlay/res/values-ru/strings.xml
-index 14dcb51aa892923f12372eeeecd095e558073202..a81836b5446726578c81552c8edba482c09692d7 100644
+index 14dcb51..a81836b 100644
 --- a/overlay/res/values-ru/strings.xml
 +++ b/overlay/res/values-ru/strings.xml
 @@ -17,21 +17,7 @@
@@ -6147,7 +6147,7 @@ index 14dcb51aa892923f12372eeeecd095e558073202..a81836b5446726578c81552c8edba482
      <string name="security_settings_face_settings_use_face_category">Функции фейсконтроля</string>
  </resources>
 diff --git a/overlay/res/values-si/strings.xml b/overlay/res/values-si/strings.xml
-index 3462c6f5a75442bef506579d2cadaf15decf9dcb..c323b088661b761371becf665b282ca6fd7700d8 100644
+index 3462c6f..c323b08 100644
 --- a/overlay/res/values-si/strings.xml
 +++ b/overlay/res/values-si/strings.xml
 @@ -17,21 +17,7 @@
@@ -6240,7 +6240,7 @@ index 3462c6f5a75442bef506579d2cadaf15decf9dcb..c323b088661b761371becf665b282ca6
      <string name="security_settings_face_settings_use_face_category">මුහුණු අගුළු ඇරීම භාවිතා කරන්න</string>
  </resources>
 diff --git a/overlay/res/values-sk/strings.xml b/overlay/res/values-sk/strings.xml
-index 5d5bdc4bd5edd36c787a70540128a2d1c6d709b0..e11444df13b04ed105e7f77437f9b848552415e1 100644
+index 5d5bdc4..e11444d 100644
 --- a/overlay/res/values-sk/strings.xml
 +++ b/overlay/res/values-sk/strings.xml
 @@ -17,21 +17,7 @@
@@ -6333,7 +6333,7 @@ index 5d5bdc4bd5edd36c787a70540128a2d1c6d709b0..e11444df13b04ed105e7f77437f9b848
      <string name="security_settings_face_settings_use_face_category">Odomknutím tvárou:</string>
  </resources>
 diff --git a/overlay/res/values-sl/strings.xml b/overlay/res/values-sl/strings.xml
-index 79fa144a3074c56c1b87827c946cba46ae94827f..37373150d1d6abccf1a8513b9fc8726a65950e4a 100644
+index 79fa144..3737315 100644
 --- a/overlay/res/values-sl/strings.xml
 +++ b/overlay/res/values-sl/strings.xml
 @@ -17,21 +17,7 @@
@@ -6426,7 +6426,7 @@ index 79fa144a3074c56c1b87827c946cba46ae94827f..37373150d1d6abccf1a8513b9fc8726a
      <string name="security_settings_face_settings_use_face_category">Uporaba odklepanja z obrazom za</string>
  </resources>
 diff --git a/overlay/res/values-sq/strings.xml b/overlay/res/values-sq/strings.xml
-index e30af5966f87fccb6f5b102fa78ee6df96ae211d..1a2ca6fe8a282537d79c7c4cb0a741515e34b449 100644
+index e30af59..1a2ca6f 100644
 --- a/overlay/res/values-sq/strings.xml
 +++ b/overlay/res/values-sq/strings.xml
 @@ -17,21 +17,7 @@
@@ -6519,7 +6519,7 @@ index e30af5966f87fccb6f5b102fa78ee6df96ae211d..1a2ca6fe8a282537d79c7c4cb0a74151
      <string name="security_settings_face_settings_use_face_category">Përdor \"Shkyçjen me fytyrë\" për</string>
  </resources>
 diff --git a/overlay/res/values-sr/strings.xml b/overlay/res/values-sr/strings.xml
-index 5daf9fefc76993dfc018ec8414011b242b77dc28..4e9a716261f073c0e7efd2f6227cbe1a13b33a6d 100644
+index 5daf9fe..4e9a716 100644
 --- a/overlay/res/values-sr/strings.xml
 +++ b/overlay/res/values-sr/strings.xml
 @@ -17,21 +17,7 @@
@@ -6612,7 +6612,7 @@ index 5daf9fefc76993dfc018ec8414011b242b77dc28..4e9a716261f073c0e7efd2f6227cbe1a
      <string name="security_settings_face_settings_use_face_category">Користи откључавање лицем:</string>
  </resources>
 diff --git a/overlay/res/values-sv/strings.xml b/overlay/res/values-sv/strings.xml
-index e38a7fe88a31400fdb9016991f2e9e9eb8c4f572..abe3f2fde52f18ef90ad9a136d7fb985600d260c 100644
+index e38a7fe..abe3f2f 100644
 --- a/overlay/res/values-sv/strings.xml
 +++ b/overlay/res/values-sv/strings.xml
 @@ -17,21 +17,7 @@
@@ -6705,7 +6705,7 @@ index e38a7fe88a31400fdb9016991f2e9e9eb8c4f572..abe3f2fde52f18ef90ad9a136d7fb985
      <string name="security_settings_face_settings_use_face_category">Använd ansiktslås för att</string>
  </resources>
 diff --git a/overlay/res/values-sw/strings.xml b/overlay/res/values-sw/strings.xml
-index 650b404bc30c930c365383aadd671c3b1f96c83a..b91d9356593c686e4da8cc097f8daf06eb1741e6 100644
+index 650b404..b91d935 100644
 --- a/overlay/res/values-sw/strings.xml
 +++ b/overlay/res/values-sw/strings.xml
 @@ -17,21 +17,7 @@
@@ -6798,7 +6798,7 @@ index 650b404bc30c930c365383aadd671c3b1f96c83a..b91d9356593c686e4da8cc097f8daf06
      <string name="security_settings_face_settings_use_face_category">Tumia kipengele cha Kufungua kwa uso</string>
  </resources>
 diff --git a/overlay/res/values-ta/strings.xml b/overlay/res/values-ta/strings.xml
-index 566c3253e90b0cc3cd80920b06bd03b75ef1d2fa..9650ba1efb687e23d045bac36e285a5d9cdd9a78 100644
+index 566c325..9650ba1 100644
 --- a/overlay/res/values-ta/strings.xml
 +++ b/overlay/res/values-ta/strings.xml
 @@ -17,21 +17,7 @@
@@ -6891,7 +6891,7 @@ index 566c3253e90b0cc3cd80920b06bd03b75ef1d2fa..9650ba1efb687e23d045bac36e285a5d
      <string name="security_settings_face_settings_use_face_category">முகம் காட்டித் திறத்தலின் உபயோகம்</string>
  </resources>
 diff --git a/overlay/res/values-te/strings.xml b/overlay/res/values-te/strings.xml
-index c6f7177aa528dcb2edc5e4dc695d5d2239b6b151..dcfb2b9274312edfa720f69732fbbd5bec69d50a 100644
+index c6f7177..dcfb2b9 100644
 --- a/overlay/res/values-te/strings.xml
 +++ b/overlay/res/values-te/strings.xml
 @@ -17,21 +17,7 @@
@@ -6984,7 +6984,7 @@ index c6f7177aa528dcb2edc5e4dc695d5d2239b6b151..dcfb2b9274312edfa720f69732fbbd5b
      <string name="security_settings_face_settings_use_face_category">వినియోగ ఆప్షన్లు</string>
  </resources>
 diff --git a/overlay/res/values-th/strings.xml b/overlay/res/values-th/strings.xml
-index 121b343f39ab941b70bd077398b6f3f6d1a4f627..a5e74f4148b6a765e6486ccdd73f0dbc69a47cb5 100644
+index 121b343..a5e74f4 100644
 --- a/overlay/res/values-th/strings.xml
 +++ b/overlay/res/values-th/strings.xml
 @@ -17,21 +17,7 @@
@@ -7077,7 +7077,7 @@ index 121b343f39ab941b70bd077398b6f3f6d1a4f627..a5e74f4148b6a765e6486ccdd73f0dbc
      <string name="security_settings_face_settings_use_face_category">ใช้การปลดล็อกด้วยใบหน้าเพื่อ</string>
  </resources>
 diff --git a/overlay/res/values-tl/strings.xml b/overlay/res/values-tl/strings.xml
-index a44c11ecea3085679a993d879815660925c2076a..8754f1cdb6ae894f33437b003fe872be6313bb85 100644
+index a44c11e..8754f1c 100644
 --- a/overlay/res/values-tl/strings.xml
 +++ b/overlay/res/values-tl/strings.xml
 @@ -17,21 +17,7 @@
@@ -7170,7 +7170,7 @@ index a44c11ecea3085679a993d879815660925c2076a..8754f1cdb6ae894f33437b003fe872be
      <string name="security_settings_face_settings_use_face_category">Gamitin ang Pag-unlock Gamit ang Mukha para sa</string>
  </resources>
 diff --git a/overlay/res/values-tr/strings.xml b/overlay/res/values-tr/strings.xml
-index 353dbe45b4b66c996b2db24bdfe1e2c4141fd6b1..17b0e15137f836bf741939dc1c1640a5d7858747 100644
+index 353dbe4..17b0e15 100644
 --- a/overlay/res/values-tr/strings.xml
 +++ b/overlay/res/values-tr/strings.xml
 @@ -17,21 +17,7 @@
@@ -7263,7 +7263,7 @@ index 353dbe45b4b66c996b2db24bdfe1e2c4141fd6b1..17b0e15137f836bf741939dc1c1640a5
      <string name="security_settings_face_settings_use_face_category">Yüz Tanıma Kilidi kullan:</string>
  </resources>
 diff --git a/overlay/res/values-uk/strings.xml b/overlay/res/values-uk/strings.xml
-index 2d18691eefe0ab50c72077fc4f822ce1da156ac5..215d842ff156988d33bda428074bb0d08b9c84df 100644
+index 2d18691..215d842 100644
 --- a/overlay/res/values-uk/strings.xml
 +++ b/overlay/res/values-uk/strings.xml
 @@ -17,21 +17,7 @@
@@ -7356,7 +7356,7 @@ index 2d18691eefe0ab50c72077fc4f822ce1da156ac5..215d842ff156988d33bda428074bb0d0
      <string name="security_settings_face_settings_use_face_category">Функції фейсконтролю</string>
  </resources>
 diff --git a/overlay/res/values-ur/strings.xml b/overlay/res/values-ur/strings.xml
-index 06bcf3a0a27bc99e156865e23cebc550e1138aac..ffaaeb86750f54c9afbab18fb43792e7479e40d0 100644
+index 06bcf3a..ffaaeb8 100644
 --- a/overlay/res/values-ur/strings.xml
 +++ b/overlay/res/values-ur/strings.xml
 @@ -17,21 +17,7 @@
@@ -7449,7 +7449,7 @@ index 06bcf3a0a27bc99e156865e23cebc550e1138aac..ffaaeb86750f54c9afbab18fb43792e7
      <string name="security_settings_face_settings_use_face_category">فیس اَنلاک استعمال کریں</string>
  </resources>
 diff --git a/overlay/res/values-uz/strings.xml b/overlay/res/values-uz/strings.xml
-index 032660976fc8310e6ab3836d2f002af44789be22..e7c45b3701dd81bf5217c99e25208d07cc4f8afc 100644
+index 0326609..e7c45b3 100644
 --- a/overlay/res/values-uz/strings.xml
 +++ b/overlay/res/values-uz/strings.xml
 @@ -17,21 +17,7 @@
@@ -7542,7 +7542,7 @@ index 032660976fc8310e6ab3836d2f002af44789be22..e7c45b3701dd81bf5217c99e25208d07
      <string name="security_settings_face_settings_use_face_category">Yuz bilan ochish:</string>
  </resources>
 diff --git a/overlay/res/values-vi/strings.xml b/overlay/res/values-vi/strings.xml
-index bf2d41d83e4029946095a1f18d149104226ff593..41252b222b7bcc5a924bcb837375e45db7285749 100644
+index bf2d41d..41252b2 100644
 --- a/overlay/res/values-vi/strings.xml
 +++ b/overlay/res/values-vi/strings.xml
 @@ -17,21 +17,7 @@
@@ -7635,7 +7635,7 @@ index bf2d41d83e4029946095a1f18d149104226ff593..41252b222b7bcc5a924bcb837375e45d
      <string name="security_settings_face_settings_use_face_category">Dùng tính năng Mở khóa bằng khuôn mặt để</string>
  </resources>
 diff --git a/overlay/res/values-zh-rCN/strings.xml b/overlay/res/values-zh-rCN/strings.xml
-index 826d1f8e7b541e1a521cb2d0f5ed9a2e7122efb4..518f521c9eabcac47ba1b7319857ddecabe3228a 100644
+index 826d1f8..518f521 100644
 --- a/overlay/res/values-zh-rCN/strings.xml
 +++ b/overlay/res/values-zh-rCN/strings.xml
 @@ -17,21 +17,7 @@
@@ -7728,7 +7728,7 @@ index 826d1f8e7b541e1a521cb2d0f5ed9a2e7122efb4..518f521c9eabcac47ba1b7319857ddec
      <string name="security_settings_face_settings_use_face_category">人脸解锁的用途</string>
  </resources>
 diff --git a/overlay/res/values-zh-rHK/strings.xml b/overlay/res/values-zh-rHK/strings.xml
-index d039493b77d4ba56255c07b9287c465dcc470193..d6ac091355a15cc0777015944f0d9f5cd26d6695 100644
+index d039493..d6ac091 100644
 --- a/overlay/res/values-zh-rHK/strings.xml
 +++ b/overlay/res/values-zh-rHK/strings.xml
 @@ -17,21 +17,7 @@
@@ -7821,7 +7821,7 @@ index d039493b77d4ba56255c07b9287c465dcc470193..d6ac091355a15cc0777015944f0d9f5c
      <string name="security_settings_face_settings_use_face_category">「面孔解鎖」的用法</string>
  </resources>
 diff --git a/overlay/res/values-zh-rTW/strings.xml b/overlay/res/values-zh-rTW/strings.xml
-index 77e28029c43aaa225c4338ffbe9e94485876f520..ca52aa3fb7169db09503615cf452dd3e58ade27a 100644
+index 77e2802..ca52aa3 100644
 --- a/overlay/res/values-zh-rTW/strings.xml
 +++ b/overlay/res/values-zh-rTW/strings.xml
 @@ -17,21 +17,7 @@
@@ -7914,7 +7914,7 @@ index 77e28029c43aaa225c4338ffbe9e94485876f520..ca52aa3fb7169db09503615cf452dd3e
      <string name="security_settings_face_settings_use_face_category">人臉解鎖功能的用途</string>
  </resources>
 diff --git a/overlay/res/values-zu/strings.xml b/overlay/res/values-zu/strings.xml
-index b07ec7d362ac1da10500673fdb7b27b040a593c0..573b11f6a12b6fe0d3e0e0c4fe041baa94d0c063 100644
+index b07ec7d..573b11f 100644
 --- a/overlay/res/values-zu/strings.xml
 +++ b/overlay/res/values-zu/strings.xml
 @@ -17,21 +17,7 @@
@@ -8007,9 +8007,18 @@ index b07ec7d362ac1da10500673fdb7b27b040a593c0..573b11f6a12b6fe0d3e0e0c4fe041baa
      <string name="security_settings_face_settings_use_face_category">Sebenzisa Ukuvula ngobuso kwe-</string>
  </resources>
 diff --git a/overlay/res/values/strings.xml b/overlay/res/values/strings.xml
-index 8094ceb0ca2f0fc06a298c603f4d29382e9c3881..5ffe6c3c11392d86878ef1e7d3c8c52603f951c7 100644
+index 8094ceb..39f5fd3 100644
 --- a/overlay/res/values/strings.xml
 +++ b/overlay/res/values/strings.xml
+@@ -23,7 +23,7 @@
+     <string name="security_settings_face_enroll_education_accessibility_dialog_negative">Go back</string>
+     <string name="security_settings_face_enroll_education_accessibility_dialog_positive">Continue setup</string>
+     <string name="security_settings_face_enroll_education_message">On the next screen, rotate your head to capture all angles of your face</string>
+-    <string name="security_settings_face_enroll_education_message_accessibility">On the next screen, hold your phone at eye level</string>
++    <string name="security_settings_face_enroll_education_message_accessibility">On the next screen, hold your tablet at eye level</string>
+     <string name="security_settings_face_enroll_education_start">Start</string>
+     <string name="security_settings_face_enroll_education_title">How to set up Face Unlock</string>
+     <string name="security_settings_face_enroll_education_title_accessibility">Set up Face Unlock</string>
 @@ -33,8 +33,8 @@
      <string name="security_settings_face_enroll_error_generic_dialog_message">"Face enrollment didn't work."</string>
      <string name="security_settings_face_enroll_error_timeout_dialog_message">Face enrollment time limit reached. Try again.</string>
@@ -8021,7 +8030,7 @@ index 8094ceb0ca2f0fc06a298c603f4d29382e9c3881..5ffe6c3c11392d86878ef1e7d3c8c526
  
  Face Unlock works best when there’s enough light and you’re not wearing a mask or dark glasses."</string>
      <string name="security_settings_face_enroll_finish_title">Looks good!</string>
-@@ -42,16 +42,16 @@ Face Unlock works best when there’s enough light and you’re not wearing a ma
+@@ -42,48 +42,46 @@ Face Unlock works best when there’s enough light and you’re not wearing a ma
  
  Your face model will be permanently and securely deleted.
  
@@ -8041,7 +8050,12 @@ index 8094ceb0ca2f0fc06a298c603f4d29382e9c3881..5ffe6c3c11392d86878ef1e7d3c8c526
      <string name="security_settings_face_enroll_introduction_accessibility_vision">Require eyes open</string>
      <string name="security_settings_face_enroll_introduction_agree">I agree</string>
      <string name="security_settings_face_enroll_introduction_cancel">Cancel</string>
-@@ -61,28 +61,26 @@ After deletion, you will need your fingerprint, PIN, pattern, or password to unl
+-    <string name="security_settings_face_enroll_introduction_consent_message">Using your child’s face to unlock their phone may be less secure than a strong pattern or PIN.</string>
+-    <string name="security_settings_face_enroll_introduction_consent_message_0">Allow your child to use their face to unlock their phone</string>
+-    <string name="security_settings_face_enroll_introduction_control_consent_message">"You and your child can delete their face model or turn off Face Unlock at any time in Settings. Face models are stored on the phone until they’re deleted.
++    <string name="security_settings_face_enroll_introduction_consent_message">Using your child’s face to unlock their tablet may be less secure than a strong pattern or PIN.</string>
++    <string name="security_settings_face_enroll_introduction_consent_message_0">Allow your child to use their face to unlock their tablet</string>
++    <string name="security_settings_face_enroll_introduction_control_consent_message">"You and your child can delete their face model or turn off Face Unlock at any time in Settings. Face models are stored on the tablet until they’re deleted.
  
  Learn more at g.co/pixel/faceunlock."</string>
      <string name="security_settings_face_enroll_introduction_control_consent_title">You and your child are in control</string>
@@ -8052,18 +8066,22 @@ index 8094ceb0ca2f0fc06a298c603f4d29382e9c3881..5ffe6c3c11392d86878ef1e7d3c8c526
      <string name="security_settings_face_enroll_introduction_control_title">You’re in control</string>
      <string name="security_settings_face_enroll_introduction_how_consent_message">"Face Unlock creates a unique model of your child’s face to verify it’s them. To create this face model during setup, your child will take images of their face from different angles.
  
- When they use Face Unlock, images are used to update their face model. Images used to create their face model are not stored, but the face model is stored securely on the phone and never leaves the phone. All processing occurs securely on the phone."</string>
+-When they use Face Unlock, images are used to update their face model. Images used to create their face model are not stored, but the face model is stored securely on the phone and never leaves the phone. All processing occurs securely on the phone."</string>
 -    <string name="security_settings_face_enroll_introduction_how_message">"Face Unlock creates a unique model of your face to verify it’s you. To create this face model during setup, you will take images of your face from different angles.
++When they use Face Unlock, images are used to update their face model. Images used to create their face model are not stored, but the face model is stored securely on the tablet and never leaves the tablet. All processing occurs securely on the tablet."</string>
 +    <string name="security_settings_face_enroll_introduction_how_message">"Face Unlock creates a model of your face. To create this model during setup, the tablet captures images of your face from different angles.
  
 -When you use Face Unlock, images are used to update your face model. Images used to create your face model are not stored, but the face model is stored securely on your phone and never leaves the phone. All processing occurs securely on your phone."</string>
 +Face processing and the resulting face model remain on this tablet. Face Unlock is a convenience feature and is not a substitute for a strong PIN, pattern, or password."</string>
      <string name="security_settings_face_enroll_introduction_how_title">How it works</string>
-     <string name="security_settings_face_enroll_introduction_info_consent_gaze">Face Unlock can require your child’s eyes to be open to unlock the phone or verify it’s them. You and your child can turn this option on at any time in Settings.</string>
+-    <string name="security_settings_face_enroll_introduction_info_consent_gaze">Face Unlock can require your child’s eyes to be open to unlock the phone or verify it’s them. You and your child can turn this option on at any time in Settings.</string>
++    <string name="security_settings_face_enroll_introduction_info_consent_gaze">Face Unlock can require your child’s eyes to be open to unlock the tablet. You and your child can turn this option on at any time in Settings.</string>
      <string name="security_settings_face_enroll_introduction_info_consent_glasses">If your child normally wears eyeglasses, they can wear them during setup.</string>
-     <string name="security_settings_face_enroll_introduction_info_consent_less_secure">Using your child’s face to unlock their phone may be less secure than a strong pattern, PIN, or password</string>
-     <string name="security_settings_face_enroll_introduction_info_consent_looking">Looking at the phone can unlock it even when they don’t intend to. Their phone can also be unlocked by someone who looks a lot like them, like an identical sibling, or if someone holds it up to their face.</string>
+-    <string name="security_settings_face_enroll_introduction_info_consent_less_secure">Using your child’s face to unlock their phone may be less secure than a strong pattern, PIN, or password</string>
+-    <string name="security_settings_face_enroll_introduction_info_consent_looking">Looking at the phone can unlock it even when they don’t intend to. Their phone can also be unlocked by someone who looks a lot like them, like an identical sibling, or if someone holds it up to their face.</string>
 -    <string name="security_settings_face_enroll_introduction_info_gaze">Face Unlock can require your eyes to be open to unlock the phone or verify it’s you. You can turn this option on at any time in Settings.</string>
++    <string name="security_settings_face_enroll_introduction_info_consent_less_secure">Using your child’s face to unlock their tablet may be less secure than a strong pattern, PIN, or password</string>
++    <string name="security_settings_face_enroll_introduction_info_consent_looking">Looking at the tablet can unlock it even when they don’t intend to. Their tablet can also be unlocked by someone who looks a lot like them, like an identical sibling, or if someone holds it up to their face.</string>
 +    <string name="security_settings_face_enroll_introduction_info_gaze">Face Unlock can require your eyes to be open to unlock the tablet. You can turn this option on at any time in Settings.</string>
      <string name="security_settings_face_enroll_introduction_info_glasses">Glasses or lightly tinted sunglasses are OK.</string>
 -    <string name="security_settings_face_enroll_introduction_info_less_secure">Using your face to unlock your phone may be less secure than a strong pattern, PIN, or password</string>
@@ -8073,12 +8091,31 @@ index 8094ceb0ca2f0fc06a298c603f4d29382e9c3881..5ffe6c3c11392d86878ef1e7d3c8c526
      <string name="security_settings_face_enroll_introduction_info_title">Keep in mind</string>
 -    <string name="security_settings_face_enroll_introduction_message">Use your face to unlock your phone or verify it’s you, like when you sign in to apps or approve a purchase.</string>
 -    <string name="security_settings_face_enroll_introduction_message_setup">Use your face to unlock your phone, authorize purchases, or sign in to apps</string>
+-    <string name="security_settings_face_enroll_introduction_message_unlock_disabled">"Use your face to unlock your phone or approve purchases.
 +    <string name="security_settings_face_enroll_introduction_message">Use your face to unlock this tablet. Sensitive authentication still requires your PIN, pattern, or password.</string>
 +    <string name="security_settings_face_enroll_introduction_message_setup">Use your face to unlock this tablet</string>
-     <string name="security_settings_face_enroll_introduction_message_unlock_disabled">"Use your face to unlock your phone or approve purchases.
++    <string name="security_settings_face_enroll_introduction_message_unlock_disabled">"Use your face to unlock your tablet.
  
  Note: You can’t use your face to unlock this device. For more information, contact your organization’s admin."</string>
-@@ -113,39 +111,39 @@ To improve performance, you can set up Face Unlock again in Settings."</string>
+     <string name="security_settings_face_enroll_introduction_more">More</string>
+@@ -99,53 +97,53 @@ Note: You can’t use your face to unlock this device. For more information, con
+     <string name="security_settings_face_enroll_repeat_title">Center your face in the circle</string>
+     <string name="security_settings_face_enroll_should_re_enroll_subtitle">Set up Face Unlock again</string>
+     <string name="security_settings_face_enroll_should_re_enroll_title">Improve Face Unlock performance</string>
+-    <string name="security_settings_face_enroll_timeout_message">"Try fast setup instead. Keep in mind, your head may need to be more directly in front of your phone when using Face Unlock.
++    <string name="security_settings_face_enroll_timeout_message">"Try fast setup instead. Keep in mind, your head may need to be more directly in front of your tablet when using Face Unlock.
+ 
+ To improve performance, you can set up Face Unlock again in Settings."</string>
+     <string name="security_settings_face_enroll_timeout_title">Can’t continue setup</string>
+     <string name="security_settings_face_enroll_timeout_try_again">Try again</string>
+     <string name="security_settings_face_enroll_timeout_use_fast_setup">Use fast setup</string>
+     <string name="security_settings_face_enroll_too_hot_exit_setup">Exit setup</string>
+-    <string name="security_settings_face_enroll_too_hot_message">Face Unlock setup can’t be completed because the phone is too hot. Try again later when the phone cools down.</string>
++    <string name="security_settings_face_enroll_too_hot_message">Face Unlock setup can’t be completed because the tablet is too hot. Try again later when the tablet cools down.</string>
+     <string name="security_settings_face_enroll_too_hot_skip_face_unlock">Skip Face Unlock</string>
+-    <string name="security_settings_face_enroll_too_hot_title">Phone is too hot</string>
++    <string name="security_settings_face_enroll_too_hot_title">Tablet is too hot</string>
+     <string name="security_settings_face_preference_summary">Face added</string>
      <string name="security_settings_face_preference_summary_none">Tap to set up face</string>
      <string name="security_settings_face_preference_title">Face Unlock</string>
      <string name="security_settings_face_profile_preference_title">Face Unlock for work</string>
@@ -8130,8 +8167,21 @@ index 8094ceb0ca2f0fc06a298c603f4d29382e9c3881..5ffe6c3c11392d86878ef1e7d3c8c526
      <string name="security_settings_face_settings_require_confirmation">Always require confirmation</string>
      <string name="security_settings_face_settings_require_confirmation_details">When using Face Unlock in apps, always require confirmation step</string>
      <string name="security_settings_face_settings_use_face_category">Use Face Unlock for</string>
+diff --git a/res/values/strings.xml b/res/values/strings.xml
+index 8c427f5..43f6491 100644
+--- a/res/values/strings.xml
++++ b/res/values/strings.xml
+@@ -5,6 +5,8 @@
+     <!-- Enroll activity -->
+     <string name="face_enroll_title">Center your face in the camera</string>
+     <string name="face_enroll_description">Hold still, and make sure you\'re in a well lit environment</string>
++    <string name="face_enroll_capturing">Looking good. Move slightly to capture another angle.</string>
++    <string name="face_enroll_complete">Face added</string>
+ 
+     <!-- Try Again activity -->
+     <string name="face_try_again_title">Couldn\'t capture your face</string>
 diff --git a/src/co/aospa/sense/SenseService.kt b/src/co/aospa/sense/SenseService.kt
-index 075905e0b4abd15d0cc7076afd3aa66c8a620651..749b61dd59dc539de046a42896d53d507ccd8b02 100644
+index 075905e..749b61d 100644
 --- a/src/co/aospa/sense/SenseService.kt
 +++ b/src/co/aospa/sense/SenseService.kt
 @@ -49,7 +49,6 @@ class SenseService : Service() {
@@ -8199,7 +8249,7 @@ index 075905e0b4abd15d0cc7076afd3aa66c8a620651..749b61dd59dc539de046a42896d53d50
                  if (faceId > 0) {
                      mVendorImpl!!.deleteFeature(faceId - 1)
 diff --git a/src/co/aospa/sense/activities/EnrollActivity.kt b/src/co/aospa/sense/activities/EnrollActivity.kt
-index 9eb51a85ef78cf36d1c2755e6bd2d06bdb8daf2a..2b987ef5fbbaacff33fe45e8411fa98f6a96774c 100644
+index 9eb51a8..76df22c 100644
 --- a/src/co/aospa/sense/activities/EnrollActivity.kt
 +++ b/src/co/aospa/sense/activities/EnrollActivity.kt
 @@ -1,7 +1,6 @@
@@ -8210,7 +8260,138 @@ index 9eb51a85ef78cf36d1c2755e6bd2d06bdb8daf2a..2b987ef5fbbaacff33fe45e8411fa98f
  import android.content.Intent
  import android.content.res.Resources
  import android.hardware.Camera
-@@ -272,18 +271,15 @@ open class EnrollActivity : FaceBaseActivity() {
+@@ -22,7 +21,6 @@ import co.aospa.sense.util.PreferenceHelper
+ import co.aospa.sense.util.Util
+ import co.aospa.sense.view.CircleSurfaceView
+ import com.google.android.setupdesign.GlifLayout
+-import com.google.android.setupdesign.util.ThemeHelper
+ 
+ 
+ open class EnrollActivity : FaceBaseActivity() {
+@@ -39,6 +37,7 @@ open class EnrollActivity : FaceBaseActivity() {
+     private var mHasCameraPermission = false
+     private var mIsActivityPaused = false
+     private var mIsFaceDetected = false
++    private var mCompletionPosted = false
+ 
+     private val mCameraCallback: CameraCallback = object : CameraCallback {
+         override fun handleSaveFeature(data: ByteArray?, width: Int, height: Int, angle: Int): Int {
+@@ -49,14 +48,18 @@ open class EnrollActivity : FaceBaseActivity() {
+         override fun handleSaveFeatureResult(result: Int) {
+             runOnUiThread {
+                 var errorString = 0
++                var acceptedSample = false
+                 when (result) {
+                     Constants.MSG_UNLOCK_FACE_SCALE_TOO_SMALL -> errorString =
+                         R.string.unlock_failed_face_small
+                     Constants.MSG_UNLOCK_FACE_SCALE_TOO_LARGE -> errorString =
+                         R.string.unlock_failed_face_large
+-                    Constants.MSG_UNLOCK_FACE_OFFSET_LEFT, Constants.MSG_UNLOCK_FACE_OFFSET_RIGHT, Constants.MSG_UNLOCK_FACE_ROTATED_LEFT, Constants.MSG_UNLOCK_FACE_ROTATED_RIGHT -> mProgress += 10.0f
++                    Constants.MSG_UNLOCK_FACE_OFFSET_LEFT,
++                    Constants.MSG_UNLOCK_FACE_OFFSET_RIGHT,
++                    Constants.MSG_UNLOCK_FACE_ROTATED_LEFT,
++                    Constants.MSG_UNLOCK_FACE_ROTATED_RIGHT -> acceptedSample = true
+                     Constants.MSG_UNLOCK_KEEP -> {
+-                        mProgress += 10.0f
++                        acceptedSample = true
+                         mIsFaceDetected = true
+                     }
+                     Constants.MSG_UNLOCK_FACE_MULTI -> errorString =
+@@ -68,16 +71,19 @@ open class EnrollActivity : FaceBaseActivity() {
+                     Constants.MSG_UNLOCK_HIGHLIGHT -> errorString = R.string.attr_light_high
+                     Constants.MSG_UNLOCK_HALF_SHADOW -> errorString = R.string.attr_light_shadow
+                 }
+-                if (mProgress < 100.0f) {
+-                    if (mIsFaceDetected) {
+-                        if (mProgress >= 60.0f) {
+-                            mProgress = 60.0f
+-                        }
+-                        mSurfaceView!!.setProgress(mProgress)
+-                    }
+-                    if (errorString != 0) {
+-                        mEnrollVendorMessage!!.setText(errorString)
+-                    }
++                if (mProgress >= 100.0f) {
++                    return@runOnUiThread
++                }
++                if (acceptedSample) {
++                    mProgress = (mProgress + PROGRESS_PER_ACCEPTED_SAMPLE)
++                        .coerceAtMost(PROGRESS_BEFORE_COMPLETION)
++                    mSurfaceView?.setProgress(mProgress)
++                    // A quality warning describes only the rejected frame that produced it.
++                    // Clear it as soon as the vendor accepts a later frame so enrollment does
++                    // not look frozen while it is actually progressing.
++                    mEnrollVendorMessage?.setText(R.string.face_enroll_capturing)
++                } else if (errorString != 0) {
++                    mEnrollVendorMessage?.setText(errorString)
+                 }
+             }
+         }
+@@ -111,30 +117,28 @@ open class EnrollActivity : FaceBaseActivity() {
+         }
+ 
+         override fun onFaceDetected() {
+-            mIsFaceDetected = true
+-            val vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
+-            vibrator.vibrate(CLICK_VIBRATION, SONIFICATION)
++            if (!mIsFaceDetected) {
++                mIsFaceDetected = true
++                val vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
++                vibrator.vibrate(CLICK_VIBRATION, SONIFICATION)
++            }
+         }
+     }
+     private val mEnrollmentCallback: FaceManager.EnrollmentCallback =
+         object : FaceManager.EnrollmentCallback() {
+             override fun onEnrollmentProgress(progress: Int) {
+-                if (progress == 0) {
++                if (progress == 0 && !mCompletionPosted) {
++                    mCompletionPosted = true
+                     runOnUiThread {
+                         mProgress = 100.0f
+-                        mSurfaceView!!.setProgress(mProgress)
+-                        try {
+-                            if (mEnrollVendorMessage != null) {
+-                                mEnrollVendorMessage!!.text = ""
++                        mSurfaceView?.setProgress(mProgress)
++                        mEnrollVendorMessage?.setText(R.string.face_enroll_complete)
++                        Handler(Looper.getMainLooper()).postDelayed({
++                            val enrollActivity = this@EnrollActivity
++                            if (!enrollActivity.isDestroyed && !enrollActivity.isFinishing) {
++                                startFinishActivity()
+                             }
+-                            Handler(Looper.getMainLooper()).postDelayed({
+-                                val enrollActivity = this@EnrollActivity
+-                                if (!enrollActivity.isDestroyed) {
+-                                    startFinishActivity()
+-                                }
+-                            }, 2000)
+-                        } catch (ignored: Exception) {
+-                        }
++                        }, COMPLETION_DELAY_MS)
+                     }
+                 }
+             }
+@@ -165,9 +169,6 @@ open class EnrollActivity : FaceBaseActivity() {
+     override fun onCreate(bundle: Bundle?) {
+         super.onCreate(bundle)
+ 
+-        setTheme(ThemeHelper.getSuwDefaultTheme(applicationContext))
+-        ThemeHelper.trySetDynamicColor(this)
+-
+         mPreferenceHelper = PreferenceHelper(this)
+         mHasCameraPermission = false
+         mFaceManager = getSystemService(FaceManager::class.java)
+@@ -201,6 +202,8 @@ open class EnrollActivity : FaceBaseActivity() {
+         getLayout().setDescriptionText(R.string.face_enroll_description)
+         mSurfaceView = findViewById(R.id.camera_surface)
+         mProgress = 0.0f
++        mCompletionPosted = false
++        mIsFaceDetected = false
+         mSurfaceView?.setProgress(0.0f)
+         /**mSurfaceView.postDelayed(new Runnable() {
+          * @Override
+@@ -272,18 +275,15 @@ open class EnrollActivity : FaceBaseActivity() {
      }
  
      private fun startFinishActivity() {
@@ -8234,8 +8415,55 @@ index 9eb51a85ef78cf36d1c2755e6bd2d06bdb8daf2a..2b987ef5fbbaacff33fe45e8411fa98f
      }
  
      override fun onBackPressed() {
+@@ -331,6 +331,9 @@ open class EnrollActivity : FaceBaseActivity() {
+     }
+ 
+     companion object {
++        private const val PROGRESS_PER_ACCEPTED_SAMPLE = 10.0f
++        private const val PROGRESS_BEFORE_COMPLETION = 90.0f
++        private const val COMPLETION_DELAY_MS = 900L
+         private val TAG = EnrollActivity::class.java.simpleName
+         private val CLICK_VIBRATION: VibrationEffect = VibrationEffect.get(0)
+         private val SONIFICATION = AudioAttributes.Builder()
+diff --git a/src/co/aospa/sense/activities/FaceBaseActivity.kt b/src/co/aospa/sense/activities/FaceBaseActivity.kt
+index ee2da86..8522039 100644
+--- a/src/co/aospa/sense/activities/FaceBaseActivity.kt
++++ b/src/co/aospa/sense/activities/FaceBaseActivity.kt
+@@ -18,9 +18,8 @@ abstract class FaceBaseActivity : AppCompatActivity() {
+     protected var mUserId = 0
+ 
+     override fun onCreate(bundle: Bundle?) {
+-        super.onCreate(bundle)
+-
+         setTheme(ThemeHelper.getSuwDefaultTheme(applicationContext))
++        super.onCreate(bundle)
+         ThemeHelper.trySetDynamicColor(this)
+ 
+         mToken = intent.getByteArrayExtra(Constants.EXTRA_KEY_CHALLENGE_TOKEN)
+diff --git a/src/co/aospa/sense/activities/TryAgainActivity.kt b/src/co/aospa/sense/activities/TryAgainActivity.kt
+index 65c6709..2129a34 100644
+--- a/src/co/aospa/sense/activities/TryAgainActivity.kt
++++ b/src/co/aospa/sense/activities/TryAgainActivity.kt
+@@ -8,7 +8,6 @@ import co.aospa.sense.R
+ import com.google.android.setupcompat.template.FooterBarMixin
+ import com.google.android.setupcompat.template.FooterButton
+ import com.google.android.setupdesign.GlifLayout
+-import com.google.android.setupdesign.util.ThemeHelper
+ 
+ 
+ class TryAgainActivity : FaceBaseActivity() {
+@@ -16,9 +15,6 @@ class TryAgainActivity : FaceBaseActivity() {
+     override fun onCreate(bundle: Bundle?) {
+         super.onCreate(bundle)
+ 
+-        setTheme(ThemeHelper.getSuwDefaultTheme(applicationContext))
+-        ThemeHelper.trySetDynamicColor(this)
+-
+         setContentView(R.layout.face_enroll_try_again)
+         setHeaderText(R.string.face_try_again_title)
+         getLayout().setDescriptionText(R.string.face_try_again_description)
 diff --git a/src/co/aospa/sense/controller/FaceAuthenticationController.kt b/src/co/aospa/sense/controller/FaceAuthenticationController.kt
-index 35d5266fa007be0d89dcd12f4fc7b59f5eba6331..8cfe6ea7feed2aaf42791bd4b2385d1ec03247b3 100644
+index 35d5266..8cfe6ea 100644
 --- a/src/co/aospa/sense/controller/FaceAuthenticationController.kt
 +++ b/src/co/aospa/sense/controller/FaceAuthenticationController.kt
 @@ -161,7 +161,9 @@ open class FaceAuthenticationController(
@@ -8257,11 +8485,20 @@ index 35d5266fa007be0d89dcd12f4fc7b59f5eba6331..8cfe6ea7feed2aaf42791bd4b2385d1e
 \ No newline at end of file
 +}
 diff --git a/src/co/aospa/sense/controller/FaceEnrollController.kt b/src/co/aospa/sense/controller/FaceEnrollController.kt
-index 46664a2cd618867f16f2381aa3588188c0c54cc8..50fc2671db39e405f65c4812859b0122ad116d8e 100644
+index 46664a2..fe6ceca 100644
 --- a/src/co/aospa/sense/controller/FaceEnrollController.kt
 +++ b/src/co/aospa/sense/controller/FaceEnrollController.kt
-@@ -201,7 +201,9 @@ open class FaceEnrollController private constructor(private val mContext: Contex
+@@ -199,9 +199,18 @@ open class FaceEnrollController private constructor(private val mContext: Contex
+                         mPreviewSize = CameraUtil.getBestPreviewSize(mCameraParams, 480, 640)
+                         val width = mPreviewSize!!.width
                          val height = mPreviewSize!!.height
++                        if (Util.IS_DEBUG_LOGGING) {
++                            Log.i(
++                                TAG,
++                                "Enrollment camera id=$mCameraId preview=${width}x${height} " +
++                                    "focus=${mCameraParams?.focusMode} format=NV21"
++                            )
++                        }
                          mCameraParams!!.setPreviewSize(width, height)
                          mCameraParams!!.previewFormat = ImageFormat.NV21
 -                        mFrame = ByteBuffer.allocateDirect(getPreviewBufferSize(width, height))
@@ -8271,8 +8508,18 @@ index 46664a2cd618867f16f2381aa3588188c0c54cc8..50fc2671db39e405f65c4812859b0122
                          CameraService.writeParameters(mCameraListener)
                          Log.d(TAG, "preview size " + mPreviewSize!!.height + " " + mPreviewSize!!.width)
                      }
+@@ -351,6 +360,9 @@ open class FaceEnrollController private constructor(private val mContext: Contex
+                         for (mCameraCallback in mCameraCallbacks) {
+                             mCameraCallback.handleSaveFeatureResult(result)
+                         }
++                        if (Util.IS_DEBUG_LOGGING) {
++                            Log.d(TAG, "Enrollment frame result=$result")
++                        }
+                         if (mFrame != null) {
+                             CameraService.addCallbackBuffer(mFrame!!.array(), null)
+                             mHandling = false
 diff --git a/src/co/aospa/sense/util/PreferenceHelper.kt b/src/co/aospa/sense/util/PreferenceHelper.kt
-index dfdb3c5babe0c0e8794956fa0974ad251893ef77..6d8c39ce6156deb090f6a5643b9213213859bec2 100644
+index dfdb3c5..6d8c39c 100644
 --- a/src/co/aospa/sense/util/PreferenceHelper.kt
 +++ b/src/co/aospa/sense/util/PreferenceHelper.kt
 @@ -3,7 +3,6 @@ package co.aospa.sense.util
@@ -8312,18 +8559,27 @@ index dfdb3c5babe0c0e8794956fa0974ad251893ef77..6d8c39ce6156deb090f6a5643b921321
 \ No newline at end of file
 +}
 diff --git a/src/co/aospa/sense/util/Util.kt b/src/co/aospa/sense/util/Util.kt
-index 30ec9de2db11c86de43dafdf08dd88c7ef057c18..7e17d50b52fb73ff4fea7871c37b4cc3f73c270e 100644
+index 30ec9de..734a19f 100644
 --- a/src/co/aospa/sense/util/Util.kt
 +++ b/src/co/aospa/sense/util/Util.kt
-@@ -2,7 +2,6 @@ package co.aospa.sense.util
+@@ -2,13 +2,14 @@ package co.aospa.sense.util
  
  import android.app.admin.DevicePolicyManager
  import android.content.Context
 -import android.util.Log
++import android.os.Build
  import java.lang.reflect.InvocationTargetException
  
  object Util {
-@@ -26,22 +25,14 @@ object Util {
+     private const val TAG = "Sense:Utils"
+ 
+-    const val IS_DEBUG_LOGGING = true
++    @JvmField
++    val IS_DEBUG_LOGGING = Build.IS_DEBUGGABLE
+     private const val PROPERTY_FACEUNLOCK_AVAILABLE = "property_faceunlock_available"
+ 
+     fun isFaceUnlockAvailable(context: Context?): Boolean {
+@@ -26,22 +27,14 @@ object Util {
  
      fun isFaceUnlockEnrolled(context: Context?): Boolean {
          val preferenceHelper = PreferenceHelper(context!!)
@@ -8349,9 +8605,56 @@ index 30ec9de2db11c86de43dafdf08dd88c7ef057c18..7e17d50b52fb73ff4fea7871c37b4cc3
      }
  
      fun getUserId(context: Context?): Int {
-@@ -59,4 +50,4 @@ object Util {
+@@ -59,4 +52,4 @@ object Util {
              0
          }
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/src/co/aospa/sense/view/CircleSurfaceView.kt b/src/co/aospa/sense/view/CircleSurfaceView.kt
+index e041644..7723411 100644
+--- a/src/co/aospa/sense/view/CircleSurfaceView.kt
++++ b/src/co/aospa/sense/view/CircleSurfaceView.kt
+@@ -19,13 +19,24 @@ class CircleSurfaceView : SurfaceView {
+     private var mProgressAnimator: ValueAnimator? = null
+     private var mProgress = 0.0f
+ 
+-    constructor(context: Context?) : super(context) {}
+-    constructor(context: Context?, attributeSet: AttributeSet?) : super(context, attributeSet) {}
++    constructor(context: Context?) : super(context) {
++        initialize()
++    }
++    constructor(context: Context?, attributeSet: AttributeSet?) : super(context, attributeSet) {
++        initialize()
++    }
+     constructor(context: Context?, attributeSet: AttributeSet?, defStyleAttr: Int) : super(
+         context,
+         attributeSet,
+         defStyleAttr
+     ) {
++        initialize()
++    }
++
++    private fun initialize() {
++        // SurfaceView normally optimizes away View drawing. Enrollment draws its progress
++        // ring in this View layer, so explicitly keep drawing enabled.
++        setWillNotDraw(false)
+     }
+ 
+     fun setProgress(progress: Float) {
+@@ -62,7 +73,7 @@ class CircleSurfaceView : SurfaceView {
+             measuredWidth + min,
+             measuredHeight + min
+         )
+-        val paint = Paint()
++        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+         paint.isAntiAlias = true
+         paint.color = context.getColor(R.color.theme_accent_200)
+         canvas.drawArc(rectF, 270.0f, 360.0f, true, paint)
+@@ -74,4 +85,4 @@ class CircleSurfaceView : SurfaceView {
+         super.draw(canvas)
+         invalidate()
      }
 -}
 \ No newline at end of file
