@@ -8426,20 +8426,37 @@ index 9eb51a8..76df22c 100644
          private val CLICK_VIBRATION: VibrationEffect = VibrationEffect.get(0)
          private val SONIFICATION = AudioAttributes.Builder()
 diff --git a/src/co/aospa/sense/activities/FaceBaseActivity.kt b/src/co/aospa/sense/activities/FaceBaseActivity.kt
-index ee2da86..8522039 100644
+index ee2da86..3b9deda 100644
 --- a/src/co/aospa/sense/activities/FaceBaseActivity.kt
 +++ b/src/co/aospa/sense/activities/FaceBaseActivity.kt
-@@ -18,9 +18,8 @@ abstract class FaceBaseActivity : AppCompatActivity() {
+@@ -7,6 +7,7 @@ import android.widget.TextView
+ import androidx.appcompat.app.AppCompatActivity
+ import co.aospa.sense.R
+ import co.aospa.sense.util.Constants
++import com.google.android.setupcompat.util.WizardManagerHelper
+ import com.google.android.setupdesign.GlifLayout
+ import com.google.android.setupdesign.util.ThemeHelper
+ 
+@@ -18,10 +19,16 @@ abstract class FaceBaseActivity : AppCompatActivity() {
      protected var mUserId = 0
  
      override fun onCreate(bundle: Bundle?) {
--        super.onCreate(bundle)
++        val isSetupWizard = WizardManagerHelper.isAnySetupWizard(intent)
++        if (isSetupWizard) {
++            // Setup Wizard owns the theme for its flow. Normal Settings enrollment keeps the
++            // DayNight theme declared in the manifest so it follows the tablet's current mode.
++            ThemeHelper.applyTheme(this)
++        }
+         super.onCreate(bundle)
 -
-         setTheme(ThemeHelper.getSuwDefaultTheme(applicationContext))
-+        super.onCreate(bundle)
-         ThemeHelper.trySetDynamicColor(this)
+-        setTheme(ThemeHelper.getSuwDefaultTheme(applicationContext))
+-        ThemeHelper.trySetDynamicColor(this)
++        if (isSetupWizard) {
++            ThemeHelper.trySetDynamicColor(this)
++        }
  
          mToken = intent.getByteArrayExtra(Constants.EXTRA_KEY_CHALLENGE_TOKEN)
+         if (bundle != null && mToken == null) {
 diff --git a/src/co/aospa/sense/activities/TryAgainActivity.kt b/src/co/aospa/sense/activities/TryAgainActivity.kt
 index 65c6709..2129a34 100644
 --- a/src/co/aospa/sense/activities/TryAgainActivity.kt
