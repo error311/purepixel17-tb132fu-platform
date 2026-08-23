@@ -157,26 +157,29 @@ index a250d4945..0c8fcde0d 100644
              mPrivateFlags4 |= PFLAG4_HAS_MOVED;
              invalidateViewProperty(true, false);
 diff --git a/core/java/android/view/ViewGroup.java b/core/java/android/view/ViewGroup.java
-index 115ae5ca6..bb795e456 100644
+index 115ae5ca6..fc0f5b86f 100644
 --- a/core/java/android/view/ViewGroup.java
 +++ b/core/java/android/view/ViewGroup.java
-@@ -82,6 +82,7 @@ import android.window.OnBackInvokedDispatcher;
+@@ -82,6 +82,8 @@ import android.window.OnBackInvokedDispatcher;
  
  import com.android.internal.R;
  
++import java.lang.ref.WeakReference;
 +import java.lang.reflect.Field;
  import java.util.ArrayList;
  import java.util.Collection;
  import java.util.Collections;
-@@ -140,6 +141,66 @@ import java.util.function.Predicate;
+@@ -140,6 +142,100 @@ import java.util.function.Predicate;
   */
  @UiThread
  public abstract class ViewGroup extends View implements ViewParent, ViewManager {
-+    // Pixel Launcher's fixed QSB and its return-animation copy briefly draw the same RemoteViews
-+    // content on TB132FU. Keep the Google-signed Launcher untouched and let the floating widget
-+    // own drawing only while it explicitly references this exact fixed-QSB host. No alpha or
-+    // visibility state is mutated, so detachment and canceled gestures restore the host naturally.
-+    private static final boolean TB132FU_FIXED_QSB_DRAW_HANDOFF =
++    // Pixel Launcher creates two OSE QSB hosts on tablets: the Launcher hotseat host used as the
++    // source for FloatingWidgetView, and an inline taskbar host. During the TB132FU landscape Home
++    // return, the inline taskbar host remains visible behind the floating QSB until the taskbar
++    // alignment finishes. Defer only that second host while an exact fixed-QSB floating owner is
++    // attached. The original hotseat host must keep drawing because GhostView uses its display
++    // list as the animated foreground.
++    private static final boolean TB132FU_FIXED_QSB_TASKBAR_HANDOFF =
 +            "tb132fu".equals(Build.DEVICE);
 +    private static final String PIXEL_LAUNCHER_PACKAGE =
 +            "com.google.android.apps.nexuslauncher";
@@ -184,70 +187,117 @@ index 115ae5ca6..bb795e456 100644
 +            "com.android.launcher3.qsb.OseWidgetView";
 +    private static final String PIXEL_FLOATING_WIDGET_CLASS =
 +            "com.android.quickstep.views.FloatingWidgetView";
++    private static final String PIXEL_TASKBAR_VIEW_CLASS =
++            "com.android.launcher3.taskbar.TaskbarView";
 +    private static final String PIXEL_FLOATING_WIDGET_HOST_FIELD = "mAppWidgetView";
 +    @Nullable private static Field sPixelFloatingWidgetHostField;
 +    private static boolean sPixelFloatingWidgetHostFieldUnavailable;
++    @Nullable private static WeakReference<View> sPixelFixedQsbFloatingOwner;
++    @Nullable private static WeakReference<ViewGroup> sPixelDeferredTaskbarQsb;
 +
-+    private boolean shouldDeferTb132fuFixedQsbDraw() {
-+        if (!TB132FU_FIXED_QSB_DRAW_HANDOFF
++    private boolean shouldDeferTb132fuTaskbarQsbDraw() {
++        if (!TB132FU_FIXED_QSB_TASKBAR_HANDOFF
 +                || getResources().getConfiguration().orientation
 +                        != Configuration.ORIENTATION_LANDSCAPE
 +                || !PIXEL_LAUNCHER_PACKAGE.equals(getContext().getPackageName())
-+                || !PIXEL_FIXED_QSB_HOST_CLASS.equals(getClass().getName())) {
++                || !PIXEL_FIXED_QSB_HOST_CLASS.equals(getClass().getName())
++                || !hasAncestorClass(this, PIXEL_TASKBAR_VIEW_CLASS)) {
 +            return false;
 +        }
-+        return hasFloatingWidgetOwner(getRootView(), this);
++        final View owner = sPixelFixedQsbFloatingOwner == null
++                ? null : sPixelFixedQsbFloatingOwner.get();
++        if (owner == null || !owner.isAttachedToWindow()) {
++            sPixelFixedQsbFloatingOwner = null;
++            return false;
++        }
++        sPixelDeferredTaskbarQsb = new WeakReference<>(this);
++        return true;
 +    }
 +
-+    private static boolean hasFloatingWidgetOwner(@Nullable View candidate, View host) {
-+        if (candidate == null) {
-+            return false;
-+        }
-+        if (PIXEL_FLOATING_WIDGET_CLASS.equals(candidate.getClass().getName())) {
-+            try {
-+                Field hostField = sPixelFloatingWidgetHostField;
-+                if (hostField == null && !sPixelFloatingWidgetHostFieldUnavailable) {
-+                    hostField = candidate.getClass().getDeclaredField(
-+                            PIXEL_FLOATING_WIDGET_HOST_FIELD);
-+                    hostField.setAccessible(true);
-+                    sPixelFloatingWidgetHostField = hostField;
-+                }
-+                return hostField != null && hostField.get(candidate) == host;
-+            } catch (ReflectiveOperationException | SecurityException exception) {
-+                // Fail open. A future Launcher revision must never leave the live QSB hidden when
-+                // its private implementation changes; the R2 visual behavior is the safe fallback.
-+                sPixelFloatingWidgetHostFieldUnavailable = true;
-+                sPixelFloatingWidgetHostField = null;
-+                return false;
-+            }
-+        }
-+        if (!(candidate instanceof ViewGroup)) {
-+            return false;
-+        }
-+        final ViewGroup group = (ViewGroup) candidate;
-+        for (int i = 0; i < group.getChildCount(); i++) {
-+            if (hasFloatingWidgetOwner(group.getChildAt(i), host)) {
++    private static boolean hasAncestorClass(View view, String className) {
++        ViewParent parent = view.getParent();
++        while (parent instanceof View) {
++            if (className.equals(parent.getClass().getName())) {
 +                return true;
 +            }
++            parent = parent.getParent();
 +        }
 +        return false;
 +    }
++
++    private static void registerTb132fuFixedQsbFloatingOwner(View candidate) {
++        if (!TB132FU_FIXED_QSB_TASKBAR_HANDOFF
++                || !PIXEL_FLOATING_WIDGET_CLASS.equals(candidate.getClass().getName())
++                || sPixelFloatingWidgetHostFieldUnavailable) {
++            return;
++        }
++        try {
++            Field hostField = sPixelFloatingWidgetHostField;
++            if (hostField == null) {
++                hostField = candidate.getClass().getDeclaredField(
++                        PIXEL_FLOATING_WIDGET_HOST_FIELD);
++                hostField.setAccessible(true);
++                sPixelFloatingWidgetHostField = hostField;
++            }
++            final Object host = hostField.get(candidate);
++            if (host instanceof View
++                    && PIXEL_FIXED_QSB_HOST_CLASS.equals(host.getClass().getName())) {
++                sPixelFixedQsbFloatingOwner = new WeakReference<>(candidate);
++            }
++        } catch (ReflectiveOperationException | SecurityException exception) {
++            // Fail open. A future Launcher revision must never leave its taskbar QSB hidden.
++            sPixelFloatingWidgetHostFieldUnavailable = true;
++            sPixelFloatingWidgetHostField = null;
++            sPixelFixedQsbFloatingOwner = null;
++        }
++    }
++
++    private static void unregisterTb132fuFixedQsbFloatingOwner(View candidate) {
++        final View owner = sPixelFixedQsbFloatingOwner == null
++                ? null : sPixelFixedQsbFloatingOwner.get();
++        if (owner != candidate) {
++            return;
++        }
++        sPixelFixedQsbFloatingOwner = null;
++        final ViewGroup taskbarQsb = sPixelDeferredTaskbarQsb == null
++                ? null : sPixelDeferredTaskbarQsb.get();
++        sPixelDeferredTaskbarQsb = null;
++        if (taskbarQsb != null) {
++            taskbarQsb.postInvalidateOnAnimation();
++        }
++    }
++
      private static final String TAG = "ViewGroup";
  
      @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.R, trackingBug = 170729553)
-@@ -4388,6 +4449,12 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager
+@@ -4388,6 +4484,11 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager
  
      @Override
      protected void dispatchDraw(@NonNull Canvas canvas) {
-+        if (shouldDeferTb132fuFixedQsbDraw()) {
-+            // FloatingWidgetView invalidates the hierarchy as it animates. Keep one additional
-+            // frame scheduled so the live host is drawn immediately after a finish or cancel.
++        if (shouldDeferTb132fuTaskbarQsbDraw()) {
++            // Keep a frame scheduled so removal or cancellation immediately restores this host.
 +            postInvalidateOnAnimation();
 +            return;
 +        }
          final int childrenCount = mChildrenCount;
          final View[] children = mChildren;
          int flags = mGroupFlags;
+@@ -5451,6 +5552,7 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager
+         } else {
+             child.mParent = this;
+         }
++        registerTb132fuFixedQsbFloatingOwner(child);
+         if (child.hasUnhandledKeyListener()) {
+             incrementChildUnhandledKeyListeners();
+         }
+@@ -5730,6 +5832,7 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager
+     }
+ 
+     private void removeViewInternal(int index, View view) {
++        unregisterTb132fuFixedQsbFloatingOwner(view);
+         if (mTransition != null) {
+             mTransition.removeChild(this, view);
+         }
 diff --git a/core/java/com/android/internal/util/PixelTabletAppProps.java b/core/java/com/android/internal/util/PixelTabletAppProps.java
 new file mode 100644
 index 000000000..e2535d82f
