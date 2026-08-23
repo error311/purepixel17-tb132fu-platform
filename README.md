@@ -26,6 +26,7 @@ The patch set covers:
 - refresh-rate, cursor and display behavior
 - battery-health details and MediaTek picture-quality color modes
 - AOD mode handling and landscape unlock-side placement
+- rotation-aware power-button light-reveal placement for the tablet chassis
 - optional camera-based convenience face unlock
 - themed face-enrollment feedback and tablet wording
 - pen attach, detach and battery-status polish
