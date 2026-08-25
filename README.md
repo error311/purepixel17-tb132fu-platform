@@ -27,8 +27,6 @@ The patch set covers:
 - battery-health details and MediaTek picture-quality color modes
 - AOD mode handling and landscape unlock-side placement
 - rotation-aware power-button light-reveal placement for the tablet chassis
-- process-scoped Pixel Tablet UI identity for Google Search and the YouTube
-  large-screen layout test
 - optional camera-based convenience face unlock
 - themed face-enrollment feedback and tablet wording
 - pen attach, detach and battery-status polish

@@ -1,5 +1,5 @@
 diff --git a/core/java/android/app/Instrumentation.java b/core/java/android/app/Instrumentation.java
-index 7402ca5cf..7579c59bc 100644
+index 7402ca5cfa101be450462df32ab3f247c6d679d6..7579c59bc4334008b71f6928ce0befbaf7b5a218 100644
 --- a/core/java/android/app/Instrumentation.java
 +++ b/core/java/android/app/Instrumentation.java
 @@ -70,6 +70,7 @@ import android.view.Window;
@@ -27,7 +27,7 @@ index 7402ca5cf..7579c59bc 100644
      }
  
 diff --git a/core/java/android/os/BatteryManager.java b/core/java/android/os/BatteryManager.java
-index 903c7637a..71d774a53 100644
+index 903c7637a8131d4190349f7dafbb6279440e55fe..71d774a53db193587ef85ce749e49d5f21e59cb1 100644
 --- a/core/java/android/os/BatteryManager.java
 +++ b/core/java/android/os/BatteryManager.java
 @@ -166,6 +166,22 @@ public class BatteryManager {
@@ -54,7 +54,7 @@ index 903c7637a..71d774a53 100644
       * Extra for {@link android.content.Intent#ACTION_BATTERY_CHANGED}:
       * Int value representing the battery charging status.
 diff --git a/core/java/android/os/RecoverySystem.java b/core/java/android/os/RecoverySystem.java
-index de995527e..4d3b2fdda 100644
+index de995527eea8c3dfb345244a1ebd64e72d6301dc..4d3b2fddafb521d624721de3e4f637e50f75965c 100644
 --- a/core/java/android/os/RecoverySystem.java
 +++ b/core/java/android/os/RecoverySystem.java
 @@ -106,6 +106,9 @@ public class RecoverySystem {
@@ -113,7 +113,7 @@ index de995527e..4d3b2fdda 100644
  
          final String filenameArg = "--update_package=" + filename + "\n";
 diff --git a/core/java/android/view/View.java b/core/java/android/view/View.java
-index a250d4945..9eeaa8188 100644
+index a250d4945bfed7f0f0ec81b83441ffcb589a786a..9eeaa8188e82ca90376811b470cf4023d85b1125 100644
 --- a/core/java/android/view/View.java
 +++ b/core/java/android/view/View.java
 @@ -917,6 +917,20 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
@@ -156,7 +156,7 @@ index a250d4945..9eeaa8188 100644
              mPrivateFlags4 |= PFLAG4_HAS_MOVED;
              invalidateViewProperty(true, false);
 diff --git a/core/java/android/view/ViewGroup.java b/core/java/android/view/ViewGroup.java
-index 115ae5ca6..fc0f5b86f 100644
+index 115ae5ca6ee5078d8ae55ba9b67f85553e48cae4..fc0f5b86f57a54cfcb56f2a5f05894e43a70e0f5 100644
 --- a/core/java/android/view/ViewGroup.java
 +++ b/core/java/android/view/ViewGroup.java
 @@ -82,6 +82,8 @@ import android.window.OnBackInvokedDispatcher;
@@ -299,10 +299,10 @@ index 115ae5ca6..fc0f5b86f 100644
          }
 diff --git a/core/java/com/android/internal/util/PixelTabletAppProps.java b/core/java/com/android/internal/util/PixelTabletAppProps.java
 new file mode 100644
-index 000000000..1b23b4d07
+index 0000000000000000000000000000000000000000..e2535d82f90614bd47005db5db27195cb652d3d7
 --- /dev/null
 +++ b/core/java/com/android/internal/util/PixelTabletAppProps.java
-@@ -0,0 +1,199 @@
+@@ -0,0 +1,195 @@
 +/*
 + * Copyright (C) 2026 The Pure Pixel Project
 + *
@@ -355,7 +355,6 @@ index 000000000..1b23b4d07
 +            PACKAGE_GOOGLE_SEARCH + ":googleapp";
 +    private static final String PROCESS_GOOGLE_SEARCH_SERVICE =
 +            PACKAGE_GOOGLE_SEARCH + ":search";
-+    private static final String PACKAGE_YOUTUBE = "com.google.android.youtube";
 +    private static final String PACKAGE_GMS = "com.google.android.gms";
 +    private static final String PROCESS_GMS_UNSTABLE = PACKAGE_GMS + ".unstable";
 +
@@ -423,9 +422,6 @@ index 000000000..1b23b4d07
 +            return PACKAGE_GOOGLE_SEARCH.equals(processName)
 +                    || PROCESS_GOOGLE_SEARCH_APP.equals(processName)
 +                    || PROCESS_GOOGLE_SEARCH_SERVICE.equals(processName);
-+        }
-+        if (PACKAGE_YOUTUBE.equals(packageName)) {
-+            return PACKAGE_YOUTUBE.equals(processName);
 +        }
 +        return PACKAGE_GMS.equals(packageName)
 +                && processName.startsWith(PACKAGE_GMS)
@@ -504,7 +500,7 @@ index 000000000..1b23b4d07
 +}
 diff --git a/core/java/com/zui/input/handwriting/IIMEClient.java b/core/java/com/zui/input/handwriting/IIMEClient.java
 new file mode 100644
-index 000000000..d7b2b33db
+index 0000000000000000000000000000000000000000..d7b2b33dbead564611d62febd835d08df7de8a8f
 --- /dev/null
 +++ b/core/java/com/zui/input/handwriting/IIMEClient.java
 @@ -0,0 +1,35 @@
@@ -545,7 +541,7 @@ index 000000000..d7b2b33db
 +}
 diff --git a/core/java/com/zui/input/handwriting/ZuiHandWritingManager.java b/core/java/com/zui/input/handwriting/ZuiHandWritingManager.java
 new file mode 100644
-index 000000000..ee8f32c09
+index 0000000000000000000000000000000000000000..ee8f32c095380affee39c42e36d59c9be5bdadee
 --- /dev/null
 +++ b/core/java/com/zui/input/handwriting/ZuiHandWritingManager.java
 @@ -0,0 +1,36 @@
@@ -587,10 +583,10 @@ index 000000000..ee8f32c09
 +}
 diff --git a/core/tests/coretests/src/com/android/internal/util/PixelTabletAppPropsTest.java b/core/tests/coretests/src/com/android/internal/util/PixelTabletAppPropsTest.java
 new file mode 100644
-index 000000000..1079e48d8
+index 0000000000000000000000000000000000000000..707383b7d4a0bc011798bf11fb1a21b451a6f765
 --- /dev/null
 +++ b/core/tests/coretests/src/com/android/internal/util/PixelTabletAppPropsTest.java
-@@ -0,0 +1,75 @@
+@@ -0,0 +1,65 @@
 +/*
 + * Copyright (C) 2026 The Pure Pixel Project
 + *
@@ -619,7 +615,6 @@ index 000000000..1079e48d8
 +@RunWith(AndroidJUnit4.class)
 +public class PixelTabletAppPropsTest {
 +    private static final String SEARCH = "com.google.android.googlequicksearchbox";
-+    private static final String YOUTUBE = "com.google.android.youtube";
 +    private static final String GMS = "com.google.android.gms";
 +
 +    @Test
@@ -649,15 +644,6 @@ index 000000000..1079e48d8
 +    }
 +
 +    @Test
-+    public void shouldApply_youtubeMainProcessOnly() {
-+        assertThat(PixelTabletAppProps.shouldApply(YOUTUBE, YOUTUBE, false)).isTrue();
-+        assertThat(PixelTabletAppProps.shouldApply(
-+                YOUTUBE, YOUTUBE + ":player", false)).isFalse();
-+        assertThat(PixelTabletAppProps.shouldApply(
-+                YOUTUBE, YOUTUBE + ":isolated", true)).isFalse();
-+    }
-+
-+    @Test
 +    public void shouldApply_doesNotSpoofLauncherOrOtherPackages() {
 +        assertThat(PixelTabletAppProps.shouldApply(
 +                "com.google.android.apps.nexuslauncher",
@@ -667,7 +653,7 @@ index 000000000..1079e48d8
 +    }
 +}
 diff --git a/libs/WindowManager/Shell/src/com/android/wm/shell/recents/RecentsTransitionHandler.java b/libs/WindowManager/Shell/src/com/android/wm/shell/recents/RecentsTransitionHandler.java
-index 770297905..d0b2c81be 100644
+index 770297905edabb8160bdece2a42a75564f143bfa..d0b2c81befc2798479908be534160b8c73cc4022 100644
 --- a/libs/WindowManager/Shell/src/com/android/wm/shell/recents/RecentsTransitionHandler.java
 +++ b/libs/WindowManager/Shell/src/com/android/wm/shell/recents/RecentsTransitionHandler.java
 @@ -51,11 +51,13 @@ import android.app.ActivityOptions;
@@ -767,7 +753,7 @@ index 770297905..d0b2c81be 100644
          }
  
 diff --git a/packages/SystemUI/multivalentTests/src/com/android/systemui/doze/DozeScreenStateTest.java b/packages/SystemUI/multivalentTests/src/com/android/systemui/doze/DozeScreenStateTest.java
-index 61386f720..42b14ca87 100644
+index 61386f720032ca63dc0f3ffa5c33de207417def9..42b14ca87e8033b7d7095696b02a797969a7a303 100644
 --- a/packages/SystemUI/multivalentTests/src/com/android/systemui/doze/DozeScreenStateTest.java
 +++ b/packages/SystemUI/multivalentTests/src/com/android/systemui/doze/DozeScreenStateTest.java
 @@ -65,6 +65,8 @@ import org.mockito.ArgumentCaptor;
@@ -853,7 +839,7 @@ index 61386f720..42b14ca87 100644
      public void testScreen_onInPulse() {
          mScreen.transitionTo(UNINITIALIZED, INITIALIZED);
 diff --git a/packages/SystemUI/multivalentTests/src/com/android/systemui/doze/DozeUiTest.java b/packages/SystemUI/multivalentTests/src/com/android/systemui/doze/DozeUiTest.java
-index e7ca2bdda..e1ba59174 100644
+index e7ca2bdda06959e5a98be9140d422f655158be69..e1ba5917405d5ef6589c53f5e832feda460bff88 100644
 --- a/packages/SystemUI/multivalentTests/src/com/android/systemui/doze/DozeUiTest.java
 +++ b/packages/SystemUI/multivalentTests/src/com/android/systemui/doze/DozeUiTest.java
 @@ -23,6 +23,7 @@ import static com.android.systemui.doze.DozeMachine.State.DOZE_REQUEST_PULSE;
@@ -953,7 +939,7 @@ index e7ca2bdda..e1ba59174 100644
      public void transitionSetsAnimateWakeup_noAlwaysOn() {
          mDozeUi.transitionTo(UNINITIALIZED, DOZE);
 diff --git a/packages/SystemUI/multivalentTests/src/com/android/systemui/qs/tiles/impl/flashlight/domain/interactor/FlashlightTileUserActionInteractorTest.kt b/packages/SystemUI/multivalentTests/src/com/android/systemui/qs/tiles/impl/flashlight/domain/interactor/FlashlightTileUserActionInteractorTest.kt
-index 275cbe980..c011c268a 100644
+index 275cbe980d3cf8ba5cc06a53b2cf6f927de03fec..c011c268afdbea3a62e60b8447dd7ddb91f58c98 100644
 --- a/packages/SystemUI/multivalentTests/src/com/android/systemui/qs/tiles/impl/flashlight/domain/interactor/FlashlightTileUserActionInteractorTest.kt
 +++ b/packages/SystemUI/multivalentTests/src/com/android/systemui/qs/tiles/impl/flashlight/domain/interactor/FlashlightTileUserActionInteractorTest.kt
 @@ -72,7 +72,7 @@ class FlashlightTileUserActionInteractorTest : SysuiTestCase() {
@@ -993,7 +979,7 @@ index 275cbe980..c011c268a 100644
          }
  
 diff --git a/packages/SystemUI/multivalentTests/src/com/android/systemui/shade/NotificationPanelViewControllerTest.java b/packages/SystemUI/multivalentTests/src/com/android/systemui/shade/NotificationPanelViewControllerTest.java
-index 099f676b5..8c92717aa 100644
+index 099f676b52df8d841579f66fcf37e98f24df36bd..8c92717aa48898cce0e4943c861e136c20d4cbcd 100644
 --- a/packages/SystemUI/multivalentTests/src/com/android/systemui/shade/NotificationPanelViewControllerTest.java
 +++ b/packages/SystemUI/multivalentTests/src/com/android/systemui/shade/NotificationPanelViewControllerTest.java
 @@ -197,4 +197,17 @@ public class NotificationPanelViewControllerTest extends NotificationPanelViewCo
@@ -1016,7 +1002,7 @@ index 099f676b5..8c92717aa 100644
  }
 diff --git a/packages/SystemUI/res/drawable/ic_tb132fu_precision_pen.xml b/packages/SystemUI/res/drawable/ic_tb132fu_precision_pen.xml
 new file mode 100644
-index 000000000..8f436e2fd
+index 0000000000000000000000000000000000000000..8f436e2fd5ab39dc69da30cd830ef163c04ca784
 --- /dev/null
 +++ b/packages/SystemUI/res/drawable/ic_tb132fu_precision_pen.xml
 @@ -0,0 +1,10 @@
@@ -1031,7 +1017,7 @@ index 000000000..8f436e2fd
 +        android:pathData="M18.37,2.29c-0.39,-0.39 -1.03,-0.39 -1.42,0L5.13,14.11 3,21l6.89,-2.13L21.71,7.05c0.39,-0.39 0.39,-1.03 0,-1.42L18.37,2.29zM8.84,17.1l-2.72,0.84 0.84,-2.72 8.93,-8.93 1.88,1.88 -8.93,8.93zM19.18,6.76L17.3,4.88l0.36,-0.36 1.88,1.88 -0.36,0.36z" />
 +</vector>
 diff --git a/packages/SystemUI/res/values/config.xml b/packages/SystemUI/res/values/config.xml
-index f1d7ed35d..0d9d160dc 100644
+index f1d7ed35d86c4a704f0bdf72348e7c390af08bd4..0d9d160dc5924282070ccbe82dd9c5b1a9e11a99 100644
 --- a/packages/SystemUI/res/values/config.xml
 +++ b/packages/SystemUI/res/values/config.xml
 @@ -192,6 +192,12 @@
@@ -1059,7 +1045,7 @@ index f1d7ed35d..0d9d160dc 100644
           Note that while rounded.xml includes the entire path (including the horizontal and vertical
           corner edges), this pulls out just the curve.
 diff --git a/packages/SystemUI/res/values/strings.xml b/packages/SystemUI/res/values/strings.xml
-index d025a3ff3..609eb75f5 100644
+index d025a3ff3a9dae1410f592b5579b5e4df2ae246c..609eb75f54c171a2e8cffed17ed7151b467e3130 100644
 --- a/packages/SystemUI/res/values/strings.xml
 +++ b/packages/SystemUI/res/values/strings.xml
 @@ -4339,6 +4339,13 @@
@@ -1077,7 +1063,7 @@ index d025a3ff3..609eb75f5 100644
      <string name="video_camera">Video camera</string>
  
 diff --git a/packages/SystemUI/src/com/android/systemui/dagger/SystemUICoreStartableModule.kt b/packages/SystemUI/src/com/android/systemui/dagger/SystemUICoreStartableModule.kt
-index 6463529a8..2f7bc441c 100644
+index 6463529a8901357b23e55c163dc87c62bef272ca..2f7bc441c41a4fc6842a2f1f3795545f6044b8ea 100644
 --- a/packages/SystemUI/src/com/android/systemui/dagger/SystemUICoreStartableModule.kt
 +++ b/packages/SystemUI/src/com/android/systemui/dagger/SystemUICoreStartableModule.kt
 @@ -55,6 +55,7 @@ import com.android.systemui.statusbar.gesture.GesturePointerEventListener
@@ -1104,7 +1090,7 @@ index 6463529a8..2f7bc441c 100644
      @IntoMap
      @ClassKey(PhysicalKeyboardCoreStartable::class)
 diff --git a/packages/SystemUI/src/com/android/systemui/dagger/SystemUIModule.java b/packages/SystemUI/src/com/android/systemui/dagger/SystemUIModule.java
-index 742cc51e9..1b26b5246 100644
+index 742cc51e99c9838ea486d135fcfd42514c61d7e0..1b26b524694887eabbdf09a1aa402a888b72edb7 100644
 --- a/packages/SystemUI/src/com/android/systemui/dagger/SystemUIModule.java
 +++ b/packages/SystemUI/src/com/android/systemui/dagger/SystemUIModule.java
 @@ -128,6 +128,9 @@ import com.android.systemui.shade.transition.LargeScreenShadeInterpolator;
@@ -1146,7 +1132,7 @@ index 742cc51e9..1b26b5246 100644
 +    }
  }
 diff --git a/packages/SystemUI/src/com/android/systemui/doze/DozeScreenState.java b/packages/SystemUI/src/com/android/systemui/doze/DozeScreenState.java
-index 6ee0dec04..cadb95d8b 100644
+index 6ee0dec04c2cdec4d37e2f2e64476b9c6a685b88..cadb95d8bed84f7231b9f3bcafc1b583434debd8 100644
 --- a/packages/SystemUI/src/com/android/systemui/doze/DozeScreenState.java
 +++ b/packages/SystemUI/src/com/android/systemui/doze/DozeScreenState.java
 @@ -30,6 +30,7 @@ import android.util.Log;
@@ -1270,7 +1256,7 @@ index 6ee0dec04..cadb95d8b 100644
          @Override
          public void onAllAuthenticatorsRegistered(@BiometricAuthenticator.Modality int modality) {
 diff --git a/packages/SystemUI/src/com/android/systemui/doze/DozeUi.java b/packages/SystemUI/src/com/android/systemui/doze/DozeUi.java
-index 8489fd8ee..684fc83ce 100644
+index 8489fd8ee517e513edf5ca8710282c318b8ad5a1..684fc83cebc4a48b290b809c393bf904e2f0a7d7 100644
 --- a/packages/SystemUI/src/com/android/systemui/doze/DozeUi.java
 +++ b/packages/SystemUI/src/com/android/systemui/doze/DozeUi.java
 @@ -60,6 +60,7 @@ public class DozeUi implements DozeMachine.Part {
@@ -1310,7 +1296,7 @@ index 8489fd8ee..684fc83ce 100644
          mTimeTickScheduled = false;
          scheduleTimeTick();
 diff --git a/packages/SystemUI/src/com/android/systemui/keyguard/data/repository/LightRevealScrimRepository.kt b/packages/SystemUI/src/com/android/systemui/keyguard/data/repository/LightRevealScrimRepository.kt
-index e0dc68caf..084b2d367 100644
+index e0dc68caf856196ab46ac4cb257c934fbf3052e6..084b2d367804592ed2c12b7f6a3e48d7bf586a6a 100644
 --- a/packages/SystemUI/src/com/android/systemui/keyguard/data/repository/LightRevealScrimRepository.kt
 +++ b/packages/SystemUI/src/com/android/systemui/keyguard/data/repository/LightRevealScrimRepository.kt
 @@ -105,7 +105,8 @@ constructor(
@@ -1324,7 +1310,7 @@ index e0dc68caf..084b2d367 100644
          )
  
 diff --git a/packages/SystemUI/src/com/android/systemui/qs/tiles/impl/flashlight/domain/interactor/FlashlightTileUserActionInteractor.kt b/packages/SystemUI/src/com/android/systemui/qs/tiles/impl/flashlight/domain/interactor/FlashlightTileUserActionInteractor.kt
-index 9ad7bc01b..ee319f231 100644
+index 9ad7bc01bdbb7215afe62d08303449cc49f74de5..ee319f231047997ecbde7eb9290b1d61cf6cc080 100644
 --- a/packages/SystemUI/src/com/android/systemui/qs/tiles/impl/flashlight/domain/interactor/FlashlightTileUserActionInteractor.kt
 +++ b/packages/SystemUI/src/com/android/systemui/qs/tiles/impl/flashlight/domain/interactor/FlashlightTileUserActionInteractor.kt
 @@ -44,14 +44,19 @@ constructor(
@@ -1356,7 +1342,7 @@ index 9ad7bc01b..ee319f231 100644
                      } else { // preserve old behavior at the cost of some redundancy
                          if (
 diff --git a/packages/SystemUI/src/com/android/systemui/shade/NotificationPanelViewController.java b/packages/SystemUI/src/com/android/systemui/shade/NotificationPanelViewController.java
-index c50979f39..4bfb226d0 100644
+index c50979f390f13e60184564c4f77b03c16b575b01..4bfb226d0a0dc97b7a4bb92952cbaa62c52989a8 100644
 --- a/packages/SystemUI/src/com/android/systemui/shade/NotificationPanelViewController.java
 +++ b/packages/SystemUI/src/com/android/systemui/shade/NotificationPanelViewController.java
 @@ -3781,6 +3781,14 @@ public final class NotificationPanelViewController implements
@@ -1388,7 +1374,7 @@ index c50979f39..4bfb226d0 100644
          }
 diff --git a/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelDateSmartspaceDataProvider.java b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelDateSmartspaceDataProvider.java
 new file mode 100644
-index 000000000..bdee80241
+index 0000000000000000000000000000000000000000..bdee80241ee0a865658a2dee99612820294e28be
 --- /dev/null
 +++ b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelDateSmartspaceDataProvider.java
 @@ -0,0 +1,69 @@
@@ -1463,7 +1449,7 @@ index 000000000..bdee80241
 +}
 diff --git a/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelDateSmartspaceView.java b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelDateSmartspaceView.java
 new file mode 100644
-index 000000000..2aa2b1a15
+index 0000000000000000000000000000000000000000..2aa2b1a15fc799434cbef4311fe2eeaa9fa207fd
 --- /dev/null
 +++ b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelDateSmartspaceView.java
 @@ -0,0 +1,111 @@
@@ -1580,7 +1566,7 @@ index 000000000..2aa2b1a15
 +}
 diff --git a/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelSmartspaceDataProvider.java b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelSmartspaceDataProvider.java
 new file mode 100644
-index 000000000..4b35d5630
+index 0000000000000000000000000000000000000000..4b35d56307b0ac0fdc15e77ef82936d983ee4f2d
 --- /dev/null
 +++ b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelSmartspaceDataProvider.java
 @@ -0,0 +1,104 @@
@@ -1690,7 +1676,7 @@ index 000000000..4b35d5630
 +}
 diff --git a/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelSmartspaceView.java b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelSmartspaceView.java
 new file mode 100644
-index 000000000..3325f8f47
+index 0000000000000000000000000000000000000000..3325f8f47ab0df3231d3b4ee5c440619f26203eb
 --- /dev/null
 +++ b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelSmartspaceView.java
 @@ -0,0 +1,219 @@
@@ -1915,7 +1901,7 @@ index 000000000..3325f8f47
 +}
 diff --git a/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelWeatherSmartspaceDataProvider.java b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelWeatherSmartspaceDataProvider.java
 new file mode 100644
-index 000000000..54c5fd91d
+index 0000000000000000000000000000000000000000..54c5fd91d18e65ff3bd4483695f4a09ca1627b76
 --- /dev/null
 +++ b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelWeatherSmartspaceDataProvider.java
 @@ -0,0 +1,108 @@
@@ -2029,7 +2015,7 @@ index 000000000..54c5fd91d
 +}
 diff --git a/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelWeatherSmartspaceView.java b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelWeatherSmartspaceView.java
 new file mode 100644
-index 000000000..8aab6e986
+index 0000000000000000000000000000000000000000..8aab6e9866e2618d3598e20cc24f049ca41e28d7
 --- /dev/null
 +++ b/packages/SystemUI/src/com/android/systemui/smartspace/weather/PurePixelWeatherSmartspaceView.java
 @@ -0,0 +1,248 @@
@@ -2282,7 +2268,7 @@ index 000000000..8aab6e986
 +    }
 +}
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/LightRevealScrim.kt b/packages/SystemUI/src/com/android/systemui/statusbar/LightRevealScrim.kt
-index 1e015b0ed..5b7c6ae21 100644
+index 1e015b0ed8c99925baf59b7f766a6a99a3442c12..5b7c6ae21be0a31ae3116e74f355b87c53d5b60f 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/LightRevealScrim.kt
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/LightRevealScrim.kt
 @@ -230,9 +230,64 @@ data class CircleReveal(
@@ -2434,7 +2420,7 @@ index 1e015b0ed..5b7c6ae21 100644
          }
      }
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/CentralSurfacesImpl.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/CentralSurfacesImpl.java
-index b7876bfc2..ec4d17643 100644
+index b7876bfc2eb8c98cb222c3dd6881747126d470ef..ec4d17643bfef6da05e59ee93b2177b8d7e64982 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/CentralSurfacesImpl.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/CentralSurfacesImpl.java
 @@ -1585,8 +1585,12 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
@@ -2453,7 +2439,7 @@ index b7876bfc2..ec4d17643 100644
  
      private void logStateToEventlog() {
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java
-index 43a93d2d1..f35005bd6 100644
+index 43a93d2d1fbf7ec2789cbeb1a34fdcd0aa1e0ccc..f35005bd6c48cc5a5ccc23a3b136041f4e579c19 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java
 @@ -209,6 +209,15 @@ public class DozeParameters implements
@@ -2473,7 +2459,7 @@ index 43a93d2d1..f35005bd6 100644
          return getPulseInDuration() + getPulseVisibleDuration() + getPulseOutDuration();
      }
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBarKeyguardViewManager.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBarKeyguardViewManager.java
-index be4c8ea08..73f8c16b0 100644
+index be4c8ea08e51201817bc6ce8277730ad90b6cde4..73f8c16b0363aec03be80970ecd2ded8716fd2f3 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBarKeyguardViewManager.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBarKeyguardViewManager.java
 @@ -1829,6 +1829,9 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
@@ -2488,7 +2474,7 @@ index be4c8ea08..73f8c16b0 100644
      private static class DismissWithActionRequest {
 diff --git a/packages/SystemUI/src/com/android/systemui/stylus/Tb132fuPenChargerStartable.kt b/packages/SystemUI/src/com/android/systemui/stylus/Tb132fuPenChargerStartable.kt
 new file mode 100644
-index 000000000..7369b55dc
+index 0000000000000000000000000000000000000000..7369b55dcaade69b3d032b5f68fa2e0ce94a5847
 --- /dev/null
 +++ b/packages/SystemUI/src/com/android/systemui/stylus/Tb132fuPenChargerStartable.kt
 @@ -0,0 +1,231 @@
@@ -2724,7 +2710,7 @@ index 000000000..7369b55dc
 +    }
 +}
 diff --git a/packages/SystemUI/src/com/android/systemui/temporarydisplay/chipbar/ChipbarCoordinator.kt b/packages/SystemUI/src/com/android/systemui/temporarydisplay/chipbar/ChipbarCoordinator.kt
-index e7c780022..edb3cccc1 100644
+index e7c780022e645fb47092c5bfc646b732443de14a..edb3cccc15ec51a4099b77ced9f9518a8cac61d8 100644
 --- a/packages/SystemUI/src/com/android/systemui/temporarydisplay/chipbar/ChipbarCoordinator.kt
 +++ b/packages/SystemUI/src/com/android/systemui/temporarydisplay/chipbar/ChipbarCoordinator.kt
 @@ -160,6 +160,12 @@ constructor(
@@ -2741,7 +2727,7 @@ index e7c780022..edb3cccc1 100644
          // (If the new text is smaller than the previous text) see b/253228632.
          textView.requestLayout()
 diff --git a/packages/SystemUI/src/com/android/systemui/temporarydisplay/chipbar/ChipbarInfo.kt b/packages/SystemUI/src/com/android/systemui/temporarydisplay/chipbar/ChipbarInfo.kt
-index bc2909911..c2cda9033 100644
+index bc2909911c249d6eca72018a7d6825a0037a2de2..c2cda9033f203ee24c64de484cb5607d37112e6c 100644
 --- a/packages/SystemUI/src/com/android/systemui/temporarydisplay/chipbar/ChipbarInfo.kt
 +++ b/packages/SystemUI/src/com/android/systemui/temporarydisplay/chipbar/ChipbarInfo.kt
 @@ -49,12 +49,20 @@ data class ChipbarInfo(
@@ -2766,7 +2752,7 @@ index bc2909911..c2cda9033 100644
      }
  }
 diff --git a/packages/SystemUI/tests/src/com/android/systemui/statusbar/LightRevealScrimTest.kt b/packages/SystemUI/tests/src/com/android/systemui/statusbar/LightRevealScrimTest.kt
-index fe2dd6d78..c5a2baedf 100644
+index fe2dd6d78a82ead82822aedfcd6d36c7e72aa03e..c5a2baedfa2295e70630023ab9bd215695c6042f 100644
 --- a/packages/SystemUI/tests/src/com/android/systemui/statusbar/LightRevealScrimTest.kt
 +++ b/packages/SystemUI/tests/src/com/android/systemui/statusbar/LightRevealScrimTest.kt
 @@ -20,69 +20,157 @@ import android.view.View
@@ -2972,7 +2958,7 @@ index fe2dd6d78..c5a2baedf 100644
 +    }
  }
 diff --git a/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/StatusBarKeyguardViewManagerTest.java b/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/StatusBarKeyguardViewManagerTest.java
-index a8c1ed0c1..701cadb22 100644
+index a8c1ed0c1d6098a18543f6a06aed7d68482bfc6e..701cadb221bf5e0fbdd61674574e4264e194991e 100644
 --- a/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/StatusBarKeyguardViewManagerTest.java
 +++ b/packages/SystemUI/tests/src/com/android/systemui/statusbar/phone/StatusBarKeyguardViewManagerTest.java
 @@ -598,6 +598,7 @@ public class StatusBarKeyguardViewManagerTest extends SysuiTestCase {
@@ -2984,7 +2970,7 @@ index a8c1ed0c1..701cadb22 100644
  
      @Test
 diff --git a/packages/SystemUI/tests/src/com/android/systemui/temporarydisplay/chipbar/ChipbarCoordinatorTest.kt b/packages/SystemUI/tests/src/com/android/systemui/temporarydisplay/chipbar/ChipbarCoordinatorTest.kt
-index e272046f7..51c2ff48e 100644
+index e272046f711f0beb89dc143ce915ebe555aca332..51c2ff48e356044167cd33a60d3fdd953b7fc9f6 100644
 --- a/packages/SystemUI/tests/src/com/android/systemui/temporarydisplay/chipbar/ChipbarCoordinatorTest.kt
 +++ b/packages/SystemUI/tests/src/com/android/systemui/temporarydisplay/chipbar/ChipbarCoordinatorTest.kt
 @@ -252,6 +252,21 @@ class ChipbarCoordinatorTest : SysuiTestCase() {
@@ -3010,7 +2996,7 @@ index e272046f7..51c2ff48e 100644
      fun displayView_endItemNull_correctlyRendered() {
          underTest.displayView(
 diff --git a/ravenwood/texts/ravenwood-annotation-allowed-classes.txt b/ravenwood/texts/ravenwood-annotation-allowed-classes.txt
-index a3a16547e..8e0b7cc91 100644
+index a3a16547e852ff7bee5cff04bcbcdba521b7506c..8e0b7cc9163a444acc4be0c586652bce0d1945d9 100644
 --- a/ravenwood/texts/ravenwood-annotation-allowed-classes.txt
 +++ b/ravenwood/texts/ravenwood-annotation-allowed-classes.txt
 @@ -756,6 +756,7 @@ com.android.internal.util.NamedLock
@@ -3030,7 +3016,7 @@ index a3a16547e..8e0b7cc91 100644
  com.google.android.collect.Lists
  com.google.android.collect.Maps
 diff --git a/services/core/Android.bp b/services/core/Android.bp
-index a8fa5805b..acefda5ef 100644
+index a8fa5805ba52379fa23ba456ff10cb6fd691be11..acefda5effe6a61caa56a3bb09a90aebd1404f39 100644
 --- a/services/core/Android.bp
 +++ b/services/core/Android.bp
 @@ -274,6 +274,7 @@ java_library_static {
@@ -3042,7 +3028,7 @@ index a8fa5805b..acefda5ef 100644
      javac_shard_size: 50,
      javacflags: [
 diff --git a/services/core/java/com/android/server/BatteryService.java b/services/core/java/com/android/server/BatteryService.java
-index e0b36ab69..2de7f330d 100644
+index e0b36ab6919477bc37aa4006d5014815d3eeffc1..2de7f330d13d95c3e8eabb13109975b59029ec05 100644
 --- a/services/core/java/com/android/server/BatteryService.java
 +++ b/services/core/java/com/android/server/BatteryService.java
 @@ -1037,6 +1037,10 @@ public final class BatteryService extends SystemService {
@@ -3068,7 +3054,7 @@ index e0b36ab69..2de7f330d 100644
          event.putInt(BatteryManager.EXTRA_CAPACITY_LEVEL, mHealthInfo.batteryCapacityLevel);
  
 diff --git a/services/core/java/com/android/server/biometrics/sensors/AuthenticationClient.java b/services/core/java/com/android/server/biometrics/sensors/AuthenticationClient.java
-index 090353b8f..805fc90c5 100644
+index 090353b8f7c57c8f3af1a614715d3f83b6c54bc5..805fc90c51850922d6821fa888d7e2d58765bfd9 100644
 --- a/services/core/java/com/android/server/biometrics/sensors/AuthenticationClient.java
 +++ b/services/core/java/com/android/server/biometrics/sensors/AuthenticationClient.java
 @@ -116,7 +116,7 @@ public abstract class AuthenticationClient<T, O extends AuthenticateOptions>
@@ -3105,7 +3091,7 @@ index 090353b8f..805fc90c5 100644
              try {
                  if (!mIsRestricted) {
 diff --git a/services/core/java/com/android/server/biometrics/sensors/face/FaceService.java b/services/core/java/com/android/server/biometrics/sensors/face/FaceService.java
-index a34791f70..9010af426 100644
+index a34791f70533fe01be5e857628c33a544edc0b6d..9010af426daf843e98eee5b1ca0fef21435147db 100644
 --- a/services/core/java/com/android/server/biometrics/sensors/face/FaceService.java
 +++ b/services/core/java/com/android/server/biometrics/sensors/face/FaceService.java
 @@ -26,6 +26,7 @@ import android.app.ActivityManager;
@@ -3174,7 +3160,7 @@ index a34791f70..9010af426 100644
              providers.add(mFaceProviderFunction.getFaceProvider(filteredSensorProps,
 diff --git a/services/core/java/com/android/server/biometrics/sensors/face/sense/BiometricTestSessionImpl.java b/services/core/java/com/android/server/biometrics/sensors/face/sense/BiometricTestSessionImpl.java
 new file mode 100644
-index 000000000..90dc55a7e
+index 0000000000000000000000000000000000000000..90dc55a7ed5062841d013ce87b47b2634f699419
 --- /dev/null
 +++ b/services/core/java/com/android/server/biometrics/sensors/face/sense/BiometricTestSessionImpl.java
 @@ -0,0 +1,234 @@
@@ -3414,7 +3400,7 @@ index 000000000..90dc55a7e
 +}
 diff --git a/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceAuthenticationClient.java b/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceAuthenticationClient.java
 new file mode 100644
-index 000000000..544b240e3
+index 0000000000000000000000000000000000000000..544b240e3c21eeb98e8d7c1e7bcd33741d21f3fb
 --- /dev/null
 +++ b/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceAuthenticationClient.java
 @@ -0,0 +1,239 @@
@@ -3659,7 +3645,7 @@ index 000000000..544b240e3
 +}
 diff --git a/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceEnrollClient.java b/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceEnrollClient.java
 new file mode 100644
-index 000000000..875aab5a2
+index 0000000000000000000000000000000000000000..875aab5a264fb88bafed0a2e6a0ed3efbc350054
 --- /dev/null
 +++ b/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceEnrollClient.java
 @@ -0,0 +1,134 @@
@@ -3799,7 +3785,7 @@ index 000000000..875aab5a2
 +}
 diff --git a/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceGenerateChallengeClient.java b/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceGenerateChallengeClient.java
 new file mode 100644
-index 000000000..9a9414ff9
+index 0000000000000000000000000000000000000000..9a9414ff94493d4709007fb3cc201c9f70e1150e
 --- /dev/null
 +++ b/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceGenerateChallengeClient.java
 @@ -0,0 +1,111 @@
@@ -3916,7 +3902,7 @@ index 000000000..9a9414ff9
 +}
 diff --git a/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceGetFeatureClient.java b/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceGetFeatureClient.java
 new file mode 100644
-index 000000000..73f99f168
+index 0000000000000000000000000000000000000000..73f99f168d1d264dba3acd312558f2dee07fb6e7
 --- /dev/null
 +++ b/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceGetFeatureClient.java
 @@ -0,0 +1,101 @@
@@ -4023,7 +4009,7 @@ index 000000000..73f99f168
 +}
 diff --git a/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceInternalCleanupClient.java b/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceInternalCleanupClient.java
 new file mode 100644
-index 000000000..da363e2ee
+index 0000000000000000000000000000000000000000..da363e2ee3f06dc74d83eb28143f97c74db96310
 --- /dev/null
 +++ b/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceInternalCleanupClient.java
 @@ -0,0 +1,86 @@
@@ -4115,7 +4101,7 @@ index 000000000..da363e2ee
 +}
 diff --git a/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceInternalEnumerateClient.java b/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceInternalEnumerateClient.java
 new file mode 100644
-index 000000000..c86d0361f
+index 0000000000000000000000000000000000000000..c86d0361f9e8f77b5df67a497c83fc1b743ab7bf
 --- /dev/null
 +++ b/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceInternalEnumerateClient.java
 @@ -0,0 +1,64 @@
@@ -4185,7 +4171,7 @@ index 000000000..c86d0361f
 +}
 diff --git a/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceRemovalClient.java b/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceRemovalClient.java
 new file mode 100644
-index 000000000..54494cb90
+index 0000000000000000000000000000000000000000..54494cb90a6e09bafde95af68e4d4fee305a8647
 --- /dev/null
 +++ b/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceRemovalClient.java
 @@ -0,0 +1,63 @@
@@ -4254,7 +4240,7 @@ index 000000000..54494cb90
 +}
 diff --git a/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceResetLockoutClient.java b/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceResetLockoutClient.java
 new file mode 100644
-index 000000000..1a9a91b97
+index 0000000000000000000000000000000000000000..1a9a91b972c2ae1b28e1310096c21957c335eefb
 --- /dev/null
 +++ b/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceResetLockoutClient.java
 @@ -0,0 +1,83 @@
@@ -4343,7 +4329,7 @@ index 000000000..1a9a91b97
 +}
 diff --git a/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceRevokeChallengeClient.java b/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceRevokeChallengeClient.java
 new file mode 100644
-index 000000000..7f42df49d
+index 0000000000000000000000000000000000000000..7f42df49d0d9f362e772edfe1f289a5923bc85c3
 --- /dev/null
 +++ b/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceRevokeChallengeClient.java
 @@ -0,0 +1,55 @@
@@ -4404,7 +4390,7 @@ index 000000000..7f42df49d
 +}
 diff --git a/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceSetFeatureClient.java b/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceSetFeatureClient.java
 new file mode 100644
-index 000000000..0b8d3ffff
+index 0000000000000000000000000000000000000000..0b8d3ffff6a7f620fdeb3be4f584603e4327447a
 --- /dev/null
 +++ b/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceSetFeatureClient.java
 @@ -0,0 +1,93 @@
@@ -4503,7 +4489,7 @@ index 000000000..0b8d3ffff
 +}
 diff --git a/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceUpdateActiveUserClient.java b/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceUpdateActiveUserClient.java
 new file mode 100644
-index 000000000..78e291e2e
+index 0000000000000000000000000000000000000000..78e291e2e66e2f35e0d384506c1d84029410da98
 --- /dev/null
 +++ b/services/core/java/com/android/server/biometrics/sensors/face/sense/FaceUpdateActiveUserClient.java
 @@ -0,0 +1,85 @@
@@ -4594,7 +4580,7 @@ index 000000000..78e291e2e
 +}
 diff --git a/services/core/java/com/android/server/biometrics/sensors/face/sense/SenseProvider.java b/services/core/java/com/android/server/biometrics/sensors/face/sense/SenseProvider.java
 new file mode 100644
-index 000000000..92d426b7f
+index 0000000000000000000000000000000000000000..92d426b7f46903d13e65a4276c396c6bf2bb8d7a
 --- /dev/null
 +++ b/services/core/java/com/android/server/biometrics/sensors/face/sense/SenseProvider.java
 @@ -0,0 +1,1127 @@
@@ -5727,7 +5713,7 @@ index 000000000..92d426b7f
 +}
 diff --git a/services/core/java/com/android/server/biometrics/sensors/face/sense/SenseUtils.java b/services/core/java/com/android/server/biometrics/sensors/face/sense/SenseUtils.java
 new file mode 100644
-index 000000000..b89c8a366
+index 0000000000000000000000000000000000000000..b89c8a36619af30a47597b82cc3aca4fed8520a5
 --- /dev/null
 +++ b/services/core/java/com/android/server/biometrics/sensors/face/sense/SenseUtils.java
 @@ -0,0 +1,66 @@
@@ -5799,7 +5785,7 @@ index 000000000..b89c8a366
 +}
 diff --git a/services/core/java/com/android/server/biometrics/sensors/face/sense/TestHal.java b/services/core/java/com/android/server/biometrics/sensors/face/sense/TestHal.java
 new file mode 100644
-index 000000000..0499bc51e
+index 0000000000000000000000000000000000000000..0499bc51ede6ea0c046f828c5beb8a2622bac37a
 --- /dev/null
 +++ b/services/core/java/com/android/server/biometrics/sensors/face/sense/TestHal.java
 @@ -0,0 +1,144 @@
@@ -5948,7 +5934,7 @@ index 000000000..0499bc51e
 +
 +}
 diff --git a/services/core/java/com/android/server/policy/PhoneWindowManager.java b/services/core/java/com/android/server/policy/PhoneWindowManager.java
-index 1af1825d3..c0eb8b876 100644
+index 1af1825d32cf9f77118d952a9a1dc9ec7fd04a5d..c0eb8b8767abe8216abf48e864a7b803c4f499a6 100644
 --- a/services/core/java/com/android/server/policy/PhoneWindowManager.java
 +++ b/services/core/java/com/android/server/policy/PhoneWindowManager.java
 @@ -1453,6 +1453,15 @@ public class PhoneWindowManager implements WindowManagerPolicy {
@@ -5968,7 +5954,7 @@ index 1af1825d3..c0eb8b876 100644
                  Settings.Global.LID_BEHAVIOR, LID_BEHAVIOR_NONE);
      }
 diff --git a/services/core/java/com/android/server/power/AmbientDisplaySuppressionController.java b/services/core/java/com/android/server/power/AmbientDisplaySuppressionController.java
-index e6922aea8..bde7c64b7 100644
+index e6922aea8e312ed91e4eda0a221d2970c34d9516..bde7c64b784fdb540be681783f395071322027e8 100644
 --- a/services/core/java/com/android/server/power/AmbientDisplaySuppressionController.java
 +++ b/services/core/java/com/android/server/power/AmbientDisplaySuppressionController.java
 @@ -225,6 +225,15 @@ public class AmbientDisplaySuppressionController {
@@ -5988,7 +5974,7 @@ index e6922aea8..bde7c64b7 100644
       * Dumps the state of ambient display suppression and the list of suppression tokens into
       * {@code pw}.
 diff --git a/services/core/java/com/android/server/power/PowerManagerService.java b/services/core/java/com/android/server/power/PowerManagerService.java
-index 505530cc2..aedc60b96 100644
+index 505530cc23786cb015c30dd4044ddc4c327a0905..aedc60b96d88d2ef7de845148cbbab5cf89f74b2 100644
 --- a/services/core/java/com/android/server/power/PowerManagerService.java
 +++ b/services/core/java/com/android/server/power/PowerManagerService.java
 @@ -371,6 +371,10 @@ public final class PowerManagerService extends SystemService
@@ -6048,7 +6034,7 @@ index 505530cc2..aedc60b96 100644
  
 diff --git a/services/core/java/com/android/server/power/Tb132fuAmbientController.java b/services/core/java/com/android/server/power/Tb132fuAmbientController.java
 new file mode 100644
-index 000000000..447739319
+index 0000000000000000000000000000000000000000..4477393195b3442e591c6949a32d32068ca0ab18
 --- /dev/null
 +++ b/services/core/java/com/android/server/power/Tb132fuAmbientController.java
 @@ -0,0 +1,215 @@
@@ -6269,7 +6255,7 @@ index 000000000..447739319
 +}
 diff --git a/services/core/java/com/android/server/power/Tb132fuPenChargerObserver.java b/services/core/java/com/android/server/power/Tb132fuPenChargerObserver.java
 new file mode 100644
-index 000000000..f5489560d
+index 0000000000000000000000000000000000000000..f5489560d36ef3f06754dbb5e11be71462065e38
 --- /dev/null
 +++ b/services/core/java/com/android/server/power/Tb132fuPenChargerObserver.java
 @@ -0,0 +1,114 @@
@@ -6388,7 +6374,7 @@ index 000000000..f5489560d
 +    }
 +}
 diff --git a/services/java/com/android/server/SystemServer.java b/services/java/com/android/server/SystemServer.java
-index 3ea580823..be7d1dcc5 100644
+index 3ea580823df65913272d00c9735a2fa9ac5d1427..be7d1dcc56a70577c8ec2c2c911eec0394b4d5bc 100644
 --- a/services/java/com/android/server/SystemServer.java
 +++ b/services/java/com/android/server/SystemServer.java
 @@ -502,8 +502,9 @@ public final class SystemServer implements Dumpable {
@@ -6404,7 +6390,7 @@ index 3ea580823..be7d1dcc5 100644
      // maximum number of binder threads used for system_server
      // will be higher than the system default
 diff --git a/services/tests/powerservicetests/src/com/android/server/power/PowerManagerServiceTest.java b/services/tests/powerservicetests/src/com/android/server/power/PowerManagerServiceTest.java
-index 63f63ae0e..b19189954 100644
+index 63f63ae0ecb3e52092333818d5a5bd4bb068bc8c..b191899541c865b5f7245a61db3dedad8bc0e783 100644
 --- a/services/tests/powerservicetests/src/com/android/server/power/PowerManagerServiceTest.java
 +++ b/services/tests/powerservicetests/src/com/android/server/power/PowerManagerServiceTest.java
 @@ -1725,6 +1725,25 @@ public class PowerManagerServiceTest {
@@ -6434,7 +6420,7 @@ index 63f63ae0e..b19189954 100644
       * Tests that dreaming stops when undocking and not configured to keep dreaming.
       */
 diff --git a/services/tests/servicestests/Android.bp b/services/tests/servicestests/Android.bp
-index 6bd823b53..29811a31f 100644
+index 6bd823b53e8a7c929f1d90477cdb8d900beac51c..29811a31f9409a19a2301ce3d4c8b0d47081641f 100644
 --- a/services/tests/servicestests/Android.bp
 +++ b/services/tests/servicestests/Android.bp
 @@ -243,6 +243,7 @@ android_ravenwood_test {
@@ -6447,7 +6433,7 @@ index 6bd823b53..29811a31f 100644
  
 diff --git a/services/tests/servicestests/src/com/android/server/power/Tb132fuAmbientControllerTest.java b/services/tests/servicestests/src/com/android/server/power/Tb132fuAmbientControllerTest.java
 new file mode 100644
-index 000000000..21063f421
+index 0000000000000000000000000000000000000000..21063f421ea45c1e2b247bb5479036ba18940c4a
 --- /dev/null
 +++ b/services/tests/servicestests/src/com/android/server/power/Tb132fuAmbientControllerTest.java
 @@ -0,0 +1,92 @@
