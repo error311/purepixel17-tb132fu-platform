@@ -61,7 +61,7 @@ while IFS=$'\t' read -r project upstream base_revision topic_head qualified_tree
             echo "$project base tree does not match its qualified no-op tree." >&2
             exit 1
         }
-        echo "$project: no net R3 patch required (qualified topic $topic_head)."
+        echo "$project: no net R4 patch required (qualified topic $topic_head)."
         continue
     fi
 
@@ -88,5 +88,5 @@ while IFS=$'\t' read -r project upstream base_revision topic_head qualified_tree
     echo "$project: applied $patch_file"
 done < PROJECTS.tsv
 
-echo 'All Pure Pixel 17 R3 platform patches applied successfully.'
+echo 'All Pure Pixel 17 R4 platform patches applied successfully.'
 echo 'No commit, build, flash, reset, clean, or device operation was performed.'

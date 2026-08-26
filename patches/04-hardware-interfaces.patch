@@ -1,6 +1,6 @@
 diff --git a/automotive/audiocontrol/1.0/Android.bp b/automotive/audiocontrol/1.0/Android.bp
 new file mode 100644
-index 0000000000000000000000000000000000000000..628793bfbde3185af03816dfb97f62f6eeb91f5b
+index 00000000..628793bf
 --- /dev/null
 +++ b/automotive/audiocontrol/1.0/Android.bp
 @@ -0,0 +1,23 @@
@@ -29,7 +29,7 @@ index 0000000000000000000000000000000000000000..628793bfbde3185af03816dfb97f62f6
 +}
 diff --git a/automotive/audiocontrol/1.0/IAudioControl.hal b/automotive/audiocontrol/1.0/IAudioControl.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..23c64da30de96130bb0b1387470beec0a61ac3bc
+index 00000000..23c64da3
 --- /dev/null
 +++ b/automotive/audiocontrol/1.0/IAudioControl.hal
 @@ -0,0 +1,64 @@
@@ -99,7 +99,7 @@ index 0000000000000000000000000000000000000000..23c64da30de96130bb0b1387470beec0
 +};
 diff --git a/automotive/audiocontrol/1.0/types.hal b/automotive/audiocontrol/1.0/types.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..04d8d358c40132e0e77266ebcd2bfaf9b9b02854
+index 00000000..04d8d358
 --- /dev/null
 +++ b/automotive/audiocontrol/1.0/types.hal
 @@ -0,0 +1,35 @@
@@ -140,7 +140,7 @@ index 0000000000000000000000000000000000000000..04d8d358c40132e0e77266ebcd2bfaf9
 +};
 diff --git a/automotive/audiocontrol/2.0/Android.bp b/automotive/audiocontrol/2.0/Android.bp
 new file mode 100644
-index 0000000000000000000000000000000000000000..4d1fdbca26f405a3eda7310a9cfbb6ac2f06f00d
+index 00000000..4d1fdbca
 --- /dev/null
 +++ b/automotive/audiocontrol/2.0/Android.bp
 @@ -0,0 +1,27 @@
@@ -173,7 +173,7 @@ index 0000000000000000000000000000000000000000..4d1fdbca26f405a3eda7310a9cfbb6ac
 +}
 diff --git a/automotive/audiocontrol/2.0/IAudioControl.hal b/automotive/audiocontrol/2.0/IAudioControl.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..1073498f61ae7c9491ff3eaf8a7220f9e439e7f5
+index 00000000..1073498f
 --- /dev/null
 +++ b/automotive/audiocontrol/2.0/IAudioControl.hal
 @@ -0,0 +1,78 @@
@@ -257,7 +257,7 @@ index 0000000000000000000000000000000000000000..1073498f61ae7c9491ff3eaf8a7220f9
 +};
 diff --git a/automotive/audiocontrol/2.0/ICloseHandle.hal b/automotive/audiocontrol/2.0/ICloseHandle.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..537af6d635d02a753f41fd41bafd16869ae2ad12
+index 00000000..537af6d6
 --- /dev/null
 +++ b/automotive/audiocontrol/2.0/ICloseHandle.hal
 @@ -0,0 +1,34 @@
@@ -297,7 +297,7 @@ index 0000000000000000000000000000000000000000..537af6d635d02a753f41fd41bafd1686
 +};
 diff --git a/automotive/audiocontrol/2.0/IFocusListener.hal b/automotive/audiocontrol/2.0/IFocusListener.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..4fd5ef0425a6da85f0991a3dc84b924a4d22ef99
+index 00000000..4fd5ef04
 --- /dev/null
 +++ b/automotive/audiocontrol/2.0/IFocusListener.hal
 @@ -0,0 +1,55 @@
@@ -358,7 +358,7 @@ index 0000000000000000000000000000000000000000..4fd5ef0425a6da85f0991a3dc84b924a
 +};
 diff --git a/automotive/audiocontrol/2.0/types.hal b/automotive/audiocontrol/2.0/types.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..80d9ee1867478fedab6a63ebc4a7ee7e329995e6
+index 00000000..80d9ee18
 --- /dev/null
 +++ b/automotive/audiocontrol/2.0/types.hal
 @@ -0,0 +1,31 @@
@@ -395,7 +395,7 @@ index 0000000000000000000000000000000000000000..80d9ee1867478fedab6a63ebc4a7ee7e
 +};
 diff --git a/automotive/sv/1.0/Android.bp b/automotive/sv/1.0/Android.bp
 new file mode 100644
-index 0000000000000000000000000000000000000000..a6b1ba77b34616a957669cddfed31bcda7672aae
+index 00000000..a6b1ba77
 --- /dev/null
 +++ b/automotive/sv/1.0/Android.bp
 @@ -0,0 +1,30 @@
@@ -431,7 +431,7 @@ index 0000000000000000000000000000000000000000..a6b1ba77b34616a957669cddfed31bcd
 +}
 diff --git a/automotive/sv/1.0/ISurroundView2dSession.hal b/automotive/sv/1.0/ISurroundView2dSession.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..fa4967465ec1aa1f54dc4e16efb83842486d9913
+index 00000000..fa496746
 --- /dev/null
 +++ b/automotive/sv/1.0/ISurroundView2dSession.hal
 @@ -0,0 +1,84 @@
@@ -521,7 +521,7 @@ index 0000000000000000000000000000000000000000..fa4967465ec1aa1f54dc4e16efb83842
 +};
 diff --git a/automotive/sv/1.0/ISurroundView3dSession.hal b/automotive/sv/1.0/ISurroundView3dSession.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..d2b0c531060c64283d068a29d8376e956fa9b5fa
+index 00000000..d2b0c531
 --- /dev/null
 +++ b/automotive/sv/1.0/ISurroundView3dSession.hal
 @@ -0,0 +1,113 @@
@@ -640,7 +640,7 @@ index 0000000000000000000000000000000000000000..d2b0c531060c64283d068a29d8376e95
 +};
 diff --git a/automotive/sv/1.0/ISurroundViewService.hal b/automotive/sv/1.0/ISurroundViewService.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..7de0bd13f8cc15f7b21406fbeb2522d3638ab00d
+index 00000000..7de0bd13
 --- /dev/null
 +++ b/automotive/sv/1.0/ISurroundViewService.hal
 @@ -0,0 +1,71 @@
@@ -717,7 +717,7 @@ index 0000000000000000000000000000000000000000..7de0bd13f8cc15f7b21406fbeb2522d3
 +};
 diff --git a/automotive/sv/1.0/ISurroundViewSession.hal b/automotive/sv/1.0/ISurroundViewSession.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..62cfac0ab80802c442a9af0e930da89afdc2f97b
+index 00000000..62cfac0a
 --- /dev/null
 +++ b/automotive/sv/1.0/ISurroundViewSession.hal
 @@ -0,0 +1,51 @@
@@ -774,7 +774,7 @@ index 0000000000000000000000000000000000000000..62cfac0ab80802c442a9af0e930da89a
 +};
 diff --git a/automotive/sv/1.0/ISurroundViewStream.hal b/automotive/sv/1.0/ISurroundViewStream.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..22d610f842892396afe5f246b8d1de14bbcaa060
+index 00000000..22d610f8
 --- /dev/null
 +++ b/automotive/sv/1.0/ISurroundViewStream.hal
 @@ -0,0 +1,38 @@
@@ -818,7 +818,7 @@ index 0000000000000000000000000000000000000000..22d610f842892396afe5f246b8d1de14
 +};
 diff --git a/automotive/sv/1.0/types.hal b/automotive/sv/1.0/types.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..573bf11322f34db688f377b02b14e3fafe8cd3df
+index 00000000..573bf113
 --- /dev/null
 +++ b/automotive/sv/1.0/types.hal
 @@ -0,0 +1,351 @@
@@ -1173,8 +1173,21 @@ index 0000000000000000000000000000000000000000..573bf11322f34db688f377b02b14e3fa
 +     */
 +    memory overlaysMemory;
 +};
+diff --git a/bluetooth/audio/utils/Android.bp b/bluetooth/audio/utils/Android.bp
+index 7f7d600c..68f217b7 100644
+--- a/bluetooth/audio/utils/Android.bp
++++ b/bluetooth/audio/utils/Android.bp
+@@ -10,7 +10,7 @@ package {
+ cc_library_shared {
+     name: "libbluetooth_audio_session",
+     defaults: ["hidl_defaults"],
+-    vendor: true,
++    vendor_available: true,
+     srcs: [
+         "session/BluetoothAudioSession.cpp",
+         "session/BluetoothAudioSession_2_1.cpp",
 diff --git a/compatibility_matrices/Android.bp b/compatibility_matrices/Android.bp
-index e34fdcac3580aa9ce84873bba297efb240d36a87..2ba0d94458a4306fe2481af328fc8a45f04f8128 100644
+index e34fdcac..2ba0d944 100644
 --- a/compatibility_matrices/Android.bp
 +++ b/compatibility_matrices/Android.bp
 @@ -43,6 +43,7 @@ SYSTEM_MATRIX_DEPS_A18 = [
@@ -1209,7 +1222,7 @@ index e34fdcac3580aa9ce84873bba297efb240d36a87..2ba0d94458a4306fe2481af328fc8a45
      stem: "compatibility_matrix.7.xml",
 diff --git a/compatibility_matrices/compatibility_matrix.5.xml b/compatibility_matrices/compatibility_matrix.5.xml
 new file mode 100644
-index 0000000000000000000000000000000000000000..0fb21a7443f3471bec1fecf0358db16a75e4c63d
+index 00000000..0fb21a74
 --- /dev/null
 +++ b/compatibility_matrices/compatibility_matrix.5.xml
 @@ -0,0 +1,561 @@
@@ -1776,7 +1789,7 @@ index 0000000000000000000000000000000000000000..0fb21a7443f3471bec1fecf0358db16a
 +</compatibility-matrix>
 diff --git a/dumpstate/1.0/Android.bp b/dumpstate/1.0/Android.bp
 new file mode 100644
-index 0000000000000000000000000000000000000000..4e37ce9a0d1778e5e15caeacbf1fedd7c7b87c8f
+index 00000000..4e37ce9a
 --- /dev/null
 +++ b/dumpstate/1.0/Android.bp
 @@ -0,0 +1,22 @@
@@ -1804,7 +1817,7 @@ index 0000000000000000000000000000000000000000..4e37ce9a0d1778e5e15caeacbf1fedd7
 +}
 diff --git a/dumpstate/1.0/IDumpstateDevice.hal b/dumpstate/1.0/IDumpstateDevice.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..12a0db40b6728bd73454ffbdceaff1b9022c8306
+index 00000000..12a0db40
 --- /dev/null
 +++ b/dumpstate/1.0/IDumpstateDevice.hal
 @@ -0,0 +1,31 @@
@@ -1841,7 +1854,7 @@ index 0000000000000000000000000000000000000000..12a0db40b6728bd73454ffbdceaff1b9
 +};
 diff --git a/dumpstate/1.1/Android.bp b/dumpstate/1.1/Android.bp
 new file mode 100644
-index 0000000000000000000000000000000000000000..b87ca91d8392eaa68a95027085279a8328534f75
+index 00000000..b87ca91d
 --- /dev/null
 +++ b/dumpstate/1.1/Android.bp
 @@ -0,0 +1,24 @@
@@ -1871,7 +1884,7 @@ index 0000000000000000000000000000000000000000..b87ca91d8392eaa68a95027085279a83
 +}
 diff --git a/dumpstate/1.1/IDumpstateDevice.hal b/dumpstate/1.1/IDumpstateDevice.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..183404dd68cd09965cb6c6790184d6718b39c831
+index 00000000..183404dd
 --- /dev/null
 +++ b/dumpstate/1.1/IDumpstateDevice.hal
 @@ -0,0 +1,73 @@
@@ -1950,7 +1963,7 @@ index 0000000000000000000000000000000000000000..183404dd68cd09965cb6c6790184d671
 +};
 diff --git a/dumpstate/1.1/types.hal b/dumpstate/1.1/types.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..c522f7cb8b6b1abd6f6945016fa821cce46f5fd9
+index 00000000..c522f7cb
 --- /dev/null
 +++ b/dumpstate/1.1/types.hal
 @@ -0,0 +1,86 @@
@@ -2042,7 +2055,7 @@ index 0000000000000000000000000000000000000000..c522f7cb8b6b1abd6f6945016fa821cc
 +};
 diff --git a/health/storage/1.0/Android.bp b/health/storage/1.0/Android.bp
 new file mode 100644
-index 0000000000000000000000000000000000000000..70b2bdce134556318f1590fc60e4e4fdcbad3a36
+index 00000000..70b2bdce
 --- /dev/null
 +++ b/health/storage/1.0/Android.bp
 @@ -0,0 +1,24 @@
@@ -2072,7 +2085,7 @@ index 0000000000000000000000000000000000000000..70b2bdce134556318f1590fc60e4e4fd
 +}
 diff --git a/health/storage/1.0/IGarbageCollectCallback.hal b/health/storage/1.0/IGarbageCollectCallback.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..2c24ead14cd4fe946a238be9174a05c193eeb20c
+index 00000000..2c24ead1
 --- /dev/null
 +++ b/health/storage/1.0/IGarbageCollectCallback.hal
 @@ -0,0 +1,30 @@
@@ -2108,7 +2121,7 @@ index 0000000000000000000000000000000000000000..2c24ead14cd4fe946a238be9174a05c1
 +};
 diff --git a/health/storage/1.0/IStorage.hal b/health/storage/1.0/IStorage.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..980cf45de77db89dcc1f88d01dd6df5421ab4436
+index 00000000..980cf45d
 --- /dev/null
 +++ b/health/storage/1.0/IStorage.hal
 @@ -0,0 +1,49 @@
@@ -2163,7 +2176,7 @@ index 0000000000000000000000000000000000000000..980cf45de77db89dcc1f88d01dd6df54
 +};
 diff --git a/health/storage/1.0/types.hal b/health/storage/1.0/types.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..2da0871e3467ce5960e945b010881bfa2bb45a6e
+index 00000000..2da0871e
 --- /dev/null
 +++ b/health/storage/1.0/types.hal
 @@ -0,0 +1,35 @@
@@ -2204,7 +2217,7 @@ index 0000000000000000000000000000000000000000..2da0871e3467ce5960e945b010881bfa
 +};
 diff --git a/input/classifier/1.0/Android.bp b/input/classifier/1.0/Android.bp
 new file mode 100644
-index 0000000000000000000000000000000000000000..37e522d4f565ff5ac90beba9aaf67a7f8c901c58
+index 00000000..37e522d4
 --- /dev/null
 +++ b/input/classifier/1.0/Android.bp
 @@ -0,0 +1,23 @@
@@ -2233,7 +2246,7 @@ index 0000000000000000000000000000000000000000..37e522d4f565ff5ac90beba9aaf67a7f
 +}
 diff --git a/input/classifier/1.0/IInputClassifier.hal b/input/classifier/1.0/IInputClassifier.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..7397fea127b20aaf05823d42b7b76c12271a3e9a
+index 00000000..7397fea1
 --- /dev/null
 +++ b/input/classifier/1.0/IInputClassifier.hal
 @@ -0,0 +1,41 @@
@@ -2280,7 +2293,7 @@ index 0000000000000000000000000000000000000000..7397fea127b20aaf05823d42b7b76c12
 +};
 diff --git a/input/common/1.0/Android.bp b/input/common/1.0/Android.bp
 new file mode 100644
-index 0000000000000000000000000000000000000000..ed0ab9875bfc2e1c5f41deef9ea166714a7b70eb
+index 00000000..ed0ab987
 --- /dev/null
 +++ b/input/common/1.0/Android.bp
 @@ -0,0 +1,19 @@
@@ -2305,7 +2318,7 @@ index 0000000000000000000000000000000000000000..ed0ab9875bfc2e1c5f41deef9ea16671
 +}
 diff --git a/input/common/1.0/types.hal b/input/common/1.0/types.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..9ad368b3b65e64e78ebe4a1895e2478ac362fe9c
+index 00000000..9ad368b3
 --- /dev/null
 +++ b/input/common/1.0/types.hal
 @@ -0,0 +1,846 @@
@@ -3157,7 +3170,7 @@ index 0000000000000000000000000000000000000000..9ad368b3b65e64e78ebe4a1895e2478a
 +};
 diff --git a/ir/1.0/Android.bp b/ir/1.0/Android.bp
 new file mode 100644
-index 0000000000000000000000000000000000000000..7ed742903c47a3d89783632305cd8bf1ef396d69
+index 00000000..7ed74290
 --- /dev/null
 +++ b/ir/1.0/Android.bp
 @@ -0,0 +1,23 @@
@@ -3186,7 +3199,7 @@ index 0000000000000000000000000000000000000000..7ed742903c47a3d89783632305cd8bf1
 +}
 diff --git a/ir/1.0/IConsumerIr.hal b/ir/1.0/IConsumerIr.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..0881dfb988d1e78e02494fec1c971a3f71c02385
+index 00000000..0881dfb9
 --- /dev/null
 +++ b/ir/1.0/IConsumerIr.hal
 @@ -0,0 +1,40 @@
@@ -3232,7 +3245,7 @@ index 0000000000000000000000000000000000000000..0881dfb988d1e78e02494fec1c971a3f
 +};
 diff --git a/ir/1.0/types.hal b/ir/1.0/types.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..9c65de6a07a20b8560d7194c9ddfa09aadf6f0ab
+index 00000000..9c65de6a
 --- /dev/null
 +++ b/ir/1.0/types.hal
 @@ -0,0 +1,24 @@
@@ -3262,7 +3275,7 @@ index 0000000000000000000000000000000000000000..9c65de6a07a20b8560d7194c9ddfa09a
 +};
 diff --git a/memtrack/1.0/Android.bp b/memtrack/1.0/Android.bp
 new file mode 100644
-index 0000000000000000000000000000000000000000..1aeec594ec384ca590f0af8465856cec367eda5f
+index 00000000..1aeec594
 --- /dev/null
 +++ b/memtrack/1.0/Android.bp
 @@ -0,0 +1,23 @@
@@ -3291,7 +3304,7 @@ index 0000000000000000000000000000000000000000..1aeec594ec384ca590f0af8465856cec
 +}
 diff --git a/memtrack/1.0/IMemtrack.hal b/memtrack/1.0/IMemtrack.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..a329032cbb519d21389e42a4847c0348a3f22147
+index 00000000..a329032c
 --- /dev/null
 +++ b/memtrack/1.0/IMemtrack.hal
 @@ -0,0 +1,68 @@
@@ -3365,7 +3378,7 @@ index 0000000000000000000000000000000000000000..a329032cbb519d21389e42a4847c0348
 +};
 diff --git a/memtrack/1.0/types.hal b/memtrack/1.0/types.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..189312a53a5ebd4b0c1ed628bb771b477b754f03
+index 00000000..189312a5
 --- /dev/null
 +++ b/memtrack/1.0/types.hal
 @@ -0,0 +1,87 @@
@@ -3458,7 +3471,7 @@ index 0000000000000000000000000000000000000000..189312a53a5ebd4b0c1ed628bb771b47
 +};
 diff --git a/vr/1.0/Android.bp b/vr/1.0/Android.bp
 new file mode 100644
-index 0000000000000000000000000000000000000000..27d2ea82875e9919f26df1d37ac7172e1e9b6a33
+index 00000000..27d2ea82
 --- /dev/null
 +++ b/vr/1.0/Android.bp
 @@ -0,0 +1,22 @@
@@ -3486,7 +3499,7 @@ index 0000000000000000000000000000000000000000..27d2ea82875e9919f26df1d37ac7172e
 +}
 diff --git a/vr/1.0/IVr.hal b/vr/1.0/IVr.hal
 new file mode 100644
-index 0000000000000000000000000000000000000000..1f996e9e675984760ac0f3d1ae11145fb15697a5
+index 00000000..1f996e9e
 --- /dev/null
 +++ b/vr/1.0/IVr.hal
 @@ -0,0 +1,41 @@

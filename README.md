@@ -4,7 +4,7 @@ This is the Android platform side of Pure Pixel 17 for the Lenovo Tab P11 Pro
 (2nd Gen), model TB132FU.
 
 The device needs more than a device tree and kernel to run Android 17 properly.
-These patches are the framework and system changes used by the R3 build. They
+These patches are the framework and system changes used by the R4 development build. They
 are kept here separately because they belong to existing AOSP projects rather
 than `device/lenovo/tb132fu`.
 
@@ -20,7 +20,7 @@ The patch set covers:
 - the audited August 2026 platform security-level declaration
 - Android 17 support for the tablet's legacy 4.19 kernel
 - BPF, ION and VINTF compatibility
-- Bluetooth and charger fixes
+- Bluetooth, Bluetooth-audio compatibility and charger fixes
 - TB132FU Settings and SystemUI features
 - pen, keyboard-cover and AOD behavior
 - refresh-rate, cursor and display behavior
@@ -34,17 +34,17 @@ The patch set covers:
 - the small platform hooks used to synchronize the Pixel Launcher landscape
   QSB return animation and its live dock owner
 
-These are the R3 diffs, not the full bring-up history. Temporary tests and
+These are the R4 diffs, not the full bring-up history. Temporary tests and
 reverted experiments were left out. `system/apex` is listed in `PROJECTS.tsv`
 because it was part of the bring-up, but its final tree matches clean AOSP and
 there is no patch to apply.
 
-## R3 base
+## R4 base
 
 - AOSP branch: `android17-release`
 - Android build: `CP2A.260605.016`
 - Android platform security patch: `2026-08-01`
-- Release branch: `purepixel17-tb132fu-r3`
+- Release line: `purepixel17-tb132fu-r4`
 - Project revisions and expected trees: `PROJECTS.tsv`
 - Patch checksums: `PATCHES.sha256`
 
