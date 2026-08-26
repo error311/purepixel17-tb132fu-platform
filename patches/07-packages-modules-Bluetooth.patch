@@ -2,7 +2,7 @@ diff --git a/system/audio_bluetooth_hw/Android.bp b/system/audio_bluetooth_hw/An
 index 1b8e850..10c2bc6 100644
 --- a/system/audio_bluetooth_hw/Android.bp
 +++ b/system/audio_bluetooth_hw/Android.bp
-@@ -55,6 +55,44 @@ cc_library_shared {
+@@ -55,6 +55,38 @@ cc_library_shared {
      ],
  }
  
@@ -12,16 +12,12 @@ index 1b8e850..10c2bc6 100644
 +// native product can select it without modifying the retained vendor image.
 +cc_library_shared {
 +    name: "audio.bluetooth.purepixel",
-+    defaults: [
-+        "audio_bluetooth_hw_defaults",
-+        "latest_android_hardware_audio_common_ndk_shared",
-+        "latest_android_hardware_bluetooth_audio_ndk_shared",
-+    ],
++    defaults: ["audio_bluetooth_hw_defaults"],
++    cflags: ["-DTB132FU_BLUETOOTH_HIDL_ONLY"],
 +    compile_multilib: "both",
 +    relative_install_path: "hw",
 +    srcs: [
 +        "audio_bluetooth_hw.cc",
-+        "device_port_proxy.cc",
 +        "device_port_proxy_hidl.cc",
 +        "stream_apis.cc",
 +        "utils.cc",
@@ -30,8 +26,6 @@ index 1b8e850..10c2bc6 100644
 +    shared_libs: [
 +        "libaudioutils",
 +        "libbase",
-+        "libbinder_ndk",
-+        "libbluetooth_audio_session_aidl",
 +        "libcutils",
 +        "libfmq",
 +        "liblog",
@@ -47,6 +41,121 @@ index 1b8e850..10c2bc6 100644
  cc_test {
      name: "audio_bluetooth_hw_test",
      test_suites: ["general-tests"],
+diff --git a/system/audio_bluetooth_hw/device_port_proxy.h b/system/audio_bluetooth_hw/device_port_proxy.h
+index 5fc7b6f..b5af092 100644
+--- a/system/audio_bluetooth_hw/device_port_proxy.h
++++ b/system/audio_bluetooth_hw/device_port_proxy.h
+@@ -16,10 +16,12 @@
+ 
+ #pragma once
+ 
++#if !defined(TB132FU_BLUETOOTH_HIDL_ONLY)
+ #include <aidl/android/hardware/audio/common/SinkMetadata.h>
+ #include <aidl/android/hardware/audio/common/SourceMetadata.h>
+ #include <aidl/android/hardware/bluetooth/audio/BluetoothAudioStatus.h>
+ #include <aidl/android/hardware/bluetooth/audio/SessionType.h>
++#endif
+ #include <hardware/audio.h>
+ 
+ #include <condition_variable>
+@@ -124,6 +126,7 @@ public:
+   }
+ };
+ 
++#if !defined(TB132FU_BLUETOOTH_HIDL_ONLY)
+ namespace aidl {
+ 
+ using ::aidl::android::hardware::bluetooth::audio::BluetoothAudioStatus;
+@@ -225,6 +228,7 @@ public:
+ };
+ 
+ }  // namespace aidl
++#endif
+ }  // namespace audio
+ }  // namespace bluetooth
+ }  // namespace android
+diff --git a/system/audio_bluetooth_hw/stream_apis.cc b/system/audio_bluetooth_hw/stream_apis.cc
+index 3f9d13f..d225b10 100644
+--- a/system/audio_bluetooth_hw/stream_apis.cc
++++ b/system/audio_bluetooth_hw/stream_apis.cc
+@@ -27,7 +27,9 @@
+ 
+ #include <memory>
+ 
++#if !defined(TB132FU_BLUETOOTH_HIDL_ONLY)
+ #include "BluetoothAudioSession.h"
++#endif
+ #include "stream_apis.h"
+ #include "utils.h"
+ 
+@@ -688,11 +690,14 @@ static void out_update_source_metadata_v7(struct audio_stream_out* stream,
+     static_cast<::android::bluetooth::audio::hidl::BluetoothAudioPortHidl*>(
+             out->bluetooth_output_.get())
+             ->UpdateTracksMetadata(&source_metadata);
+-  } else {
++  }
++#if !defined(TB132FU_BLUETOOTH_HIDL_ONLY)
++  else {
+     static_cast<::android::bluetooth::audio::aidl::BluetoothAudioPortAidl*>(
+             out->bluetooth_output_.get())
+             ->UpdateSourceMetadata(source_metadata_v7);
+   }
++#endif
+ }
+ 
+ static int out_set_latency_mode(struct audio_stream_out* stream, audio_latency_mode_t mode) {
+@@ -734,6 +739,11 @@ int adev_open_output_stream(struct audio_hw_device* dev, audio_io_handle_t /*han
+                             const char* address __unused) {
+   *stream_out = nullptr;
+   auto out = std::make_unique<BluetoothStreamOut>();
++#if defined(TB132FU_BLUETOOTH_HIDL_ONLY)
++  out->bluetooth_output_ =
++          std::make_unique<::android::bluetooth::audio::hidl::BluetoothAudioPortHidlOut>();
++  out->is_aidl = false;
++#else
+   if (::aidl::android::hardware::bluetooth::audio::BluetoothAudioSession::IsAidlAvailable()) {
+     out->bluetooth_output_ =
+             std::make_unique<::android::bluetooth::audio::aidl::BluetoothAudioPortAidlOut>();
+@@ -743,6 +753,7 @@ int adev_open_output_stream(struct audio_hw_device* dev, audio_io_handle_t /*han
+             std::make_unique<::android::bluetooth::audio::hidl::BluetoothAudioPortHidlOut>();
+     out->is_aidl = false;
+   }
++#endif
+   if (!out->bluetooth_output_->SetUp(devices)) {
+     out->bluetooth_output_ = nullptr;
+     LOG(ERROR) << __func__ << ": cannot init HAL";
+@@ -1209,9 +1220,11 @@ static void in_update_sink_metadata_v7(struct audio_stream_in* stream,
+     LOG(WARNING) << __func__ << " is only supported in AIDL but using HIDL now!";
+     return;
+   }
++#if !defined(TB132FU_BLUETOOTH_HIDL_ONLY)
+   static_cast<::android::bluetooth::audio::aidl::BluetoothAudioPortAidl*>(
+           in->bluetooth_input_.get())
+           ->UpdateSinkMetadata(sink_metadata);
++#endif
+ }
+ 
+ int adev_open_input_stream(struct audio_hw_device* /*dev*/, audio_io_handle_t /*handle*/,
+@@ -1220,6 +1233,11 @@ int adev_open_input_stream(struct audio_hw_device* /*dev*/, audio_io_handle_t /*
+                            const char* address __unused, audio_source_t source __unused) {
+   *stream_in = nullptr;
+   auto in = std::make_unique<BluetoothStreamIn>();
++#if defined(TB132FU_BLUETOOTH_HIDL_ONLY)
++  in->bluetooth_input_ =
++          std::make_unique<::android::bluetooth::audio::hidl::BluetoothAudioPortHidlIn>();
++  in->is_aidl = false;
++#else
+   if (::aidl::android::hardware::bluetooth::audio::BluetoothAudioSession::IsAidlAvailable()) {
+     in->bluetooth_input_ =
+             std::make_unique<::android::bluetooth::audio::aidl::BluetoothAudioPortAidlIn>();
+@@ -1229,6 +1247,7 @@ int adev_open_input_stream(struct audio_hw_device* /*dev*/, audio_io_handle_t /*
+             std::make_unique<::android::bluetooth::audio::hidl::BluetoothAudioPortHidlIn>();
+     in->is_aidl = false;
+   }
++#endif
+   if (!in->bluetooth_input_->SetUp(devices)) {
+     in->bluetooth_input_ = nullptr;
+     LOG(ERROR) << __func__ << ": cannot init HAL";
 diff --git a/system/gd/hci/hci_layer.cc b/system/gd/hci/hci_layer.cc
 index fd85769..fd1c5ba 100644
 --- a/system/gd/hci/hci_layer.cc
