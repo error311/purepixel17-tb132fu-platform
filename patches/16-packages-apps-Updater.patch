@@ -1,5 +1,5 @@
 diff --git a/app/src/main/java/org/lineageos/updater/UpdaterApplication.kt b/app/src/main/java/org/lineageos/updater/UpdaterApplication.kt
-index f8fd572136a66e5b8e867543e8c0217d429b9081..9cdb94cd6281df28c1ab036820c54be126fdc3ba 100644
+index f8fd572..9cdb94c 100644
 --- a/app/src/main/java/org/lineageos/updater/UpdaterApplication.kt
 +++ b/app/src/main/java/org/lineageos/updater/UpdaterApplication.kt
 @@ -28,7 +28,7 @@ class UpdaterApplication : Application() {
@@ -12,7 +12,7 @@ index f8fd572136a66e5b8e867543e8c0217d429b9081..9cdb94cd6281df28c1ab036820c54be1
      val networkMonitor by lazy { NetworkMonitor(applicationContext, coroutineScope) }
      val notificationHelper by lazy { NotificationHelper(applicationContext) }
 diff --git a/app/src/main/java/org/lineageos/updater/controller/ABUpdateInstaller.java b/app/src/main/java/org/lineageos/updater/controller/ABUpdateInstaller.java
-index b012b2d484af664f237416626c2d0fadd1a61d9a..4708111a0cf8651854e02bad94bc84fee3b38a85 100644
+index b012b2d..4708111 100644
 --- a/app/src/main/java/org/lineageos/updater/controller/ABUpdateInstaller.java
 +++ b/app/src/main/java/org/lineageos/updater/controller/ABUpdateInstaller.java
 @@ -14,10 +14,8 @@ import android.util.Log;
@@ -91,7 +91,7 @@ index b012b2d484af664f237416626c2d0fadd1a61d9a..4708111a0cf8651854e02bad94bc84fe
  
      private void installationDone(boolean needsReboot) {
 diff --git a/app/src/main/java/org/lineageos/updater/controller/UpdateInstaller.java b/app/src/main/java/org/lineageos/updater/controller/UpdateInstaller.java
-index de873500d6dee3303621d69b6465965ca0b8ba32..b25f5ad4be1e9c69b60a1a7a329f5cf414e1758e 100644
+index de87350..b25f5ad 100644
 --- a/app/src/main/java/org/lineageos/updater/controller/UpdateInstaller.java
 +++ b/app/src/main/java/org/lineageos/updater/controller/UpdateInstaller.java
 @@ -6,6 +6,10 @@ package org.lineageos.updater.controller;
@@ -174,7 +174,7 @@ index de873500d6dee3303621d69b6465965ca0b8ba32..b25f5ad4be1e9c69b60a1a7a329f5cf4
              Log.e(TAG, "Could not install update", e);
              mUpdaterController.setUpdate(downloadId, mUpdaterController.getUpdate(downloadId)
 diff --git a/app/src/main/java/org/lineageos/updater/controller/UpdaterService.java b/app/src/main/java/org/lineageos/updater/controller/UpdaterService.java
-index 58eb81032d3c710d217c29c1d61d11a4c2817033..9eca7d9c827732f85eb130ce317e65f70eed3420 100644
+index 58eb810..72b4e1b 100644
 --- a/app/src/main/java/org/lineageos/updater/controller/UpdaterService.java
 +++ b/app/src/main/java/org/lineageos/updater/controller/UpdaterService.java
 @@ -28,6 +28,7 @@ import org.lineageos.updater.UpdatesActivity;
@@ -247,8 +247,17 @@ index 58eb81032d3c710d217c29c1d61d11a4c2817033..9eca7d9c827732f85eb130ce317e65f7
                  installer.reconnect();
                  installer.resume();
              }
+@@ -497,7 +502,7 @@ public class UpdaterService extends Service {
+     private void setNotificationTitle(Update update) {
+         String buildDate = StringUtil.getDateLocalizedUTC(this,
+                 FormatStyle.MEDIUM, update.getTimestamp());
+-        String buildInfo = getString(R.string.list_build_version_date,
++        String buildInfo = getString(R.string.pure_pixel_list_build_version_date,
+                 update.getVersion(), buildDate);
+         mNotificationStyle.setBigContentTitle(buildInfo);
+         mNotificationBuilder.setContentTitle(buildInfo);
 diff --git a/app/src/main/java/org/lineageos/updater/data/Update.kt b/app/src/main/java/org/lineageos/updater/data/Update.kt
-index 194dc020db63ed4252c8e5a47ae3d9a361bf5ac5..5cc1d489022cf7eb65eac881837c69f090fee748 100644
+index 194dc02..5cc1d48 100644
 --- a/app/src/main/java/org/lineageos/updater/data/Update.kt
 +++ b/app/src/main/java/org/lineageos/updater/data/Update.kt
 @@ -31,8 +31,10 @@ data class Update(
@@ -292,7 +301,7 @@ index 194dc020db63ed4252c8e5a47ae3d9a361bf5ac5..5cc1d489022cf7eb65eac881837c69f0
      }
  
 diff --git a/app/src/main/java/org/lineageos/updater/data/source/network/NetworkUpdate.kt b/app/src/main/java/org/lineageos/updater/data/source/network/NetworkUpdate.kt
-index 8e2ff5b38f75c22d3ab6290ea59d107842420435..ea1683612d6a10fe1a845a839802e9990118b57e 100644
+index 8e2ff5b..ea16836 100644
 --- a/app/src/main/java/org/lineageos/updater/data/source/network/NetworkUpdate.kt
 +++ b/app/src/main/java/org/lineageos/updater/data/source/network/NetworkUpdate.kt
 @@ -32,6 +32,7 @@ data class NetworkUpdate(
@@ -312,7 +321,7 @@ index 8e2ff5b38f75c22d3ab6290ea59d107842420435..ea1683612d6a10fe1a845a839802e999
          name = file.filename,
          timestamp = datetime,
 diff --git a/app/src/main/java/org/lineageos/updater/data/source/network/UpdatesNetworkDataSource.kt b/app/src/main/java/org/lineageos/updater/data/source/network/UpdatesNetworkDataSource.kt
-index 2f1407f73d8fbc8c894aa34130fa2620a5cfdc39..e071eda0061a5c4e080598447d92d58829db43d7 100644
+index 2f1407f..e071eda 100644
 --- a/app/src/main/java/org/lineageos/updater/data/source/network/UpdatesNetworkDataSource.kt
 +++ b/app/src/main/java/org/lineageos/updater/data/source/network/UpdatesNetworkDataSource.kt
 @@ -30,7 +30,9 @@ class UpdatesNetworkDataSource(private val context: Context) {
@@ -327,7 +336,7 @@ index 2f1407f73d8fbc8c894aa34130fa2620a5cfdc39..e071eda0061a5c4e080598447d92d588
  
      fun fetchUpdates(): List<NetworkUpdate> {
 diff --git a/app/src/main/java/org/lineageos/updater/deviceinfo/DeviceInfoUtils.kt b/app/src/main/java/org/lineageos/updater/deviceinfo/DeviceInfoUtils.kt
-index 126a7a4c7aebb20dad33a1bec26063ff0eee36d0..31ba5b3b3ecac8e47973945dde36e906380e504b 100644
+index 126a7a4..31ba5b3 100644
 --- a/app/src/main/java/org/lineageos/updater/deviceinfo/DeviceInfoUtils.kt
 +++ b/app/src/main/java/org/lineageos/updater/deviceinfo/DeviceInfoUtils.kt
 @@ -12,16 +12,10 @@ import com.android.settingslib.DeviceInfoUtils as SettingsLibDeviceInfoUtils
@@ -395,8 +404,39 @@ index 126a7a4c7aebb20dad33a1bec26063ff0eee36d0..31ba5b3b3ecac8e47973945dde36e906
 -        get() = SystemProperties.get(PROP_UPDATER_URI, "")
 +        get() = ""
  }
+diff --git a/app/src/main/java/org/lineageos/updater/deviceinfo/UpdaterCard.kt b/app/src/main/java/org/lineageos/updater/deviceinfo/UpdaterCard.kt
+index 2d7795f..b6619e4 100644
+--- a/app/src/main/java/org/lineageos/updater/deviceinfo/UpdaterCard.kt
++++ b/app/src/main/java/org/lineageos/updater/deviceinfo/UpdaterCard.kt
+@@ -279,7 +279,10 @@ fun UpdaterCard(
+                     horizontalArrangement = Arrangement.spacedBy(SettingsDimension.paddingLarge),
+                 ) {
+                     InfoColumn(
+-                        label = stringResource(R.string.header_build_version, buildVersion),
++                        label = stringResource(
++                            R.string.pure_pixel_header_build_version,
++                            buildVersion,
++                        ),
+                         value = stringResource(R.string.header_android_version, androidVersion),
+                     )
+                     InfoColumn(
+diff --git a/app/src/main/java/org/lineageos/updater/notifications/NotificationHelper.kt b/app/src/main/java/org/lineageos/updater/notifications/NotificationHelper.kt
+index 47489ac..2741b33 100644
+--- a/app/src/main/java/org/lineageos/updater/notifications/NotificationHelper.kt
++++ b/app/src/main/java/org/lineageos/updater/notifications/NotificationHelper.kt
+@@ -78,7 +78,9 @@ class NotificationHelper(context: Context) {
+             installTimestamp,
+         )
+         val buildInfo = appContext.getString(
+-            R.string.list_build_version_date, DeviceInfoUtils.buildVersion, buildDate,
++            R.string.pure_pixel_list_build_version_date,
++            DeviceInfoUtils.buildVersion,
++            buildDate,
+         )
+         val intent = PendingIntent.getActivity(
+             appContext, 0,
 diff --git a/app/src/main/java/org/lineageos/updater/preferences/PreferencesScreen.kt b/app/src/main/java/org/lineageos/updater/preferences/PreferencesScreen.kt
-index 4f3a2a4fab62288d93019f66287ffd5ef3380adc..168f92e5c39cd11621ae239f37b4b072f6b64e65 100644
+index 4f3a2a4..168f92e 100644
 --- a/app/src/main/java/org/lineageos/updater/preferences/PreferencesScreen.kt
 +++ b/app/src/main/java/org/lineageos/updater/preferences/PreferencesScreen.kt
 @@ -28,7 +28,6 @@ import org.lineageos.updater.UpdaterApplication
@@ -470,7 +510,7 @@ index 4f3a2a4fab62288d93019f66287ffd5ef3380adc..168f92e5c39cd11621ae239f37b4b072
              SwitchPreference(object : SwitchPreferenceModel {
                  override val title = stringResource(R.string.menu_update_recovery)
 diff --git a/app/src/main/java/org/lineageos/updater/updates/UpdateList.kt b/app/src/main/java/org/lineageos/updater/updates/UpdateList.kt
-index f98439363ae7a44b5ad4978aaf4f3f28213441ba..2af5a116c01001fd3492333e07635cba1358964b 100644
+index f984393..2af5a11 100644
 --- a/app/src/main/java/org/lineageos/updater/updates/UpdateList.kt
 +++ b/app/src/main/java/org/lineageos/updater/updates/UpdateList.kt
 @@ -8,6 +8,7 @@ package org.lineageos.updater.updates
@@ -496,7 +536,7 @@ index f98439363ae7a44b5ad4978aaf4f3f28213441ba..2af5a116c01001fd3492333e07635cba
      val collapsedVisibleItems =
          (listOf(items.first()) + activeItems).distinctBy { it.downloadId }
 diff --git a/app/src/main/java/org/lineageos/updater/updates/action/UpdateAction.kt b/app/src/main/java/org/lineageos/updater/updates/action/UpdateAction.kt
-index 90bc450a8f15c17e36e3b392ba1f2a8b1551b593..b9e1d30dbdf5edcd63b14ef58306eb47f9e39fc7 100644
+index 90bc450..b9e1d30 100644
 --- a/app/src/main/java/org/lineageos/updater/updates/action/UpdateAction.kt
 +++ b/app/src/main/java/org/lineageos/updater/updates/action/UpdateAction.kt
 @@ -23,6 +23,7 @@ enum class UpdateActionType(@param:StringRes val titleRes: Int) {
@@ -508,7 +548,7 @@ index 90bc450a8f15c17e36e3b392ba1f2a8b1551b593..b9e1d30dbdf5edcd63b14ef58306eb47
      DELETE(R.string.menu_delete_update),
      EXPORT(R.string.menu_export_update),
 diff --git a/app/src/main/java/org/lineageos/updater/updates/action/UpdateActionHandler.kt b/app/src/main/java/org/lineageos/updater/updates/action/UpdateActionHandler.kt
-index 8c0ab12dc77a3a51db9ca3bf1a4b4cd2c696a6ac..4b15e0d6e7cce9864cc2450d3114a8f7fc12aac9 100644
+index 8c0ab12..5851d5a 100644
 --- a/app/src/main/java/org/lineageos/updater/updates/action/UpdateActionHandler.kt
 +++ b/app/src/main/java/org/lineageos/updater/updates/action/UpdateActionHandler.kt
 @@ -165,6 +165,19 @@ class UpdateActionHandler(
@@ -542,8 +582,17 @@ index 8c0ab12dc77a3a51db9ca3bf1a4b4cd2c696a6ac..4b15e0d6e7cce9864cc2450d3114a8f7
              UpdateActionType.VIEW_DOWNLOADS -> activity.startActivity(
                  Intent(
                      Intent.ACTION_VIEW,
+@@ -250,7 +267,7 @@ class UpdateActionHandler(
+             update.timestamp,
+         )
+         val buildInfoText = activity.getString(
+-            R.string.list_build_version_date,
++            R.string.pure_pixel_list_build_version_date,
+             update.version,
+             buildDate,
+         )
 diff --git a/app/src/main/java/org/lineageos/updater/updates/state/UpdateItemStateMapper.kt b/app/src/main/java/org/lineageos/updater/updates/state/UpdateItemStateMapper.kt
-index 1b97368a411c14eda3ea7ab897e33f110ae9a7c2..80797e85cd3741a0d52f508f77086ec405d9faf3 100644
+index 1b97368..a25703d 100644
 --- a/app/src/main/java/org/lineageos/updater/updates/state/UpdateItemStateMapper.kt
 +++ b/app/src/main/java/org/lineageos/updater/updates/state/UpdateItemStateMapper.kt
 @@ -151,7 +151,9 @@ class UpdateItemStateMapper(
@@ -557,6 +606,15 @@ index 1b97368a411c14eda3ea7ab897e33f110ae9a7c2..80797e85cd3741a0d52f508f77086ec4
              overflow = buildList {
                  if (state.canExport) {
                      add(action(UpdateActionType.EXPORT, enabled = !state.isBusy))
+@@ -170,7 +172,7 @@ class UpdateItemStateMapper(
+             isLocal = state.isFullyDownloaded,
+             buildDate = StringUtil.formatBuildDate(context, update.timestamp),
+             buildVersion = context.getString(
+-                R.string.list_build_version,
++                R.string.pure_pixel_list_build_version,
+                 update.version,
+             ),
+             status = state.titleRes?.let { context.getString(it) } ?: "",
 @@ -191,6 +193,7 @@ class UpdateItemStateMapper(
              installNote = when (state.installBlockedReason) {
                  InstallUtils.BlockedReason.DOWNGRADE -> R.string.list_downgrade_blocked
@@ -566,7 +624,7 @@ index 1b97368a411c14eda3ea7ab897e33f110ae9a7c2..80797e85cd3741a0d52f508f77086ec4
              },
              progress = progress,
 diff --git a/app/src/main/java/org/lineageos/updater/updates/state/UpdateOperationState.kt b/app/src/main/java/org/lineageos/updater/updates/state/UpdateOperationState.kt
-index 0d8d3eb3dc69dd98afaefee6f93929ff9c22b895..c31ecb31df652e3d1d1c0d5ca10b9d2e3431f082 100644
+index 0d8d3eb..c31ecb3 100644
 --- a/app/src/main/java/org/lineageos/updater/updates/state/UpdateOperationState.kt
 +++ b/app/src/main/java/org/lineageos/updater/updates/state/UpdateOperationState.kt
 @@ -64,7 +64,8 @@ data class UpdateOperationState(
@@ -580,7 +638,7 @@ index 0d8d3eb3dc69dd98afaefee6f93929ff9c22b895..c31ecb31df652e3d1d1c0d5ca10b9d2e
      @get:StringRes
      val titleRes: Int?
 diff --git a/app/src/main/java/org/lineageos/updater/util/BatteryMonitor.kt b/app/src/main/java/org/lineageos/updater/util/BatteryMonitor.kt
-index ab9096fc91af9b8cb48fbc6dbb5f86d2ba7781dc..e667e699135ab921504062608c12c17ca160a340 100644
+index ab9096f..e667e69 100644
 --- a/app/src/main/java/org/lineageos/updater/util/BatteryMonitor.kt
 +++ b/app/src/main/java/org/lineageos/updater/util/BatteryMonitor.kt
 @@ -10,20 +10,16 @@ import android.content.Context
@@ -648,7 +706,7 @@ index ab9096fc91af9b8cb48fbc6dbb5f86d2ba7781dc..e667e699135ab921504062608c12c17c
                  trySend(state)
              }
 diff --git a/app/src/main/java/org/lineageos/updater/util/InstallUtils.kt b/app/src/main/java/org/lineageos/updater/util/InstallUtils.kt
-index 4a0da3cb077a54e492d3aededb09e0e19f67716d..fe7c1cfe851fe36de32432e52c9ecf2db5feb007 100644
+index 4a0da3c..fe7c1cf 100644
 --- a/app/src/main/java/org/lineageos/updater/util/InstallUtils.kt
 +++ b/app/src/main/java/org/lineageos/updater/util/InstallUtils.kt
 @@ -18,11 +18,13 @@ object InstallUtils {
@@ -667,7 +725,7 @@ index 4a0da3cb077a54e492d3aededb09e0e19f67716d..fe7c1cfe851fe36de32432e52c9ecf2d
                  (update.timestamp < DeviceInfoUtils.buildDateTimestamp ||
                          update.osSdkLevel < DeviceInfoUtils.sdkLevel) -> BlockedReason.DOWNGRADE
 diff --git a/app/src/main/res/values/config.xml b/app/src/main/res/values/config.xml
-index b4f696a568376d4e57a9e608d5169eb6fb24919d..54b671c0c761a6ca8b5d1f60affe23f9bbd4efda 100644
+index b4f696a..54b671c 100644
 --- a/app/src/main/res/values/config.xml
 +++ b/app/src/main/res/values/config.xml
 @@ -5,17 +5,17 @@
@@ -693,7 +751,7 @@ index b4f696a568376d4e57a9e608d5169eb6fb24919d..54b671c0c761a6ca8b5d1f60affe23f9
 +    <string name="menu_downloads_url" translatable="false">https://sourceforge.net/projects/purepixel17-tb132fu/files/</string>
  </resources>
 diff --git a/app/src/main/res/values/strings.xml b/app/src/main/res/values/strings.xml
-index df56e15283e927c3147e62f2d6d450d3249e7e70..9fe116c3696986b0b4934e9dfd681229cf2de98e 100644
+index df56e15..4e53b25 100644
 --- a/app/src/main/res/values/strings.xml
 +++ b/app/src/main/res/values/strings.xml
 @@ -4,7 +4,7 @@
@@ -737,7 +795,7 @@ index df56e15283e927c3147e62f2d6d450d3249e7e70..9fe116c3696986b0b4934e9dfd681229
      <string name="menu_view_downloads">View on <xliff:g id="brand_name" example="LineageOS">%1$s</xliff:g> Downloads</string>
      <string name="menu_metered_network_warning">Metered network warning</string>
      <string name="menu_metered_network_warning_summary">Warn before downloading over mobile data</string>
-@@ -112,27 +112,28 @@
+@@ -112,27 +112,33 @@
      <string name="header_android_version">Android <xliff:g id="version" example="16">%1$s</xliff:g></string>
  
      <!-- Banner -->
@@ -745,6 +803,11 @@ index df56e15283e927c3147e62f2d6d450d3249e7e70..9fe116c3696986b0b4934e9dfd681229
 -    <string name="header_build_version" translatable="false">LineageOS <xliff:g id="version" example="23.2">%1$s</xliff:g></string>
 +    <string name="brand_name" translatable="false">Pure Pixel</string>
 +    <string name="header_build_version" translatable="false">Pure Pixel <xliff:g id="version" example="17">%1$s</xliff:g></string>
++    <!-- Unique, nonlocalized identities prevent inherited LineageOS translations from
++         replacing the Pure Pixel name in regional English and other locales. -->
++    <string name="pure_pixel_header_build_version" translatable="false">Pure Pixel <xliff:g id="version" example="17">%1$s</xliff:g></string>
++    <string name="pure_pixel_list_build_version" translatable="false">Pure Pixel <xliff:g id="version" example="17">%1$s</xliff:g></string>
++    <string name="pure_pixel_list_build_version_date" translatable="false">Pure Pixel <xliff:g id="version" example="17">%1$s</xliff:g> - <xliff:g id="date" example="August 21, 2026">%2$s</xliff:g></string>
      <string name="build_date">Build date</string>
      <string name="security_update">Security update</string>
      <string name="show_changelog">Recent changes</string>
@@ -772,7 +835,7 @@ index df56e15283e927c3147e62f2d6d450d3249e7e70..9fe116c3696986b0b4934e9dfd681229
      <string name="list_downgrade_blocked">This build is older than the installed system and cannot be applied.</string>
      <string name="list_download_progress_newer"><xliff:g id="filesize_without_unit" example="12.2">%1$s</xliff:g> of <xliff:g id="filesize_without_unit" example="310 MB">%2$s</xliff:g></string>
      <string name="list_download_progress_eta_newer"><xliff:g id="filesize_without_unit" example="12.2">%1$s</xliff:g> of <xliff:g id="filesize_without_unit" example="310 MB">%2$s</xliff:g> (<xliff:g id="eta" example="3 minutes left">%3$s</xliff:g>)</string>
-@@ -174,7 +175,7 @@
+@@ -174,7 +180,7 @@
  
      <string name="blocked_update_dialog_title">Update blocked</string>
      <string name="blocked_update_dialog_message">This update cannot be installed using the updater app.  Please read <xliff:g id="info_url">%1$s</xliff:g> for more information.</string>

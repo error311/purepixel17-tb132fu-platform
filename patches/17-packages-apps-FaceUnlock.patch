@@ -8007,7 +8007,7 @@ index b07ec7d..573b11f 100644
      <string name="security_settings_face_settings_use_face_category">Sebenzisa Ukuvula ngobuso kwe-</string>
  </resources>
 diff --git a/overlay/res/values/strings.xml b/overlay/res/values/strings.xml
-index 8094ceb..39f5fd3 100644
+index 8094ceb..b533018 100644
 --- a/overlay/res/values/strings.xml
 +++ b/overlay/res/values/strings.xml
 @@ -23,7 +23,7 @@
@@ -8098,7 +8098,7 @@ index 8094ceb..39f5fd3 100644
  
  Note: You can’t use your face to unlock this device. For more information, contact your organization’s admin."</string>
      <string name="security_settings_face_enroll_introduction_more">More</string>
-@@ -99,53 +97,53 @@ Note: You can’t use your face to unlock this device. For more information, con
+@@ -99,53 +97,54 @@ Note: You can’t use your face to unlock this device. For more information, con
      <string name="security_settings_face_enroll_repeat_title">Center your face in the circle</string>
      <string name="security_settings_face_enroll_should_re_enroll_subtitle">Set up Face Unlock again</string>
      <string name="security_settings_face_enroll_should_re_enroll_title">Improve Face Unlock performance</string>
@@ -8120,6 +8120,7 @@ index 8094ceb..39f5fd3 100644
      <string name="security_settings_face_preference_title">Face Unlock</string>
      <string name="security_settings_face_profile_preference_title">Face Unlock for work</string>
 -    <string name="security_settings_face_settings_context_subtitle">Use Face Unlock to unlock your phone</string>
++    <string name="biometric_settings_use_biometric_unlock_phone">Unlock your tablet</string>
 +    <string name="security_settings_face_settings_context_subtitle">Use Face Unlock to unlock this tablet</string>
      <string name="security_settings_face_settings_enroll">Set up Face Unlock</string>
 -    <string name="security_settings_face_settings_footer">"Use your face to unlock your phone or for authentication in apps, like when you sign in or approve a purchase.
