@@ -16,6 +16,10 @@ index 1b8e850..10c2bc6 100644
 +    cflags: ["-DTB132FU_BLUETOOTH_HIDL_ONLY"],
 +    compile_multilib: "both",
 +    relative_install_path: "hw",
++    // audioserver loads this module through Lenovo's Android 11 vendor
++    // namespace, whose libc++.so predates symbols used by Android 17 code.
++    // Keep the C++ runtime self-contained while retaining the vendor HIDL ABI.
++    stl: "libc++_static",
 +    srcs: [
 +        "audio_bluetooth_hw.cc",
 +        "device_port_proxy_hidl.cc",
