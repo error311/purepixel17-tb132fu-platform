@@ -79,7 +79,7 @@ while IFS=$'\t' read -r project upstream base_revision topic_head qualified_tree
     temporary_index_dir=
 
     [[ "$observed_tree" == "$qualified_tree" ]] || {
-        echo "$project applied tree does not match its qualified R3 tree." >&2
+        echo "$project applied tree does not match its qualified R4 tree." >&2
         echo "Expected: $qualified_tree" >&2
         echo "Observed: $observed_tree" >&2
         exit 1

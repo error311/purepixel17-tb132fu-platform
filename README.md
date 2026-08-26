@@ -4,14 +4,14 @@ This is the Android platform side of Pure Pixel 17 for the Lenovo Tab P11 Pro
 (2nd Gen), model TB132FU.
 
 The device needs more than a device tree and kernel to run Android 17 properly.
-These patches are the framework and system changes used by the R4 development build. They
+These patches are the framework and system changes used by Pure Pixel 17 R4. They
 are kept here separately because they belong to existing AOSP projects rather
 than `device/lenovo/tb132fu`.
 
 The other two source repositories are:
 
 - [TB132FU device tree](https://github.com/error311/android_device_lenovo_tb132fu)
-- [TB132FU kernel #14](https://github.com/error311/tb132fu-kernel/tree/tb132fu-purepixel17-r2-k14)
+- [TB132FU Kernel #17](https://github.com/error311/tb132fu-kernel/tree/tb132fu-purepixel17-r4-k17)
 
 ## What is included
 
@@ -74,7 +74,7 @@ cd /path/to/purepixel17-tb132fu-platform
 ```
 
 The script intentionally refuses to patch a dirty or mismatched source tree.
-It checks the patch hashes and confirms that the result matches the exact R3
+It checks the patch hashes and confirms that the result matches the exact R4
 Git tree. It does not commit anything, erase source, start a build or touch a
 connected device.
 
