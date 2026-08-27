@@ -4,14 +4,14 @@ This is the Android platform side of Pure Pixel 17 for the Lenovo Tab P11 Pro
 (2nd Gen), model TB132FU.
 
 The device needs more than a device tree and kernel to run Android 17 properly.
-These patches are the framework and system changes used by the R4 development build. They
+These patches are the framework and system changes retained through the R5 development build. They
 are kept here separately because they belong to existing AOSP projects rather
 than `device/lenovo/tb132fu`.
 
 The other two source repositories are:
 
 - [TB132FU device tree](https://github.com/error311/android_device_lenovo_tb132fu)
-- [TB132FU kernel #14](https://github.com/error311/tb132fu-kernel/tree/tb132fu-purepixel17-r2-k14)
+- [TB132FU kernel](https://github.com/error311/tb132fu-kernel)
 
 ## What is included
 
@@ -34,17 +34,17 @@ The patch set covers:
 - the small platform hooks used to synchronize the Pixel Launcher landscape
   QSB return animation and its live dock owner
 
-These are the R4 diffs, not the full bring-up history. Temporary tests and
+These are the accepted release-line diffs, not the full bring-up history. Temporary tests and
 reverted experiments were left out. `system/apex` is listed in `PROJECTS.tsv`
 because it was part of the bring-up, but its final tree matches clean AOSP and
 there is no patch to apply.
 
-## R4 base
+## R5 base
 
 - AOSP branch: `android17-release`
 - Android build: `CP2A.260605.016`
 - Android platform security patch: `2026-08-01`
-- Release line: `purepixel17-tb132fu-r4`
+- Release line: `purepixel17-tb132fu-r5`
 - Project revisions and expected trees: `PROJECTS.tsv`
 - Patch checksums: `PATCHES.sha256`
 

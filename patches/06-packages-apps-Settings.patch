@@ -2464,6 +2464,97 @@ index 0000000..5015f00
 +        assertThat(Tb132fuSettingsFragment.getAodMode(false, false)).isEqualTo("off");
 +    }
 +}
++diff --git a/res/values/strings.xml b/res/values/strings.xml
+index 10dcace..91dfa2a 100644
+--- a/res/values/strings.xml
++++ b/res/values/strings.xml
+@@ -15625,8 +15625,8 @@
+     <!-- Access HID end -->
+ 
+     <!-- Lenovo TB132FU device controls. -->
+-    <string name="tb132fu_settings_title">TB132FU settings</string>
+-    <string name="tb132fu_settings_summary">Display, wake, pen, and keyboard controls</string>
++    <string name="tb132fu_settings_title">Pure Pixel settings</string>
++    <string name="tb132fu_settings_summary">TB132FU display, wake, pen, and keyboard controls</string>
+     <string name="tb132fu_display_and_wake">Display and wake</string>
+     <string name="tb132fu_aod_title">Always-on display</string>
+     <string name="tb132fu_aod_mode_off">Off</string>
+@@ -15645,9 +15645,10 @@
+     <string name="tb132fu_pen_not_connected">Not connected</string>
+     <string name="tb132fu_pen_settings_unavailable_summary">Connect or install the Lenovo pen service to configure the pen</string>
+     <string name="tb132fu_pen_settings_unavailable">Pen settings are not available</string>
+-    <string name="tb132fu_pogo_title">Pogo keyboard</string>
+-    <string name="tb132fu_pogo_attached">Connected</string>
+-    <string name="tb132fu_pogo_detached">Not connected</string>
++    <string name="tb132fu_pogo_title">Pogo keyboard and touchpad</string>
++    <string name="tb132fu_pogo_attached">Connected · Tap for settings</string>
++    <string name="tb132fu_pogo_detached">Not connected · Tap for settings</string>
++    <string name="tb132fu_pogo_settings_unavailable">Keyboard and touchpad settings are not available</string>
+     <string name="tb132fu_device_category">Device</string>
+     <string name="tb132fu_build_info_title">Software</string>
+     <string name="tb132fu_build_info_summary">Android %1$s · Linux %2$s</string>
+diff --git a/res/xml/tb132fu_settings.xml b/res/xml/tb132fu_settings.xml
+index 18500af..3ce5bdc 100644
+--- a/res/xml/tb132fu_settings.xml
++++ b/res/xml/tb132fu_settings.xml
+@@ -29,8 +29,7 @@
+             android:title="@string/tb132fu_pen_settings_title" />
+         <Preference
+             android:key="tb132fu_pogo_status"
+-            android:title="@string/tb132fu_pogo_title"
+-            android:selectable="false" />
++            android:title="@string/tb132fu_pogo_title" />
+     </PreferenceCategory>
+ 
+     <PreferenceCategory android:title="@string/tb132fu_device_category">
+diff --git a/src/com/android/settings/tb132fu/Tb132fuSettingsFragment.java b/src/com/android/settings/tb132fu/Tb132fuSettingsFragment.java
+index f2bf85c..5fff51c 100644
+--- a/src/com/android/settings/tb132fu/Tb132fuSettingsFragment.java
++++ b/src/com/android/settings/tb132fu/Tb132fuSettingsFragment.java
+@@ -100,6 +100,7 @@ public final class Tb132fuSettingsFragment extends DashboardFragment
+         mAodSchedule.setOnPreferenceChangeListener(this);
+         mRefreshRate.setOnPreferenceChangeListener(this);
+         mPenSettings.setOnPreferenceClickListener(this);
++        mPogoStatus.setOnPreferenceClickListener(this);
+ 
+         final boolean aodAvailable = new AmbientDisplayConfiguration(getContext())
+                 .alwaysOnAvailableForUser(UserHandle.myUserId());
+@@ -195,16 +196,26 @@ public final class Tb132fuSettingsFragment extends DashboardFragment
+ 
+     @Override
+     public boolean onPreferenceClick(Preference preference) {
+-        if (!KEY_PEN_SETTINGS.equals(preference.getKey())) {
+-            return false;
+-        }
+-        try {
+-            startActivity(new Intent().setComponent(LENOVO_PEN_SETTINGS));
+-        } catch (ActivityNotFoundException exception) {
+-            Toast.makeText(getContext(), R.string.tb132fu_pen_settings_unavailable,
+-                    Toast.LENGTH_LONG).show();
++        switch (preference.getKey()) {
++            case KEY_PEN_SETTINGS:
++                try {
++                    startActivity(new Intent().setComponent(LENOVO_PEN_SETTINGS));
++                } catch (ActivityNotFoundException exception) {
++                    Toast.makeText(getContext(), R.string.tb132fu_pen_settings_unavailable,
++                            Toast.LENGTH_LONG).show();
++                }
++                return true;
++            case KEY_POGO_STATUS:
++                try {
++                    startActivity(new Intent(Settings.ACTION_HARD_KEYBOARD_SETTINGS));
++                } catch (ActivityNotFoundException exception) {
++                    Toast.makeText(getContext(), R.string.tb132fu_pogo_settings_unavailable,
++                            Toast.LENGTH_LONG).show();
++                }
++                return true;
++            default:
++                return false;
+         }
+-        return true;
+     }
+ 
+     private boolean setDt2w(boolean enabled) {
 diff --git a/tests/unit/src/com/android/settings/display/ColorModePreferenceFragmentTest.java b/tests/unit/src/com/android/settings/display/ColorModePreferenceFragmentTest.java
 index b3a2770..e2d75b5 100644
 --- a/tests/unit/src/com/android/settings/display/ColorModePreferenceFragmentTest.java
