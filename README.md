@@ -4,9 +4,9 @@ This is the Android platform side of Pure Pixel 17 for the Lenovo Tab P11 Pro
 (2nd Gen), model TB132FU.
 
 The device needs more than a device tree and kernel to run Android 17 properly.
-These patches are the framework and system changes retained through the R5 development build. They
-are kept here separately because they belong to existing AOSP projects rather
-than `device/lenovo/tb132fu`.
+These patches are the framework and system changes retained in the public R5
+release. They are kept here separately because they belong to existing AOSP
+projects rather than `device/lenovo/tb132fu`.
 
 The other two source repositories are:
 
@@ -26,10 +26,17 @@ The patch set covers:
 - refresh-rate, cursor and display behavior
 - battery-health details and MediaTek picture-quality color modes
 - AOD mode handling and landscape unlock-side placement
+- immediate double-tap wake across AOD entry and the post-wake false-touch fix
+- rotation-safe camera privacy-indicator placement when immersive UI hides the
+  status bar
 - rotation-aware power-button light-reveal placement for the tablet chassis
 - optional camera-based convenience face unlock
-- themed face-enrollment feedback and tablet wording
+- themed face-enrollment feedback, tablet wording, and removal of stale
+  fingerprint wording from credential/PIN setup
 - pen attach, detach and battery-status polish
+- the factory-reset-qualified Pixel Setup language/region selector and its
+  no-action-bar crash guard
+- Pure Pixel updater branding in locale-visible labels
 - cacheless, signed A-only recovery updates on the active slot
 - the small platform hooks used to synchronize the Pixel Launcher landscape
   QSB return animation and its live dock owner
@@ -74,8 +81,8 @@ cd /path/to/purepixel17-tb132fu-platform
 ```
 
 The script intentionally refuses to patch a dirty or mismatched source tree.
-It checks the patch hashes and confirms that the result matches the exact R3
-Git tree. It does not commit anything, erase source, start a build or touch a
+It checks the patch hashes and confirms that the result matches the exact R5
+Git trees. It does not commit anything, erase source, start a build or touch a
 connected device.
 
 Afterward, add the device tree at `device/lenovo/tb132fu` and supply the vendor
