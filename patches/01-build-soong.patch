@@ -1,3 +1,16 @@
+diff --git a/java/builder.go b/java/builder.go
+index d421adede696574861fa30961c3a566ea4f8f215..45e902569d424b46fdd9b6b08792e6c4380104d7 100644
+--- a/java/builder.go
++++ b/java/builder.go
+@@ -361,6 +361,8 @@ var (
+ 				// before running jarjar.
+ 				"rm -f ${out} && " +
+ 				"${config.JavaCmd} ${config.JavaVmFlags}" +
++				// Keep JarJar's transient archive on Soong's out-scoped temporary volume.
++				" -Djava.io.tmpdir=$$TMPDIR" +
+ 				// b/146418363 Enable Android specific jarjar transformer to drop compat annotations
+ 				// for newly repackaged classes. Dropping @UnsupportedAppUsage on repackaged classes
+ 				// avoids adding new hiddenapis after jarjar'ing.
 diff --git a/ui/build/soong.go b/ui/build/soong.go
 index 4521b4abef559c568e568dc6c113d385339d14fd..f67aaadf089d7d86ecd0b396be9616d1b289685c 100644
 --- a/ui/build/soong.go
