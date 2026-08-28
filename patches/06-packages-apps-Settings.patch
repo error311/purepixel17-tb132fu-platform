@@ -2576,3 +2576,16 @@ index b3a2770..e2d75b5 100644
      }
  
      @Test
+diff --git a/src/com/android/settings/biometrics/face/FaceSettings.java b/src/com/android/settings/biometrics/face/FaceSettings.java
+index 12f54f1..2cc13b0 100644
+--- a/src/com/android/settings/biometrics/face/FaceSettings.java
++++ b/src/com/android/settings/biometrics/face/FaceSettings.java
+@@ -368,7 +368,7 @@ public class FaceSettings extends DashboardFragment {
+                         true);
+                 intent.putExtra(Intent.EXTRA_USER_ID, mUserId);
+                 intent.putExtra(ChooseLockSettingsHelper.EXTRA_KEY_REQUEST_GK_PW_HANDLE, true);
+-                intent.putExtra(ChooseLockSettingsHelper.EXTRA_KEY_FOR_FINGERPRINT, true);
++                intent.putExtra(ChooseLockSettingsHelper.EXTRA_KEY_FOR_FACE, true);
+                 startActivityForResult(intent, CHOOSE_LOCK_GENERIC_REQUEST);
+             }
+         } else {
