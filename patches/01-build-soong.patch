@@ -11,6 +11,20 @@ index d421adede696574861fa30961c3a566ea4f8f215..45e902569d424b46fdd9b6b08792e6c4
  				// b/146418363 Enable Android specific jarjar transformer to drop compat annotations
  				// for newly repackaged classes. Dropping @UnsupportedAppUsage on repackaged classes
  				// avoids adding new hiddenapis after jarjar'ing.
+diff --git a/ui/build/ninja.go b/ui/build/ninja.go
+index d608b9a83de6b36e73b439eb0c5448a40ddd58e8..4827acdc96621df5e7937e843dbc327a48353553 100644
+--- a/ui/build/ninja.go
++++ b/ui/build/ninja.go
+@@ -351,6 +351,9 @@ func runNinja(ctx Context, config Config, ninjaArgs []string) {
+ 		}, config.BuildBrokenNinjaUsesEnvVars()...)...)
+ 	}
+ 
++	// Java does not honor TMPDIR on its own. Pin every Ninja Java action to
++	// Soong's out-scoped temporary directory instead of the host /tmp.
++	cmd.Environment.Set("JAVA_TOOL_OPTIONS", "-Djava.io.tmpdir="+absPath(ctx, config.TempDir()))
+ 	cmd.Environment.Set("DIST_DIR", config.DistDir())
+ 	cmd.Environment.Set("SHELL", "/bin/bash")
+ 	switch config.ninjaCommand {
 diff --git a/ui/build/soong.go b/ui/build/soong.go
 index 4521b4abef559c568e568dc6c113d385339d14fd..f67aaadf089d7d86ecd0b396be9616d1b289685c 100644
 --- a/ui/build/soong.go
