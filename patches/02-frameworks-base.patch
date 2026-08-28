@@ -752,11 +752,146 @@ index 770297905edabb8160bdece2a42a75564f143bfa..d0b2c81befc2798479908be534160b8c
              });
          }
  
+diff --git a/packages/SystemUI/multivalentTests/src/com/android/systemui/classifier/BrightLineFalsingManagerTest.java b/packages/SystemUI/multivalentTests/src/com/android/systemui/classifier/BrightLineFalsingManagerTest.java
+index 9decff6a7a6f9ef8fbfc150266d74b65774240ab..6f3f554388e4f62edb71f4abbf09bae7b09210cf 100644
+--- a/packages/SystemUI/multivalentTests/src/com/android/systemui/classifier/BrightLineFalsingManagerTest.java
++++ b/packages/SystemUI/multivalentTests/src/com/android/systemui/classifier/BrightLineFalsingManagerTest.java
+@@ -247,6 +247,14 @@ public class BrightLineFalsingManagerTest extends SysuiTestCase {
+         assertThat(mBrightLineFalsingManager.isFalseTouch(Classifier.GENERIC)).isFalse();
+     }
+ 
++    @Test
++    public void testSkipDuringPostAodWakeGracePeriod() {
++        when(mHistoryTracker.isWithinPostAodWakeGracePeriod()).thenReturn(true);
++
++        assertThat(mBrightLineFalsingManager.isFalseTouch(Classifier.GENERIC)).isFalse();
++        verify(mClassifierA, never()).classifyGesture(anyInt(), anyDouble(), anyDouble());
++    }
++
+     @Test
+     public void testAddAndRemoveFalsingBeliefListener() {
+         verify(mHistoryTracker, never()).addBeliefListener(any());
+diff --git a/packages/SystemUI/multivalentTests/src/com/android/systemui/classifier/FalsingCollectorImplTest.kt b/packages/SystemUI/multivalentTests/src/com/android/systemui/classifier/FalsingCollectorImplTest.kt
+index 1986828c72da308bca73e856b4ff19e3e09fb125..2cd88943052cbc8a8b92c92696c61785ec9d8122 100644
+--- a/packages/SystemUI/multivalentTests/src/com/android/systemui/classifier/FalsingCollectorImplTest.kt
++++ b/packages/SystemUI/multivalentTests/src/com/android/systemui/classifier/FalsingCollectorImplTest.kt
+@@ -15,6 +15,7 @@
+  */
+ package com.android.systemui.classifier
+ 
++import android.content.res.Resources
+ import android.platform.test.flag.junit.FlagsParameterization
+ import android.testing.TestableLooper.RunWithLooper
+ import android.view.KeyEvent
+@@ -45,6 +46,7 @@ import com.android.systemui.kosmos.Kosmos
+ import com.android.systemui.kosmos.runTest
+ import com.android.systemui.kosmos.useUnconfinedTestDispatcher
+ import com.android.systemui.plugins.statusbar.StatusBarStateController
++import com.android.systemui.res.R
+ import com.android.systemui.scene.data.repository.sceneContainerRepository
+ import com.android.systemui.scene.shared.model.Scenes
+ import com.android.systemui.shade.domain.interactor.ShadeInteractor
+@@ -91,6 +93,7 @@ class FalsingCollectorImplTest(flags: FlagsParameterization) : SysuiTestCase() {
+     private var falsingDataProvider = mock<FalsingDataProvider>()
+     private var keyguardUpdateMonitor = mock<KeyguardUpdateMonitor>()
+     private var historyTracker = mock<HistoryTracker>()
++    private var resources = mock<Resources>()
+     private var proximitySensor = mock<ProximitySensor>()
+     private var statusBarStateController =
+         mock<SysuiStatusBarStateController> { on { state } doReturn StatusBarState.KEYGUARD }
+@@ -115,6 +118,7 @@ class FalsingCollectorImplTest(flags: FlagsParameterization) : SysuiTestCase() {
+                 falsingManager,
+                 keyguardUpdateMonitor,
+                 historyTracker,
++                resources,
+                 proximitySensor,
+                 statusBarStateController,
+                 keyguardStateController,
+@@ -212,6 +216,28 @@ class FalsingCollectorImplTest(flags: FlagsParameterization) : SysuiTestCase() {
+             verify(proximitySensor).register(any<ThresholdSensor.Listener>())
+         }
+ 
++    @Test
++    fun aodExit_startsConfiguredGraceOnlyOnce() =
++        kosmos.runTest {
++            whenever(resources.getInteger(R.integer.falsing_post_aod_wake_grace_period))
++                .thenReturn(1000)
++
++            underTest.setShowingAod(true)
++            underTest.setShowingAod(false)
++            underTest.setShowingAod(false)
++
++            verify(historyTracker, times(1)).startPostAodWakeGracePeriod(1000)
++        }
++
++    @Test
++    fun aodExit_zeroGracePreservesDefaultBehavior() =
++        kosmos.runTest {
++            underTest.setShowingAod(true)
++            underTest.setShowingAod(false)
++
++            verify(historyTracker, never()).startPostAodWakeGracePeriod(any())
++        }
++
+     @Test
+     fun testUnregisterSensor_StateTransition() =
+         kosmos.runTest {
+diff --git a/packages/SystemUI/multivalentTests/src/com/android/systemui/classifier/HistoryTrackerTest.java b/packages/SystemUI/multivalentTests/src/com/android/systemui/classifier/HistoryTrackerTest.java
+index 8e19a1f84d7252df967a556b962f266da09f7361..999a778629b368bc989b9ff3e77986ecde084da4 100644
+--- a/packages/SystemUI/multivalentTests/src/com/android/systemui/classifier/HistoryTrackerTest.java
++++ b/packages/SystemUI/multivalentTests/src/com/android/systemui/classifier/HistoryTrackerTest.java
+@@ -118,6 +118,29 @@ public class HistoryTrackerTest extends SysuiTestCase {
+         assertThat(mHistoryTracker.falseConfidence()).isEqualTo(0);
+     }
+ 
++    @Test
++    public void postAodWakeGrace_clearsHistoryIgnoresResidualInputAndExpires() {
++        addResult(true, 1);
++
++        mHistoryTracker.startPostAodWakeGracePeriod(1000);
++
++        assertThat(mHistoryTracker.falseBelief()).isEqualTo(0.5);
++        assertThat(mHistoryTracker.falseConfidence()).isEqualTo(0);
++        assertThat(mHistoryTracker.isWithinPostAodWakeGracePeriod()).isTrue();
++
++        // A residual wake event completed during the grace period and must not repopulate history.
++        addResult(true, 1);
++        assertThat(mHistoryTracker.falseBelief()).isEqualTo(0.5);
++
++        mSystemClock.advanceTime(999);
++        assertThat(mHistoryTracker.isWithinPostAodWakeGracePeriod()).isTrue();
++        mSystemClock.advanceTime(1);
++        assertThat(mHistoryTracker.isWithinPostAodWakeGracePeriod()).isFalse();
++
++        addResult(true, 1);
++        assertThat(mHistoryTracker.falseBelief()).isWithin(0.001).of(1);
++    }
++
+     private void addResult(boolean falsed, double confidence) {
+         mHistoryTracker.addResults(Collections.singletonList(
+                 falsed
 diff --git a/packages/SystemUI/multivalentTests/src/com/android/systemui/doze/DozeScreenStateTest.java b/packages/SystemUI/multivalentTests/src/com/android/systemui/doze/DozeScreenStateTest.java
-index 61386f720032ca63dc0f3ffa5c33de207417def9..42b14ca87e8033b7d7095696b02a797969a7a303 100644
+index 61386f720032ca63dc0f3ffa5c33de207417def9..cf8c2795d9ea87be601411ff05fc66d9b7169cf7 100644
 --- a/packages/SystemUI/multivalentTests/src/com/android/systemui/doze/DozeScreenStateTest.java
 +++ b/packages/SystemUI/multivalentTests/src/com/android/systemui/doze/DozeScreenStateTest.java
-@@ -65,6 +65,8 @@ import org.mockito.ArgumentCaptor;
+@@ -34,13 +34,15 @@ import static org.junit.Assert.assertEquals;
+ import static org.junit.Assert.assertFalse;
+ import static org.junit.Assert.assertThat;
+ import static org.junit.Assert.assertTrue;
+-import static org.mockito.ArgumentMatchers.eq;
+ import static org.mockito.ArgumentMatchers.any;
++import static org.mockito.ArgumentMatchers.eq;
+ import static org.mockito.Mockito.anyInt;
+ import static org.mockito.Mockito.doAnswer;
++import static org.mockito.Mockito.mock;
+ import static org.mockito.Mockito.verify;
+ import static org.mockito.Mockito.when;
+ 
++import android.os.Handler;
+ import android.os.Looper;
+ import android.view.Display;
+ 
+@@ -65,6 +67,8 @@ import org.mockito.ArgumentCaptor;
  import org.mockito.Mock;
  import org.mockito.MockitoAnnotations;
  
@@ -765,7 +900,15 @@ index 61386f720032ca63dc0f3ffa5c33de207417def9..42b14ca87e8033b7d7095696b02a7979
  import javax.inject.Provider;
  
  @RunWith(AndroidJUnit4.class)
-@@ -127,6 +129,72 @@ public class DozeScreenStateTest extends SysuiTestCase {
+@@ -99,6 +103,7 @@ public class DozeScreenStateTest extends SysuiTestCase {
+         MockitoAnnotations.initMocks(this);
+         when(mDozeParameters.getDisplayNeedsBlanking()).thenReturn(true);
+         when(mDozeParameters.getAlwaysOn()).thenReturn(true);
++        when(mDozeParameters.getEnterDisplayStateDelay()).thenReturn(4000);
+         when(mUdfpsControllerProvider.get()).thenReturn(mUdfpsController);
+         when(mAuthController.isUdfpsEnrolled(anyInt())).thenReturn(true);
+         when(mUdfpsController.isFingerDown()).thenReturn(false);
+@@ -127,6 +132,72 @@ public class DozeScreenStateTest extends SysuiTestCase {
          assertEquals(Display.STATE_DOZE_SUSPEND, mServiceFake.screenState);
      }
  
@@ -838,6 +981,28 @@ index 61386f720032ca63dc0f3ffa5c33de207417def9..42b14ca87e8033b7d7095696b02a7979
      @Test
      public void testScreen_onInPulse() {
          mScreen.transitionTo(UNINITIALIZED, INITIALIZED);
+@@ -214,6 +285,21 @@ public class DozeScreenStateTest extends SysuiTestCase {
+         assertThat(mWakeLock.isHeld(), is(false));
+     }
+ 
++    @Test
++    public void enterDoze_usesConfiguredDisplayStateDelay() {
++        Handler handler = mock(Handler.class);
++        when(mDozeParameters.shouldDelayDisplayDozeTransition()).thenReturn(true);
++        when(mDozeParameters.getEnterDisplayStateDelay()).thenReturn(750);
++        DozeScreenState screen = new DozeScreenState(
++                mServiceFake, handler, mDozeHost, mDozeParameters, mWakeLock,
++                mAuthController, mUdfpsControllerProvider, mDozeLog, mDozeScreenBrightness,
++                mDozeInteractor, mSelectedUserInteractor);
++
++        screen.transitionTo(INITIALIZED, DOZE_AOD);
++
++        verify(handler).postDelayed(any(Runnable.class), eq(750L));
++    }
++
+     @Test
+     public void test_releasesWakeLock_abortingLowPowerDelayed() {
+         // Transition to low power mode will be delayed to let
 diff --git a/packages/SystemUI/multivalentTests/src/com/android/systemui/doze/DozeUiTest.java b/packages/SystemUI/multivalentTests/src/com/android/systemui/doze/DozeUiTest.java
 index e7ca2bdda06959e5a98be9140d422f655158be69..e1ba5917405d5ef6589c53f5e832feda460bff88 100644
 --- a/packages/SystemUI/multivalentTests/src/com/android/systemui/doze/DozeUiTest.java
@@ -1000,6 +1165,32 @@ index 099f676b52df8d841579f66fcf37e98f24df36bd..8c92717aa48898cce0e4943c861e136c
 +    }
 +
  }
+diff --git a/packages/SystemUI/multivalentTests/src/com/android/systemui/statusbar/phone/DozeParametersTest.java b/packages/SystemUI/multivalentTests/src/com/android/systemui/statusbar/phone/DozeParametersTest.java
+index c964c3843a878686e3809afedd4ffb73438664b9..2ec60a36736bbd7576b06c0092758816d30aedf7 100644
+--- a/packages/SystemUI/multivalentTests/src/com/android/systemui/statusbar/phone/DozeParametersTest.java
++++ b/packages/SystemUI/multivalentTests/src/com/android/systemui/statusbar/phone/DozeParametersTest.java
+@@ -50,6 +50,7 @@ import com.android.systemui.keyguard.domain.interactor.KeyguardTransitionInterac
+ import com.android.systemui.keyguard.shared.model.KeyguardState;
+ import com.android.systemui.minmode.MinModeManager;
+ import com.android.systemui.plugins.statusbar.StatusBarStateController;
++import com.android.systemui.res.R;
+ import com.android.systemui.settings.UserTracker;
+ import com.android.systemui.statusbar.policy.BatteryController;
+ import com.android.systemui.statusbar.policy.BatteryController.BatteryStateChangeCallback;
+@@ -188,6 +189,13 @@ public class DozeParametersTest extends SysuiTestCase {
+                 DozeScreenState.ENTER_DOZE_HIDE_WALLPAPER_DELAY);
+     }
+ 
++    @Test
++    public void getEnterDisplayStateDelay_readsResource() {
++        when(mResources.getInteger(R.integer.doze_enter_display_state_delay)).thenReturn(750);
++
++        assertThat(mDozeParameters.getEnterDisplayStateDelay()).isEqualTo(750);
++    }
++
+     @Test
+     public void testGetAlwaysOn() {
+         when(mAmbientDisplayConfiguration.alwaysOnEnabled(anyInt())).thenReturn(true);
 diff --git a/packages/SystemUI/res/drawable/ic_tb132fu_precision_pen.xml b/packages/SystemUI/res/drawable/ic_tb132fu_precision_pen.xml
 new file mode 100644
 index 0000000000000000000000000000000000000000..8f436e2fd5ab39dc69da30cd830ef163c04ca784
@@ -1017,10 +1208,10 @@ index 0000000000000000000000000000000000000000..8f436e2fd5ab39dc69da30cd830ef163
 +        android:pathData="M18.37,2.29c-0.39,-0.39 -1.03,-0.39 -1.42,0L5.13,14.11 3,21l6.89,-2.13L21.71,7.05c0.39,-0.39 0.39,-1.03 0,-1.42L18.37,2.29zM8.84,17.1l-2.72,0.84 0.84,-2.72 8.93,-8.93 1.88,1.88 -8.93,8.93zM19.18,6.76L17.3,4.88l0.36,-0.36 1.88,1.88 -0.36,0.36z" />
 +</vector>
 diff --git a/packages/SystemUI/res/values/config.xml b/packages/SystemUI/res/values/config.xml
-index f1d7ed35d86c4a704f0bdf72348e7c390af08bd4..0d9d160dc5924282070ccbe82dd9c5b1a9e11a99 100644
+index f1d7ed35d86c4a704f0bdf72348e7c390af08bd4..dcff5d3092b2eacfb59d6c6c9f72f978a23f8d39 100644
 --- a/packages/SystemUI/res/values/config.xml
 +++ b/packages/SystemUI/res/values/config.xml
-@@ -192,6 +192,12 @@
+@@ -192,6 +192,21 @@
      <!-- Doze: does this device support STATE_DOZE_SUSPEND?  -->
      <bool name="doze_suspend_display_state_supported">false</bool>
  
@@ -1030,10 +1221,19 @@ index f1d7ed35d86c4a704f0bdf72348e7c390af08bd4..0d9d160dc5924282070ccbe82dd9c5b1
 +         new frame. The normal value is false. -->
 +    <bool name="doze_suspend_display_state_needs_time_tick_refresh">false</bool>
 +
++    <!-- Delay before entering the low-power doze display state, in milliseconds. This leaves
++         enough time for the screen-off animation to reach its final frame. -->
++    <integer name="doze_enter_display_state_delay">4000</integer>
++
++    <!-- Ignore and do not retain falsing classifications for this many milliseconds after
++         leaving AOD. The default keeps the existing behavior; devices whose touch controller
++         reports a wake key before replaying the wake gesture may opt in. -->
++    <integer name="falsing_post_aod_wake_grace_period">0</integer>
++
      <!-- Doze: should the significant motion sensor be used as a pulse signal? -->
      <bool name="doze_pulse_on_significant_motion">false</bool>
  
-@@ -560,6 +566,10 @@
+@@ -560,6 +575,10 @@
      <!-- ThemePicker package name for overlaying icons. -->
      <string name="themepicker_overlayable_package" translatable="false">com.android.wallpaper</string>
  
@@ -1062,6 +1262,126 @@ index d025a3ff3a9dae1410f592b5579b5e4df2ae246c..609eb75f54c171a2e8cffed17ed7151b
      <!-- Label for a lock screen shortcut to start the camera in video mode. [CHAR_LIMIT=16] -->
      <string name="video_camera">Video camera</string>
  
+diff --git a/packages/SystemUI/src/com/android/systemui/classifier/BrightLineFalsingManager.java b/packages/SystemUI/src/com/android/systemui/classifier/BrightLineFalsingManager.java
+index 770b18d52385665c365e9736a491f23fd7059028..502f62ed8c81285a771c8c1ff4cee95a2af71da5 100644
+--- a/packages/SystemUI/src/com/android/systemui/classifier/BrightLineFalsingManager.java
++++ b/packages/SystemUI/src/com/android/systemui/classifier/BrightLineFalsingManager.java
+@@ -389,6 +389,7 @@ public class BrightLineFalsingManager implements FalsingManager {
+         return interactionType == BACK_GESTURE
+                 || !mKeyguardStateController.isShowing()
+                 || mTestHarness
++                || mHistoryTracker.isWithinPostAodWakeGracePeriod()
+                 || mDataProvider.isJustUnlockedWithFace()
+                 || mDataProvider.isUnlockedAndDismissing()
+                 || mDataProvider.isDocked()
+diff --git a/packages/SystemUI/src/com/android/systemui/classifier/FalsingCollectorImpl.java b/packages/SystemUI/src/com/android/systemui/classifier/FalsingCollectorImpl.java
+index d408a242e5775dd345989b58eb047750a6cb61c2..f91744a8cb15740e59ee7cdc085721eda2e3ec2f 100644
+--- a/packages/SystemUI/src/com/android/systemui/classifier/FalsingCollectorImpl.java
++++ b/packages/SystemUI/src/com/android/systemui/classifier/FalsingCollectorImpl.java
+@@ -18,6 +18,7 @@ package com.android.systemui.classifier;
+ 
+ import static com.android.systemui.dock.DockManager.DockEventListener;
+ 
++import android.content.res.Resources;
+ import android.hardware.SensorManager;
+ import android.hardware.biometrics.BiometricSourceType;
+ import android.util.Log;
+@@ -42,6 +43,7 @@ import com.android.systemui.dock.DockManager;
+ import com.android.systemui.keyguard.domain.interactor.KeyguardOcclusionInteractor;
+ import com.android.systemui.plugins.FalsingManager;
+ import com.android.systemui.plugins.statusbar.StatusBarStateController;
++import com.android.systemui.res.R;
+ import com.android.systemui.scene.shared.flag.SceneContainerFlag;
+ import com.android.systemui.shade.domain.interactor.ShadeInteractor;
+ import com.android.systemui.statusbar.StatusBarState;
+@@ -86,6 +88,7 @@ class FalsingCollectorImpl implements FalsingCollector {
+     private final FalsingManager mFalsingManager;
+     private final KeyguardUpdateMonitor mKeyguardUpdateMonitor;
+     private final HistoryTracker mHistoryTracker;
++    private final Resources mResources;
+     private final ProximitySensor mProximitySensor;
+     private final StatusBarStateController mStatusBarStateController;
+     private final KeyguardStateController mKeyguardStateController;
+@@ -173,6 +176,7 @@ class FalsingCollectorImpl implements FalsingCollector {
+             FalsingManager falsingManager,
+             KeyguardUpdateMonitor keyguardUpdateMonitor,
+             HistoryTracker historyTracker,
++            @Main Resources resources,
+             ProximitySensor proximitySensor,
+             StatusBarStateController statusBarStateController,
+             KeyguardStateController keyguardStateController,
+@@ -192,6 +196,7 @@ class FalsingCollectorImpl implements FalsingCollector {
+         mFalsingManager = falsingManager;
+         mKeyguardUpdateMonitor = keyguardUpdateMonitor;
+         mHistoryTracker = historyTracker;
++        mResources = resources;
+         mProximitySensor = proximitySensor;
+         mStatusBarStateController = statusBarStateController;
+         mKeyguardStateController = keyguardStateController;
+@@ -284,7 +289,15 @@ class FalsingCollectorImpl implements FalsingCollector {
+     @Override
+     public void setShowingAod(boolean showingAod) {
+         logDebug("REAL: setShowingAod(" + showingAod + ")");
++        final boolean wasShowingAod = mShowingAod;
+         mShowingAod = showingAod;
++        if (wasShowingAod && !showingAod) {
++            final int gracePeriodMs = mResources.getInteger(
++                    R.integer.falsing_post_aod_wake_grace_period);
++            if (gracePeriodMs > 0) {
++                mHistoryTracker.startPostAodWakeGracePeriod(gracePeriodMs);
++            }
++        }
+         updateSessionActive();
+     }
+ 
+diff --git a/packages/SystemUI/src/com/android/systemui/classifier/HistoryTracker.java b/packages/SystemUI/src/com/android/systemui/classifier/HistoryTracker.java
+index 9cb26f35fa667efc0cdd431213f22f7367742f39..05a65738aafd172412d59a19a6a9fb360347c863 100644
+--- a/packages/SystemUI/src/com/android/systemui/classifier/HistoryTracker.java
++++ b/packages/SystemUI/src/com/android/systemui/classifier/HistoryTracker.java
+@@ -54,12 +54,32 @@ public class HistoryTracker {
+ 
+     DelayQueue<CombinedResult> mResults = new DelayQueue<>();
+     private final Set<BeliefListener> mBeliefListeners = Sets.newConcurrentHashSet();
++    private long mPostAodWakeGracePeriodEndMs;
+ 
+     @Inject
+     HistoryTracker(SystemClock systemClock) {
+         mSystemClock = systemClock;
+     }
+ 
++    /**
++     * Starts a short neutral interval after leaving AOD.
++     *
++     * Some touch controllers wake Android with a key event and then replay the final wake tap as
++     * ordinary touchscreen input. Discard the old history and avoid letting that residual input
++     * immediately poison the new keyguard session.
++     */
++    void startPostAodWakeGracePeriod(long durationMs) {
++        if (durationMs <= 0) {
++            return;
++        }
++        mResults.clear();
++        mPostAodWakeGracePeriodEndMs = mSystemClock.uptimeMillis() + durationMs;
++    }
++
++    boolean isWithinPostAodWakeGracePeriod() {
++        return mSystemClock.uptimeMillis() < mPostAodWakeGracePeriodEndMs;
++    }
++
+     /**
+      * Returns how much the HistoryClassifier thinks the past events indicate pocket dialing.
+      *
+@@ -133,6 +153,10 @@ public class HistoryTracker {
+     }
+ 
+     void addResults(Collection<FalsingClassifier.Result> results, long uptimeMillis) {
++        if (uptimeMillis < mPostAodWakeGracePeriodEndMs) {
++            return;
++        }
++
+         double finalScore = 0;
+         for (FalsingClassifier.Result result : results) {
+             // A confidence of 1 adds either 0 for non-falsed or 1 for falsed.
 diff --git a/packages/SystemUI/src/com/android/systemui/dagger/SystemUICoreStartableModule.kt b/packages/SystemUI/src/com/android/systemui/dagger/SystemUICoreStartableModule.kt
 index 6463529a8901357b23e55c163dc87c62bef272ca..2f7bc441c41a4fc6842a2f1f3795545f6044b8ea 100644
 --- a/packages/SystemUI/src/com/android/systemui/dagger/SystemUICoreStartableModule.kt
@@ -1132,7 +1452,7 @@ index 742cc51e99c9838ea486d135fcfd42514c61d7e0..1b26b524694887eabbdf09a1aa402a88
 +    }
  }
 diff --git a/packages/SystemUI/src/com/android/systemui/doze/DozeScreenState.java b/packages/SystemUI/src/com/android/systemui/doze/DozeScreenState.java
-index 6ee0dec04c2cdec4d37e2f2e64476b9c6a685b88..cadb95d8bed84f7231b9f3bcafc1b583434debd8 100644
+index 6ee0dec04c2cdec4d37e2f2e64476b9c6a685b88..2405e8891f86ba70f420c3226f8e7ced1fbefcee 100644
 --- a/packages/SystemUI/src/com/android/systemui/doze/DozeScreenState.java
 +++ b/packages/SystemUI/src/com/android/systemui/doze/DozeScreenState.java
 @@ -30,6 +30,7 @@ import android.util.Log;
@@ -1143,7 +1463,19 @@ index 6ee0dec04c2cdec4d37e2f2e64476b9c6a685b88..cadb95d8bed84f7231b9f3bcafc1b583
  
  import com.android.systemui.biometrics.AuthController;
  import com.android.systemui.biometrics.UdfpsController;
-@@ -73,6 +74,11 @@ public class DozeScreenState implements DozeMachine.Part {
+@@ -55,11 +56,6 @@ public class DozeScreenState implements DozeMachine.Part {
+     private static final boolean DEBUG = DozeService.DEBUG;
+     private static final String TAG = "DozeScreenState";
+ 
+-    /**
+-     * Delay entering low power mode when animating to make sure that we'll have
+-     * time to move all elements into their final positions while still at 60 fps.
+-     */
+-    private static final int ENTER_DOZE_DELAY = 4000;
+     /**
+      * Hide wallpaper earlier when entering low power mode. The gap between
+      * hiding the wallpaper and changing the display mode is necessary to hide
+@@ -73,6 +69,11 @@ public class DozeScreenState implements DozeMachine.Part {
       */
      public static final int UDFPS_DISPLAY_STATE_DELAY = 1200;
  
@@ -1155,7 +1487,7 @@ index 6ee0dec04c2cdec4d37e2f2e64476b9c6a685b88..cadb95d8bed84f7231b9f3bcafc1b583
      private final DozeMachine.Service mDozeService;
      private final Handler mHandler;
      private final Runnable mApplyPendingScreenState = this::applyPendingScreenState;
-@@ -88,6 +94,12 @@ public class DozeScreenState implements DozeMachine.Part {
+@@ -88,6 +89,12 @@ public class DozeScreenState implements DozeMachine.Part {
  
      private int mPendingScreenState = Display.STATE_UNKNOWN;
      private SettableWakeLock mWakeLock;
@@ -1168,7 +1500,7 @@ index 6ee0dec04c2cdec4d37e2f2e64476b9c6a685b88..cadb95d8bed84f7231b9f3bcafc1b583
  
      @Inject
      public DozeScreenState(
-@@ -130,11 +142,14 @@ public class DozeScreenState implements DozeMachine.Part {
+@@ -130,11 +137,14 @@ public class DozeScreenState implements DozeMachine.Part {
  
      @Override
      public void destroy() {
@@ -1183,7 +1515,34 @@ index 6ee0dec04c2cdec4d37e2f2e64476b9c6a685b88..cadb95d8bed84f7231b9f3bcafc1b583
          int screenState = newState.screenState(mParameters);
          mDozeHost.cancelGentleSleep();
  
-@@ -235,6 +250,7 @@ public class DozeScreenState implements DozeMachine.Part {
+@@ -170,6 +180,8 @@ public class DozeScreenState implements DozeMachine.Part {
+             // Delay screen state transitions even longer while animations are running.
+             boolean shouldDelayTransitionEnteringDoze = newState == DOZE_AOD
+                     && mParameters.shouldDelayDisplayDozeTransition() && !turningOn;
++            final int enterDozeDelay = shouldDelayTransitionEnteringDoze
++                    ? mParameters.getEnterDisplayStateDelay() : 0;
+ 
+             // Delay screen state transition longer if UDFPS is actively authenticating a fp
+             boolean shouldDelayTransitionForUDFPS = newState == DOZE_AOD
+@@ -178,7 +190,7 @@ public class DozeScreenState implements DozeMachine.Part {
+             if (!messagePending) {
+                 if (DEBUG) {
+                     Log.d(TAG, "Display state changed to " + screenState + " delayed by "
+-                            + (shouldDelayTransitionEnteringDoze ? ENTER_DOZE_DELAY : 1));
++                            + (shouldDelayTransitionEnteringDoze ? enterDozeDelay : 1));
+                 }
+ 
+                 if (shouldDelayTransitionEnteringDoze) {
+@@ -194,7 +206,7 @@ public class DozeScreenState implements DozeMachine.Part {
+                         mPendingScreenState = screenState;
+                     }
+ 
+-                    mHandler.postDelayed(mApplyPendingScreenState, ENTER_DOZE_DELAY);
++                    mHandler.postDelayed(mApplyPendingScreenState, enterDozeDelay);
+                 } else if (shouldDelayTransitionForUDFPS) {
+                     mDozeLog.traceDisplayStateDelayedByUdfps(mPendingScreenState);
+                     mHandler.postDelayed(mApplyPendingScreenState, UDFPS_DISPLAY_STATE_DELAY);
+@@ -235,6 +247,7 @@ public class DozeScreenState implements DozeMachine.Part {
              if (DEBUG) Log.d(TAG, "setDozeScreenState(" + screenState + ")");
              mDozeService.setDozeScreenState(screenState);
              mDozeInteractor.setDozeScreenState(screenState);
@@ -1191,7 +1550,7 @@ index 6ee0dec04c2cdec4d37e2f2e64476b9c6a685b88..cadb95d8bed84f7231b9f3bcafc1b583
              if (screenState == Display.STATE_DOZE) {
                  // If we're entering doze, update the doze screen brightness. We might have been
                  // clamping it to the dim brightness during the screen off animation, and we should
-@@ -246,6 +262,63 @@ public class DozeScreenState implements DozeMachine.Part {
+@@ -246,6 +259,63 @@ public class DozeScreenState implements DozeMachine.Part {
          }
      }
  
@@ -2439,10 +2798,10 @@ index b7876bfc2eb8c98cb222c3dd6881747126d470ef..ec4d17643bfef6da05e59ee93b2177b8
  
      private void logStateToEventlog() {
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java
-index 43a93d2d1fbf7ec2789cbeb1a34fdcd0aa1e0ccc..f35005bd6c48cc5a5ccc23a3b136041f4e579c19 100644
+index 43a93d2d1fbf7ec2789cbeb1a34fdcd0aa1e0ccc..c0a72c5cd7e25683ed592ed370f6af8db4ada55b 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java
-@@ -209,6 +209,15 @@ public class DozeParameters implements
+@@ -209,6 +209,20 @@ public class DozeParameters implements
          return mResources.getBoolean(R.bool.doze_suspend_display_state_supported);
      }
  
@@ -2453,6 +2812,11 @@ index 43a93d2d1fbf7ec2789cbeb1a34fdcd0aa1e0ccc..f35005bd6c48cc5a5ccc23a3b136041f
 +    public boolean getDozeSuspendDisplayStateNeedsTimeTickRefresh() {
 +        return mResources.getBoolean(
 +                R.bool.doze_suspend_display_state_needs_time_tick_refresh);
++    }
++
++    /** Delay before applying the low-power display state while entering AOD. */
++    public int getEnterDisplayStateDelay() {
++        return mResources.getInteger(R.integer.doze_enter_display_state_delay);
 +    }
 +
      public int getPulseDuration() {
