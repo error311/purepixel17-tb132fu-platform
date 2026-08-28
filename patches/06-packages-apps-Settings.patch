@@ -1333,6 +1333,46 @@ index 0000000..2d549c3
 +        return true;
 +    }
 +}
+diff --git a/src/com/android/settings/localepicker/LocalePickerWithRegionActivity.java b/src/com/android/settings/localepicker/LocalePickerWithRegionActivity.java
+index ab50178..c39a627 100644
+--- a/src/com/android/settings/localepicker/LocalePickerWithRegionActivity.java
++++ b/src/com/android/settings/localepicker/LocalePickerWithRegionActivity.java
+@@ -26,6 +26,7 @@ import static com.android.settings.regionalpreferences.RegionDialogFragment.ARG_
+ import static com.android.settings.regionalpreferences.RegionDialogFragment.ARG_TARGET_LOCALE;
+ import static com.android.settings.regionalpreferences.RegionDialogFragment.ARG_REPLACED_TARGET_LOCALE;
+ 
++import android.app.ActionBar;
+ import android.app.FragmentTransaction;
+ import android.content.Intent;
+ import android.os.Bundle;
+@@ -72,7 +73,7 @@ public class LocalePickerWithRegionActivity extends SettingsBaseActivity
+     @Override
+     public void onCreate(Bundle savedInstanceState) {
+         super.onCreate(savedInstanceState);
+-        getActionBar().setDisplayHomeAsUpEnabled(true);
++        configureActionBar();
+         setTitle(R.string.add_a_language);
+         LocaleList explicitLocales = null;
+         if (isDeviceDemoMode()) {
+@@ -102,6 +103,13 @@ public class LocalePickerWithRegionActivity extends SettingsBaseActivity
+         }
+     }
+ 
++    void configureActionBar() {
++        final ActionBar actionBar = getActionBar();
++        if (actionBar != null) {
++            actionBar.setDisplayHomeAsUpEnabled(true);
++        }
++    }
++
+     @Override
+     public void onDestroy() {
+         super.onDestroy();
+@@ -234,4 +242,3 @@ public class LocalePickerWithRegionActivity extends SettingsBaseActivity
+         return true;
+     }
+ }
+-
 diff --git a/src/com/android/settings/localepicker/SetupWizardLocalePickerActivity.java b/src/com/android/settings/localepicker/SetupWizardLocalePickerActivity.java
 new file mode 100644
 index 0000000..dbaf8cc
@@ -2369,10 +2409,10 @@ index 0000000..32570da
 +}
 diff --git a/tests/robotests/src/com/android/settings/localepicker/SetupWizardLocalePickerActivityTest.java b/tests/robotests/src/com/android/settings/localepicker/SetupWizardLocalePickerActivityTest.java
 new file mode 100644
-index 0000000..a1ac633
+index 0000000..54ea8dc
 --- /dev/null
 +++ b/tests/robotests/src/com/android/settings/localepicker/SetupWizardLocalePickerActivityTest.java
-@@ -0,0 +1,56 @@
+@@ -0,0 +1,66 @@
 +/*
 + * Copyright (C) 2026 The Android Open Source Project
 + *
@@ -2395,6 +2435,7 @@ index 0000000..a1ac633
 +import static org.junit.Assert.assertNotNull;
 +import static org.mockito.ArgumentMatchers.any;
 +import static org.mockito.Mockito.doNothing;
++import static org.mockito.Mockito.doReturn;
 +import static org.mockito.Mockito.spy;
 +
 +import android.app.Activity;
@@ -2412,6 +2453,15 @@ index 0000000..a1ac633
 +
 +@RunWith(RobolectricTestRunner.class)
 +public class SetupWizardLocalePickerActivityTest {
++
++    @Test
++    public void configureActionBar_withoutActionBar_doesNotCrash() {
++        final SetupWizardLocalePickerActivity activity = spy(
++                Robolectric.buildActivity(SetupWizardLocalePickerActivity.class).get());
++        doReturn(null).when(activity).getActionBar();
++
++        activity.configureActionBar();
++    }
 +
 +    @Test
 +    public void onLocaleSelected_returnsSelectedLocale() {
