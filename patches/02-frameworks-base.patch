@@ -1165,6 +1165,33 @@ index 099f676b52df8d841579f66fcf37e98f24df36bd..8c92717aa48898cce0e4943c861e136c
 +    }
 +
  }
+diff --git a/packages/SystemUI/multivalentTests/src/com/android/systemui/statusbar/events/PrivacyDotViewControllerTest.kt b/packages/SystemUI/multivalentTests/src/com/android/systemui/statusbar/events/PrivacyDotViewControllerTest.kt
+index 39a3d20b469add3f6252727b4e56b44477814be8..8f0f96f20470b3162e2035a848775745111a4f66 100644
+--- a/packages/SystemUI/multivalentTests/src/com/android/systemui/statusbar/events/PrivacyDotViewControllerTest.kt
++++ b/packages/SystemUI/multivalentTests/src/com/android/systemui/statusbar/events/PrivacyDotViewControllerTest.kt
+@@ -272,8 +272,22 @@ class PrivacyDotViewControllerTest(flags: FlagsParameterization) : SysuiTestCase
+ 
+         val controller = createAndInitializeController()
+ 
++        assertThat(controller.currentViewState.rotation).isEqualTo(ROTATION_LANDSCAPE)
+         assertThat(controller.currentViewState.corner).isEqualTo(BottomRight)
+         assertThat(controller.currentViewState.designatedCorner).isEqualTo(bottomRightView)
++        assertThat(bottomRightView.frameLayoutParams.gravity).isEqualTo(TopRight.gravity)
++    }
++
++    @Test
++    fun initializeLandscape_thenRotatePortrait_activeCornerIsTopRight() {
++        setRotation(ROTATION_LANDSCAPE)
++        val controller = createAndInitializeController()
++
++        controller.setNewRotation(ROTATION_NONE)
++
++        assertThat(controller.currentViewState.rotation).isEqualTo(ROTATION_NONE)
++        assertThat(controller.currentViewState.corner).isEqualTo(TopRight)
++        assertThat(controller.currentViewState.designatedCorner).isEqualTo(topRightView)
+     }
+ 
+     @Test
 diff --git a/packages/SystemUI/multivalentTests/src/com/android/systemui/statusbar/phone/DozeParametersTest.java b/packages/SystemUI/multivalentTests/src/com/android/systemui/statusbar/phone/DozeParametersTest.java
 index c964c3843a878686e3809afedd4ffb73438664b9..2ec60a36736bbd7576b06c0092758816d30aedf7 100644
 --- a/packages/SystemUI/multivalentTests/src/com/android/systemui/statusbar/phone/DozeParametersTest.java
@@ -2778,6 +2805,18 @@ index 1e015b0ed8c99925baf59b7f766a6a99a3442c12..5b7c6ae21be0a31ae3116e74f355b87c
              }
          }
      }
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/events/PrivacyDotViewController.kt b/packages/SystemUI/src/com/android/systemui/statusbar/events/PrivacyDotViewController.kt
+index 14eb86bf878895836683ca83ea34738ad24de8b3..20a7aa052451284a580a49e9bcfd26f538177177 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/events/PrivacyDotViewController.kt
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/events/PrivacyDotViewController.kt
+@@ -489,6 +489,7 @@ constructor(
+                     viewInitialized = true,
+                     designatedCorner = designatedCornerView,
+                     corner = corner,
++                    rotation = currentRotation,
+                     seascapeRect = left,
+                     portraitRect = top,
+                     landscapeRect = right,
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/CentralSurfacesImpl.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/CentralSurfacesImpl.java
 index b7876bfc2eb8c98cb222c3dd6881747126d470ef..ec4d17643bfef6da05e59ee93b2177b8d7e64982 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/CentralSurfacesImpl.java
