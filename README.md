@@ -40,6 +40,9 @@ The patch set covers:
 - optional TB132FU-only convenience Face enrollment after creating a screen
   lock in Pixel Setup, with the temporary Gatekeeper handle kept inside
   Settings
+- a userdebug-only Pixel Tablet Play Store catalog identity for qualifying
+  official dynamic wallpaper delivery; production user builds are hard-disabled
+  from that path
 - native Settings placement for refresh rate, double-tap wake, AOD daytime
   scheduling, Precision Pen, and pogo keyboard/touchpad controls
 - the standard Android Multiple users page below System's Interaction section

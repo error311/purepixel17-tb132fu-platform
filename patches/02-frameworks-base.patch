@@ -299,10 +299,10 @@ index 115ae5ca6ee5078d8ae55ba9b67f85553e48cae4..fc0f5b86f57a54cfcb56f2a5f05894e4
          }
 diff --git a/core/java/com/android/internal/util/PixelTabletAppProps.java b/core/java/com/android/internal/util/PixelTabletAppProps.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..e2535d82f90614bd47005db5db27195cb652d3d7
+index 0000000000000000000000000000000000000000..6c0c6bbf8dbdad576f77cf994654f79f66a2a464
 --- /dev/null
 +++ b/core/java/com/android/internal/util/PixelTabletAppProps.java
-@@ -0,0 +1,195 @@
+@@ -0,0 +1,203 @@
 +/*
 + * Copyright (C) 2026 The Pure Pixel Project
 + *
@@ -357,6 +357,7 @@ index 0000000000000000000000000000000000000000..e2535d82f90614bd47005db5db27195c
 +            PACKAGE_GOOGLE_SEARCH + ":search";
 +    private static final String PACKAGE_GMS = "com.google.android.gms";
 +    private static final String PROCESS_GMS_UNSTABLE = PACKAGE_GMS + ".unstable";
++    private static final String PACKAGE_PLAY_STORE = "com.android.vending";
 +
 +    private static final Map<String, String> PIXEL_TABLET_UI_PROPS = Map.of(
 +            "PRODUCT", "tangorpro",
@@ -384,7 +385,7 @@ index 0000000000000000000000000000000000000000..e2535d82f90614bd47005db5db27195c
 +            return;
 +        }
 +
-+        if (!shouldApply(packageName, processName, Process.isIsolated())) {
++        if (!shouldApply(packageName, processName, Process.isIsolated(), Build.IS_DEBUGGABLE)) {
 +            return;
 +        }
 +
@@ -412,11 +413,18 @@ index 0000000000000000000000000000000000000000..e2535d82f90614bd47005db5db27195c
 +     * Limits the compatibility identity to processes which actually select
 +     * Google tablet UI. In particular, do not alter Pixel Launcher (the
 +     * dedicated tablet APK and resource configuration already select its
-+     * layout) or Search-owned WebView/hotword isolated processes.
++     * layout) or Search-owned WebView/hotword isolated processes. Userdebug
++     * builds additionally qualify Play Store catalog delivery using the same
++     * non-attestation identity; production user builds cannot take that path.
 +     */
-+    static boolean shouldApply(String packageName, String processName, boolean isolated) {
++    static boolean shouldApply(String packageName, String processName, boolean isolated,
++            boolean debuggable) {
 +        if (isolated) {
 +            return false;
++        }
++        if (PACKAGE_PLAY_STORE.equals(packageName)) {
++            return debuggable && (PACKAGE_PLAY_STORE.equals(processName)
++                    || processName.startsWith(PACKAGE_PLAY_STORE + ":"));
 +        }
 +        if (PACKAGE_GOOGLE_SEARCH.equals(packageName)) {
 +            return PACKAGE_GOOGLE_SEARCH.equals(processName)
@@ -583,10 +591,10 @@ index 0000000000000000000000000000000000000000..ee8f32c095380affee39c42e36d59c9b
 +}
 diff --git a/core/tests/coretests/src/com/android/internal/util/PixelTabletAppPropsTest.java b/core/tests/coretests/src/com/android/internal/util/PixelTabletAppPropsTest.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..707383b7d4a0bc011798bf11fb1a21b451a6f765
+index 0000000000000000000000000000000000000000..4426b85d453fe0d1a287de29c914903033c6b7f2
 --- /dev/null
 +++ b/core/tests/coretests/src/com/android/internal/util/PixelTabletAppPropsTest.java
-@@ -0,0 +1,65 @@
+@@ -0,0 +1,86 @@
 +/*
 + * Copyright (C) 2026 The Pure Pixel Project
 + *
@@ -616,40 +624,61 @@ index 0000000000000000000000000000000000000000..707383b7d4a0bc011798bf11fb1a21b4
 +public class PixelTabletAppPropsTest {
 +    private static final String SEARCH = "com.google.android.googlequicksearchbox";
 +    private static final String GMS = "com.google.android.gms";
++    private static final String PLAY_STORE = "com.android.vending";
 +
 +    @Test
 +    public void shouldApply_searchUiProcessesOnly() {
-+        assertThat(PixelTabletAppProps.shouldApply(SEARCH, SEARCH, false)).isTrue();
-+        assertThat(PixelTabletAppProps.shouldApply(SEARCH, SEARCH + ":googleapp", false)).isTrue();
-+        assertThat(PixelTabletAppProps.shouldApply(SEARCH, SEARCH + ":search", false)).isTrue();
++        assertThat(PixelTabletAppProps.shouldApply(SEARCH, SEARCH, false, false)).isTrue();
++        assertThat(PixelTabletAppProps.shouldApply(
++                SEARCH, SEARCH + ":googleapp", false, false)).isTrue();
++        assertThat(PixelTabletAppProps.shouldApply(
++                SEARCH, SEARCH + ":search", false, false)).isTrue();
 +
 +        assertThat(PixelTabletAppProps.shouldApply(
-+                SEARCH, SEARCH + ":interactor", false)).isFalse();
++                SEARCH, SEARCH + ":interactor", false, false)).isFalse();
 +        assertThat(PixelTabletAppProps.shouldApply(
-+                SEARCH, "com.google.android.webview:sandboxed_process0", true)).isFalse();
++                SEARCH, "com.google.android.webview:sandboxed_process0", true, true)).isFalse();
 +        assertThat(PixelTabletAppProps.shouldApply(
-+                SEARCH, SEARCH + ":trusted_disable_art_image_:hotword_detector_0", true))
++                SEARCH, SEARCH + ":trusted_disable_art_image_:hotword_detector_0", true, true))
 +                .isFalse();
 +    }
 +
 +    @Test
 +    public void shouldApply_nonAttestationGmsOnly() {
-+        assertThat(PixelTabletAppProps.shouldApply(GMS, GMS, false)).isTrue();
-+        assertThat(PixelTabletAppProps.shouldApply(GMS, GMS + ".persistent", false)).isTrue();
-+
-+        assertThat(PixelTabletAppProps.shouldApply(GMS, GMS + ".unstable", false)).isFalse();
-+        assertThat(PixelTabletAppProps.shouldApply(GMS, GMS + ".persistent", true)).isFalse();
++        assertThat(PixelTabletAppProps.shouldApply(GMS, GMS, false, false)).isTrue();
 +        assertThat(PixelTabletAppProps.shouldApply(
-+                GMS, "com.google.android.webview:sandboxed_process0", false)).isFalse();
++                GMS, GMS + ".persistent", false, false)).isTrue();
++
++        assertThat(PixelTabletAppProps.shouldApply(
++                GMS, GMS + ".unstable", false, true)).isFalse();
++        assertThat(PixelTabletAppProps.shouldApply(
++                GMS, GMS + ".persistent", true, true)).isFalse();
++        assertThat(PixelTabletAppProps.shouldApply(
++                GMS, "com.google.android.webview:sandboxed_process0", false, true)).isFalse();
++    }
++
++    @Test
++    public void shouldApply_playStoreOnlyOnDebuggableBuilds() {
++        assertThat(PixelTabletAppProps.shouldApply(
++                PLAY_STORE, PLAY_STORE, false, true)).isTrue();
++        assertThat(PixelTabletAppProps.shouldApply(
++                PLAY_STORE, PLAY_STORE + ":quick_launch", false, true)).isTrue();
++
++        assertThat(PixelTabletAppProps.shouldApply(
++                PLAY_STORE, PLAY_STORE, false, false)).isFalse();
++        assertThat(PixelTabletAppProps.shouldApply(
++                PLAY_STORE, PLAY_STORE + ":background", true, true)).isFalse();
++        assertThat(PixelTabletAppProps.shouldApply(
++                PLAY_STORE, "com.example.untrusted", false, true)).isFalse();
 +    }
 +
 +    @Test
 +    public void shouldApply_doesNotSpoofLauncherOrOtherPackages() {
 +        assertThat(PixelTabletAppProps.shouldApply(
 +                "com.google.android.apps.nexuslauncher",
-+                "com.google.android.apps.nexuslauncher", false)).isFalse();
++                "com.google.android.apps.nexuslauncher", false, true)).isFalse();
 +        assertThat(PixelTabletAppProps.shouldApply(
-+                "com.android.settings", "com.android.settings", false)).isFalse();
++                "com.android.settings", "com.android.settings", false, true)).isFalse();
 +    }
 +}
 diff --git a/libs/WindowManager/Shell/src/com/android/wm/shell/recents/RecentsTransitionHandler.java b/libs/WindowManager/Shell/src/com/android/wm/shell/recents/RecentsTransitionHandler.java
