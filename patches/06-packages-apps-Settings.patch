@@ -93,7 +93,7 @@ index f836ad1..8291d8a 100644
      <bool name="config_force_showing_icon_on_locale_picker_screen">false</bool>
  </resources>
 diff --git a/res/values/strings.xml b/res/values/strings.xml
-index 8246f5b..93308ce 100644
+index 8246f5b..0456a60 100644
 --- a/res/values/strings.xml
 +++ b/res/values/strings.xml
 @@ -3184,6 +3184,10 @@
@@ -151,13 +151,14 @@ index 8246f5b..93308ce 100644
      <!-- SD card & phone storage settings summary. Displayed when the total memory usage is being calculated. Will be replaced with a number like "12.3 GB" when finished calucating. [CHAR LIMIT=30] -->
      <string name="memory_calculating_size">Calculating\u2026</string>
  
-@@ -15590,4 +15624,21 @@
+@@ -15590,4 +15624,22 @@
      <!-- Search keywords for Human interface device access setting -->
      <string name="keywords_access_hid">hid, human, access, device</string>
      <!-- Access HID end -->
 +
 +    <!-- Lenovo TB132FU controls integrated into standard Settings pages. -->
 +    <string name="tb132fu_dt2w_title">Double-tap to wake</string>
++    <string name="tb132fu_aod_schedule_purpose">Control when Always-on display is shown</string>
 +    <string name="tb132fu_aod_schedule_title">Show AOD during the day</string>
 +    <string name="tb132fu_aod_schedule_summary">Show AOD from sunrise to sunset and hide it overnight</string>
 +    <string name="tb132fu_refresh_rate_title">Refresh rate</string>
@@ -1147,10 +1148,10 @@ index b074d21..4148109 100644
  }
 diff --git a/src/com/android/settings/display/ambient/Tb132fuAodDaytimePreference.kt b/src/com/android/settings/display/ambient/Tb132fuAodDaytimePreference.kt
 new file mode 100644
-index 0000000..6224fd8
+index 0000000..ff10b15
 --- /dev/null
 +++ b/src/com/android/settings/display/ambient/Tb132fuAodDaytimePreference.kt
-@@ -0,0 +1,40 @@
+@@ -0,0 +1,41 @@
 +/*
 + * Copyright (C) 2026 The Android Open Source Project
 + * SPDX-License-Identifier: Apache-2.0
@@ -1169,6 +1170,7 @@ index 0000000..6224fd8
 +class Tb132fuAodDaytimePreference(context: Context) :
 +    SwitchPreference(
 +        key = KEY,
++        purpose = R.string.tb132fu_aod_schedule_purpose,
 +        title = R.string.tb132fu_aod_schedule_title,
 +        summary = R.string.tb132fu_aod_schedule_summary,
 +    ) {
