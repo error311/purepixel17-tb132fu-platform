@@ -1619,10 +1619,10 @@ index d349015..4a1494c 100644
          public void onStop() {
              super.onStop();
 diff --git a/src/com/android/settings/password/SetupChooseLockGeneric.java b/src/com/android/settings/password/SetupChooseLockGeneric.java
-index fd4be8f..ffc63c9 100644
+index fd4be8f..7d335f0 100644
 --- a/src/com/android/settings/password/SetupChooseLockGeneric.java
 +++ b/src/com/android/settings/password/SetupChooseLockGeneric.java
-@@ -18,23 +18,36 @@ package com.android.settings.password;
+@@ -18,23 +18,35 @@ package com.android.settings.password;
 
  import static android.Manifest.permission.REQUEST_PASSWORD_COMPLEXITY;
  import static android.app.admin.DevicePolicyManager.EXTRA_PASSWORD_COMPLEXITY;
@@ -1646,7 +1646,6 @@ index fd4be8f..ffc63c9 100644
  import android.graphics.drawable.ColorDrawable;
 +import android.hardware.biometrics.BiometricManager.Authenticators;
 +import android.hardware.face.FaceManager;
-+import android.hardware.face.FaceSensorPropertiesInternal;
  import android.os.Bundle;
  import android.os.IBinder;
  import android.os.UserHandle;
@@ -1659,7 +1658,7 @@ index fd4be8f..ffc63c9 100644
  import androidx.fragment.app.Fragment;
  import androidx.preference.Preference;
  import androidx.preference.PreferenceFragmentCompat;
-@@ -45,6 +58,9 @@ import com.android.internal.widget.LockPatternUtils;
+@@ -45,6 +57,9 @@ import com.android.internal.widget.LockPatternUtils;
  import com.android.settings.R;
  import com.android.settings.SetupWizardUtils;
  import com.android.settings.accessibility.PreferenceAdapterInSuw;
@@ -1669,29 +1668,22 @@ index fd4be8f..ffc63c9 100644
  import com.android.settings.utils.SettingsDividerItemDecoration;
 
  import com.google.android.setupcompat.util.WizardManagerHelper;
-@@ -54,6 +70,8 @@ import com.google.android.setupdesign.util.ThemeHelper;
-
- import org.jetbrains.annotations.NotNull;
-
-+import java.util.List;
-+
- /**
-  * Setup Wizard's version of ChooseLockGeneric screen. It inherits the logic and basic structure
-  * from ChooseLockGeneric class, and should remain similar to that behaviorally. This class should
-@@ -64,6 +82,12 @@ import org.jetbrains.annotations.NotNull;
+@@ -64,6 +79,14 @@ import org.jetbrains.annotations.NotNull;
  // TODO(b/123225425): Restrict SetupChooseLockGeneric to be accessible by SUW only
  public class SetupChooseLockGeneric extends ChooseLockGeneric {
 
 +    private static final String TAG = "SetupChooseLockGeneric";
 +    private static final String ACTION_SETUP_LOCK_SCREEN =
 +            "com.android.settings.SETUP_LOCK_SCREEN";
++    private static final String GOOGLE_SETUP_WIZARD_PACKAGE =
++            "com.google.android.setupwizard";
 +    @VisibleForTesting
 +    static final String EXTRA_TB132FU_SETUP_FACE =
 +            "com.android.settings.extra.TB132FU_SETUP_FACE";
      private static final String KEY_UNLOCK_SET_DO_LATER = "unlock_set_do_later";
 
      @Override
-@@ -87,6 +111,7 @@ public class SetupChooseLockGeneric extends ChooseLockGeneric {
+@@ -87,6 +110,7 @@ public class SetupChooseLockGeneric extends ChooseLockGeneric {
              setTheme(SetupWizardUtils.getTheme(this, getIntent()));
              ThemeHelper.trySetDynamicColor(this);
          }
@@ -1699,7 +1691,7 @@ index fd4be8f..ffc63c9 100644
          super.onCreate(savedInstance);
 
          if(getIntent().hasExtra(EXTRA_KEY_REQUESTED_MIN_COMPLEXITY)) {
-@@ -103,7 +128,83 @@ public class SetupChooseLockGeneric extends ChooseLockGeneric {
+@@ -103,7 +127,83 @@ public class SetupChooseLockGeneric extends ChooseLockGeneric {
              }
          }
 
@@ -1727,7 +1719,8 @@ index fd4be8f..ffc63c9 100644
 +        final boolean isSetupWizard = WizardManagerHelper.isAnySetupWizard(intent);
 +        final boolean userSetupComplete = WizardManagerHelper.isUserSetupComplete(this);
 +        if (!isTb132fuSetupFaceCandidate(
-+                intent, Tb132fuUtils.isTb132fu(), isSetupWizard, userSetupComplete)) {
++                intent, Tb132fuUtils.isTb132fu(), isSetupWizard, userSetupComplete,
++                getCallingPackage())) {
 +            return;
 +        }
 +
@@ -1736,18 +1729,14 @@ index fd4be8f..ffc63c9 100644
 +        final DevicePolicyManager devicePolicyManager =
 +                getSystemService(DevicePolicyManager.class);
 +        try {
-+            final List<FaceSensorPropertiesInternal> faceSensors = faceManager != null
-+                    ? faceManager.getSensorPropertiesInternal() : List.of();
-+            final boolean hasRegisteredFaceSensor = !faceSensors.isEmpty();
 +            final boolean hasEnrolledFace = faceManager != null
 +                    && faceManager.hasEnrolledTemplates(userId);
 +            final boolean faceDisabledByAdmin = devicePolicyManager != null
 +                    && (devicePolicyManager.getKeyguardDisabledFeatures(null, userId)
 +                    & KEYGUARD_DISABLE_FACE) != 0;
-+            if (!hasRegisteredFaceSensor || hasEnrolledFace || faceDisabledByAdmin) {
-+                Log.i(TAG, "Skipping optional TB132FU setup Face enrollment: sensor="
-+                        + hasRegisteredFaceSensor + ", enrolled=" + hasEnrolledFace
-+                        + ", disabledByAdmin=" + faceDisabledByAdmin);
++            if (hasEnrolledFace || faceDisabledByAdmin) {
++                Log.i(TAG, "Skipping optional TB132FU setup Face enrollment: enrolled="
++                        + hasEnrolledFace + ", disabledByAdmin=" + faceDisabledByAdmin);
 +                return;
 +            }
 +        } catch (RuntimeException exception) {
@@ -1756,7 +1745,9 @@ index fd4be8f..ffc63c9 100644
 +        }
 +
 +        // Google's lock-screen wrapper can omit isSetupFlow while the user is still in initial
-+        // setup. Normalize that one setup-only handoff so BiometricEnrollActivity consumes the
++        // setup. It also runs before the vendor Face service is guaranteed to report its sensor,
++        // so do not make this known-device handoff depend on a timing-sensitive hardware probe.
++        // Normalize the exact Google Setup caller so BiometricEnrollActivity consumes the
 +        // Gatekeeper handle instead of asking for the new credential a second time.
 +        normalizeTb132fuSetupFaceIntent(intent);
 +        Log.i(TAG, "TB132FU setup will continue from screen lock to optional Face enrollment");
@@ -1774,9 +1765,10 @@ index fd4be8f..ffc63c9 100644
 +
 +    @VisibleForTesting
 +    static boolean isTb132fuSetupFaceCandidate(Intent intent, boolean isTb132fu,
-+            boolean isSetupWizard, boolean userSetupComplete) {
++            boolean isSetupWizard, boolean userSetupComplete, String callingPackage) {
 +        return isTb132fu
 +                && ACTION_SETUP_LOCK_SCREEN.equals(intent.getAction())
++                && GOOGLE_SETUP_WIZARD_PACKAGE.equals(callingPackage)
 +                && (isSetupWizard || !userSetupComplete)
 +                && !intent.getBooleanExtra(EXTRA_KEY_FOR_FACE, false)
 +                && !intent.getBooleanExtra(EXTRA_KEY_FOR_FINGERPRINT, false)
@@ -1784,7 +1776,7 @@ index fd4be8f..ffc63c9 100644
      }
 
      @Override
-@@ -167,9 +268,25 @@ public class SetupChooseLockGeneric extends ChooseLockGeneric {
+@@ -167,9 +267,25 @@ public class SetupChooseLockGeneric extends ChooseLockGeneric {
              data.putExtra(EXTRA_PASSWORD_QUALITY,
                      lockPatternUtils.getKeyguardStoredPasswordQuality(UserHandle.myUserId()));
 
@@ -1810,7 +1802,7 @@ index fd4be8f..ffc63c9 100644
          @Override
          public RecyclerView onCreateRecyclerView(LayoutInflater inflater, ViewGroup parent,
                  Bundle savedInstanceState) {
-@@ -256,6 +373,14 @@ public class SetupChooseLockGeneric extends ChooseLockGeneric {
+@@ -256,6 +372,14 @@ public class SetupChooseLockGeneric extends ChooseLockGeneric {
          @Override
          protected Intent getBiometricEnrollIntent(Context context) {
              final Intent intent = super.getBiometricEnrollIntent(context);
@@ -2936,7 +2928,7 @@ index 0000000..54ea8dc
 +    }
 +}
 diff --git a/tests/robotests/src/com/android/settings/password/SetupChooseLockGenericTest.java b/tests/robotests/src/com/android/settings/password/SetupChooseLockGenericTest.java
-index cd78446..947224c 100644
+index cd78446..e0be512 100644
 --- a/tests/robotests/src/com/android/settings/password/SetupChooseLockGenericTest.java
 +++ b/tests/robotests/src/com/android/settings/password/SetupChooseLockGenericTest.java
 @@ -18,6 +18,7 @@ package com.android.settings.password;
@@ -2976,7 +2968,17 @@ index cd78446..947224c 100644
 
  import java.util.List;
 
-@@ -115,6 +121,120 @@ public class SetupChooseLockGenericTest {
+@@ -76,6 +82,9 @@ import java.util.List;
+ })
+ public class SetupChooseLockGenericTest {
+
++    private static final String GOOGLE_SETUP_WIZARD_PACKAGE =
++            "com.google.android.setupwizard";
++
+     @Rule
+     public final MockitoRule mMockitoRule = MockitoJUnit.rule();
+     @Mock
+@@ -115,6 +124,131 @@ public class SetupChooseLockGenericTest {
          assertThat(activity.isFinishing()).isTrue();
      }
 
@@ -2986,7 +2988,7 @@ index cd78446..947224c 100644
 +        intent.putExtra(EXTRA_IS_SETUP_FLOW, true);
 +
 +        assertThat(SetupChooseLockGeneric.isTb132fuSetupFaceCandidate(
-+                intent, true, true, false)).isTrue();
++                intent, true, true, false, GOOGLE_SETUP_WIZARD_PACKAGE)).isTrue();
 +    }
 +
 +    @Test
@@ -2994,7 +2996,7 @@ index cd78446..947224c 100644
 +        final Intent intent = new Intent("com.android.settings.SETUP_LOCK_SCREEN");
 +
 +        assertThat(SetupChooseLockGeneric.isTb132fuSetupFaceCandidate(
-+                intent, true, false, false)).isTrue();
++                intent, true, false, false, GOOGLE_SETUP_WIZARD_PACKAGE)).isTrue();
 +    }
 +
 +    @Test
@@ -3002,7 +3004,7 @@ index cd78446..947224c 100644
 +        final Intent intent = new Intent("com.android.settings.SETUP_LOCK_SCREEN");
 +
 +        assertThat(SetupChooseLockGeneric.isTb132fuSetupFaceCandidate(
-+                intent, true, false, true)).isFalse();
++                intent, true, false, true, GOOGLE_SETUP_WIZARD_PACKAGE)).isFalse();
 +    }
 +
 +    @Test
@@ -3012,7 +3014,7 @@ index cd78446..947224c 100644
 +        intent.putExtra(ChooseLockSettingsHelper.EXTRA_KEY_FOR_FINGERPRINT, true);
 +
 +        assertThat(SetupChooseLockGeneric.isTb132fuSetupFaceCandidate(
-+                intent, true, true, false)).isFalse();
++                intent, true, true, false, GOOGLE_SETUP_WIZARD_PACKAGE)).isFalse();
 +    }
 +
 +    @Test
@@ -3021,7 +3023,18 @@ index cd78446..947224c 100644
 +        intent.putExtra(EXTRA_IS_SETUP_FLOW, true);
 +
 +        assertThat(SetupChooseLockGeneric.isTb132fuSetupFaceCandidate(
-+                intent, false, true, false)).isFalse();
++                intent, false, true, false, GOOGLE_SETUP_WIZARD_PACKAGE)).isFalse();
++    }
++
++    @Test
++    public void isTb132fuSetupFaceCandidate_nonGoogleCaller_returnsFalse() {
++        final Intent intent = new Intent("com.android.settings.SETUP_LOCK_SCREEN");
++        intent.putExtra(EXTRA_IS_SETUP_FLOW, true);
++
++        assertThat(SetupChooseLockGeneric.isTb132fuSetupFaceCandidate(
++                intent, true, true, false, "com.example.untrusted")).isFalse();
++        assertThat(SetupChooseLockGeneric.isTb132fuSetupFaceCandidate(
++                intent, true, true, false, null)).isFalse();
 +    }
 +
 +    @Test
