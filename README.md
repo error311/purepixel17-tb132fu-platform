@@ -5,8 +5,9 @@ This is the Android platform side of Pure Pixel 17 for the Lenovo Tab P11 Pro
 
 The device needs more than a device tree and kernel to run Android 17 properly.
 These patches are the framework and system changes retained in the public R5
-release. They are kept here separately because they belong to existing AOSP
-projects rather than `device/lenovo/tb132fu`.
+release plus the current R6 development-line additions. They are kept here
+separately because they belong to existing AOSP projects rather than
+`device/lenovo/tb132fu`.
 
 The other two source repositories are:
 
@@ -36,6 +37,12 @@ The patch set covers:
 - pen attach, detach and battery-status polish
 - the factory-reset-qualified Pixel Setup language/region selector and its
   no-action-bar crash guard
+- optional TB132FU-only convenience Face enrollment after creating a screen
+  lock in Pixel Setup, with the temporary Gatekeeper handle kept inside
+  Settings
+- native Settings placement for refresh rate, double-tap wake, AOD daytime
+  scheduling, Precision Pen, and pogo keyboard/touchpad controls
+- the exact Pure Pixel incremental build identity on Android version
 - Pure Pixel updater branding in locale-visible labels
 - cacheless, signed A-only recovery updates on the active slot
 - the small platform hooks used to synchronize the Pixel Launcher landscape

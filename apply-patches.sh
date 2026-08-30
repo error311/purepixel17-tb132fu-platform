@@ -88,5 +88,5 @@ while IFS=$'\t' read -r project upstream base_revision topic_head qualified_tree
     echo "$project: applied $patch_file"
 done < PROJECTS.tsv
 
-echo 'All Pure Pixel 17 R5 platform patches applied successfully.'
+echo 'All pinned Pure Pixel 17 platform patches applied successfully.'
 echo 'No commit, build, flash, reset, clean, or device operation was performed.'
