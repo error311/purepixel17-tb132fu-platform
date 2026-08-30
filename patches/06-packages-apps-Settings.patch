@@ -5,7 +5,7 @@ index c0cd774..7b024c5 100644
 @@ -1140,6 +1140,18 @@
                    android:theme="@style/Theme.LocalePickerWithRegionActivity">
          </activity>
-
+ 
 +        <!-- Pixel Setup Wizard uses this contract for its first-screen language control. -->
 +        <activity android:name=".localepicker.SetupWizardLocalePickerActivity"
 +                  android:excludeFromRecents="true"
@@ -66,16 +66,16 @@ index f836ad1..8291d8a 100644
 @@ -564,7 +564,7 @@
      <!-- Grayscale settings intent -->
      <string name="config_grayscale_settings_intent" translatable="false"></string>
-
+ 
 -    <!-- List containing the injected tile keys which are suppressed. -->
 +    <!-- List containing injected tile keys or flattened component names which are suppressed. -->
      <string-array name="config_suppress_injected_tile_keys" translatable="false"/>
-
+ 
      <!-- Reset application package name -->
 @@ -646,6 +646,9 @@
      <!-- Whether to show Smart Storage toggle -->
      <bool name="config_show_smart_storage_toggle">true</bool>
-
+ 
 +    <!-- Use a vendor MediaTek picture-quality HAL for selectable display color modes. -->
 +    <bool name="config_use_mtk_pq_color_modes">false</bool>
 +
@@ -85,7 +85,7 @@ index f836ad1..8291d8a 100644
 @@ -1094,6 +1097,9 @@
      <!-- Whether to enable the device state app functions. -->
      <bool name="config_device_state_app_functions_enabled">false</bool>
-
+ 
 +    <!-- Whether the device exposes reliable battery gauge capacity and cycle data. -->
 +    <bool name="config_show_battery_health_details">false</bool>
 +
@@ -124,7 +124,7 @@ index 8246f5b..0456a60 100644
 @@ -3743,6 +3754,29 @@
      <!-- About phone, status item title. The status summary for cycle count that's not available. [CHAR LIMIT=40] -->
      <string name="battery_cycle_count_not_available">Unavailable</string>
-
+ 
 +    <!-- Battery settings entry and detailed battery health screen. -->
 +    <string name="battery_health_title">Battery health</string>
 +    <string name="battery_health_summary">Estimated capacity, condition, and cycle count</string>
@@ -150,7 +150,7 @@ index 8246f5b..0456a60 100644
 +
      <!-- SD card & phone storage settings summary. Displayed when the total memory usage is being calculated. Will be replaced with a number like "12.3 GB" when finished calucating. [CHAR LIMIT=30] -->
      <string name="memory_calculating_size">Calculating\u2026</string>
-
+ 
 @@ -15590,4 +15624,22 @@
      <!-- Search keywords for Human interface device access setting -->
      <string name="keywords_access_hid">hid, human, access, device</string>
@@ -252,7 +252,7 @@ index 09a6059..592d37b 100644
 @@ -46,4 +46,19 @@
          settings:controller="com.android.settings.applications.credentials.CredentialManagerPreferenceController"
          settings:keywords="@string/credman_keywords" />
-
+ 
 +    <!--
 +         The accounts-and-backup flag can be enabled on a product whose
 +         CredentialManager service is unavailable. AccountDashboardFragment
@@ -276,7 +276,7 @@ index 0029ab1..fab9351 100644
 @@ -182,6 +182,14 @@
              android:summary="@string/peak_refresh_rate_summary"
              settings:controller="com.android.settings.display.PeakRefreshRatePreferenceController"/>
-
+ 
 +        <ListPreference
 +            android:key="tb132fu_refresh_rate"
 +            android:title="@string/tb132fu_refresh_rate_title"
@@ -295,7 +295,7 @@ index 41f7733..c575c00 100644
 @@ -21,6 +21,32 @@
      android:title="@string/firmware_version"
      settings:keywords="@string/keywords_android_version">
-
+ 
 +    <!-- Pure Pixel identity -->
 +    <Preference
 +        android:key="pure_pixel_rom"
@@ -341,7 +341,7 @@ index 4890560..a0fc320 100644
 +            android:summary="@string/battery_health_summary"
 +            settings:controller="com.android.settings.fuelgauge.BatteryHealthEntryPreferenceController" />
      </com.android.settingslib.widget.UntitledPreferenceCategory>
-
+ 
      <com.android.settingslib.widget.UntitledPreferenceCategory
 diff --git a/res/xml/system_dashboard_fragment.xml b/res/xml/system_dashboard_fragment.xml
 index 3dae93a..a3959e6 100644
@@ -350,7 +350,7 @@ index 3dae93a..a3959e6 100644
 @@ -99,6 +99,18 @@
              android:fragment="com.android.settings.inputmethod.MouseSettingFragment"
              settings:controller="com.android.settings.inputmethod.MouseSettingsController" />
-
+ 
 +        <Preference
 +            android:key="tb132fu_pen_settings"
 +            android:title="@string/tb132fu_pen_settings_title"
@@ -373,7 +373,7 @@ index e0cb8cf..0400f37 100644
 @@ -66,6 +66,18 @@
          android:title="@string/interaction_category_title"
          android:order="-380">
-
+ 
 +        <Preference
 +            android:key="tb132fu_pen_settings"
 +            android:title="@string/tb132fu_pen_settings_title"
@@ -403,7 +403,7 @@ index 8f037ac..ef64920 100644
 +            buildLegacyAutofillPreferenceControllers(context, controllers);
          }
      }
-
+ 
 +    static void buildLegacyAutofillPreferenceControllers(
 +            Context context, List<AbstractPreferenceController> controllers) {
 +        controllers.add(new PasswordsPreferenceController(context, "passwords_category"));
@@ -429,7 +429,7 @@ index 73fef1b..0c141b6 100644
 +        } else {
 +            Log.w(TAG, "Missing password preference group: " + getPreferenceKey());
 +        }
-
+ 
          replaceEnterpriseStringTitle(screen, "auto_sync_personal_account_data",
                  AUTO_SYNC_PERSONAL_DATA, R.string.account_settings_menu_auto_sync_personal);
 diff --git a/src/com/android/settings/biometrics/face/FaceSettings.java b/src/com/android/settings/biometrics/face/FaceSettings.java
@@ -497,7 +497,7 @@ index 8948b33..8720a2c 100644
 --- a/src/com/android/settings/deviceinfo/firmwareversion/FirmwareVersionScreen.kt
 +++ b/src/com/android/settings/deviceinfo/firmwareversion/FirmwareVersionScreen.kt
 @@ -70,6 +70,9 @@ open class FirmwareVersionScreen : PreferenceScreenMixin, PreferenceSummaryProvi
-
+ 
      override fun getPreferenceHierarchy(context: Context, coroutineScope: CoroutineScope) =
          preferenceHierarchy(context) {
 +            +PurePixelRomPreference()
@@ -662,7 +662,7 @@ index a15b02d..88b93fb 100644
 +++ b/src/com/android/settings/display/ColorModeApiScreen.kt
 @@ -53,7 +53,9 @@ class ColorModeApiScreen :
          }
-
+ 
          preconditions(R.string.color_mode_preconditions) {
 -            if (!context.colorDisplayManager.isDeviceColorManaged) {
 +            if (ColorModeUtils.getAvailableColorModes(context).size <= 1) {
@@ -685,13 +685,13 @@ index a15b02d..88b93fb 100644
 +            }
          }
      }
-
+ 
 diff --git a/src/com/android/settings/display/ColorModePreferenceController.java b/src/com/android/settings/display/ColorModePreferenceController.java
 index 5d74948..bba7f87 100644
 --- a/src/com/android/settings/display/ColorModePreferenceController.java
 +++ b/src/com/android/settings/display/ColorModePreferenceController.java
 @@ -53,10 +53,15 @@ public class ColorModePreferenceController extends BasePreferenceController
-
+ 
      @Override
      public int getAvailabilityStatus() {
 -        return mContext.getSystemService(ColorDisplayManager.class)
@@ -708,7 +708,7 @@ index 5d74948..bba7f87 100644
 +                && !ColorDisplayManager.areAccessibilityTransformsEnabled(mContext)
 +                ? AVAILABLE : DISABLED_FOR_USER;
      }
-
+ 
      @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
 @@ -65,6 +70,12 @@ public class ColorModePreferenceController extends BasePreferenceController
                  Settings.System.getUriFor(Settings.System.DISPLAY_COLOR_MODE),
@@ -721,7 +721,7 @@ index 5d74948..bba7f87 100644
 +                    mContentObserver);
 +        }
      }
-
+ 
      @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
 diff --git a/src/com/android/settings/display/ColorModePreferenceFragment.java b/src/com/android/settings/display/ColorModePreferenceFragment.java
 index 3469a48..95c2f56 100644
@@ -730,31 +730,31 @@ index 3469a48..95c2f56 100644
 @@ -13,12 +13,7 @@
   */
  package com.android.settings.display;
-
+ 
 -import static android.hardware.display.ColorDisplayManager.COLOR_MODE_AUTOMATIC;
 -import static android.hardware.display.ColorDisplayManager.COLOR_MODE_BOOSTED;
  import static android.hardware.display.ColorDisplayManager.COLOR_MODE_NATURAL;
 -import static android.hardware.display.ColorDisplayManager.COLOR_MODE_SATURATED;
 -import static android.hardware.display.ColorDisplayManager.VENDOR_COLOR_MODE_RANGE_MAX;
 -import static android.hardware.display.ColorDisplayManager.VENDOR_COLOR_MODE_RANGE_MIN;
-
+ 
  import android.app.settings.SettingsEnums;
  import android.content.ContentResolver;
 @@ -75,7 +70,6 @@ public class ColorModePreferenceFragment extends RadioButtonPickerFragment {
      private static final int DOT_INDICATOR_RIGHT_PADDING = 6;
-
+ 
      private ContentObserver mContentObserver;
 -    private ColorDisplayManager mColorDisplayManager;
      private Resources mResources;
-
+ 
      private View mViewArrowPrevious;
 @@ -91,7 +85,6 @@ public class ColorModePreferenceFragment extends RadioButtonPickerFragment {
      public void onAttach(Context context) {
          super.onAttach(context);
-
+ 
 -        mColorDisplayManager = context.getSystemService(ColorDisplayManager.class);
          mResources = context.getResources();
-
+ 
          final ContentResolver cr = context.getContentResolver();
 @@ -261,9 +254,9 @@ public class ColorModePreferenceFragment extends RadioButtonPickerFragment {
      protected boolean setDefaultKey(String key) {
@@ -766,7 +766,7 @@ index 3469a48..95c2f56 100644
 -        return true;
 +        return false;
      }
-
+ 
      @Override
 @@ -276,15 +269,15 @@ public class ColorModePreferenceFragment extends RadioButtonPickerFragment {
       */
@@ -775,7 +775,7 @@ index 3469a48..95c2f56 100644
 -        return mColorDisplayManager.getColorMode();
 +        return ColorModeUtils.getColorMode(getContext());
      }
-
+ 
      /**
       * Wraps ColorDisplayManager#setColorMode for substitution in testing.
       */
@@ -785,11 +785,11 @@ index 3469a48..95c2f56 100644
 +    public boolean setColorMode(int colorMode) {
 +        return ColorModeUtils.setColorMode(getContext(), colorMode);
      }
-
+ 
      @Override
 @@ -298,12 +291,12 @@ public class ColorModePreferenceFragment extends RadioButtonPickerFragment {
      }
-
+ 
      private boolean isValidColorMode(int colorMode) {
 -        return colorMode == COLOR_MODE_NATURAL
 -                || colorMode == COLOR_MODE_BOOSTED
@@ -804,7 +804,7 @@ index 3469a48..95c2f56 100644
 +        }
 +        return false;
      }
-
+ 
      @VisibleForTesting
 diff --git a/src/com/android/settings/display/ColorModeScreen.kt b/src/com/android/settings/display/ColorModeScreen.kt
 index a430df8..ae9f7a3 100644
@@ -820,14 +820,14 @@ index a430df8..ae9f7a3 100644
  import com.android.settingslib.metadata.PreferenceAvailabilityProvider
 @@ -80,13 +81,14 @@ open class ColorModeScreen :
      private var settingsKeyedObserver: KeyedObserver<String>? = null
-
+ 
      override val availabilityDescription =
 -        "The device must be color managed and not have accessibility transforms enabled."
 +        "The device must expose multiple color modes, be color managed, and not have " +
 +            "accessibility transforms enabled."
-
+ 
      override fun getAvailabilityStability() = PreconditionStability.UNSTABLE
-
+ 
      override fun isAvailable(context: Context): Boolean {
 -        val colorManager = context.getSystemService(ColorDisplayManager::class.java) ?: return false
 -        return colorManager.isDeviceColorManaged &&
@@ -835,7 +835,7 @@ index a430df8..ae9f7a3 100644
 +            ColorModeUtils.isColorModeSupported(context) &&
              !ColorDisplayManager.areAccessibilityTransformsEnabled(context)
      }
-
+ 
 @@ -101,6 +103,10 @@ open class ColorModeScreen :
              settingsKeyedObserver = observer
              val storage = SettingsSystemStore.get(context)
@@ -846,7 +846,7 @@ index a430df8..ae9f7a3 100644
 +            }
          }
      }
-
+ 
 @@ -109,6 +115,10 @@ open class ColorModeScreen :
              settingsKeyedObserver?.let {
                  val storage = SettingsSystemStore.get(context)
@@ -869,10 +869,10 @@ index 01a6a50..594259a 100644
 -import android.util.Log
 -
  import com.android.settings.R
-
+ 
  object ColorModeUtils {
 @@ -29,6 +27,16 @@ object ColorModeUtils {
-
+ 
      @JvmStatic
      fun getColorModeMapping(resources: Resources): Map<Int, String> {
 +        if (resources.getBoolean(R.bool.config_use_mtk_pq_color_modes)) {
@@ -890,7 +890,7 @@ index 01a6a50..594259a 100644
          )
 @@ -52,8 +60,20 @@ object ColorModeUtils {
      }
-
+ 
      @JvmStatic
 -    fun getColorMode(context: Context): Int =
 -            context.getSystemService(ColorDisplayManager::class.java).colorMode
@@ -908,11 +908,11 @@ index 01a6a50..594259a 100644
 +            context.getSystemService(ColorDisplayManager::class.java).setColorMode(colorMode)
 +            true
 +        }
-
+ 
      @JvmStatic
      fun getActiveColorModeName(context: Context): String =
 @@ -61,5 +81,24 @@ object ColorModeUtils {
-
+ 
      @JvmStatic
      fun getAvailableColorModes(context: Context): IntArray =
 -        context.getResources().getIntArray(com.android.internal.R.array.config_availableColorModes)
@@ -1075,32 +1075,32 @@ index b074d21..773a783 100644
 +++ b/src/com/android/settings/display/TapToWakePreferenceController.java
 @@ -14,18 +14,25 @@
  package com.android.settings.display;
-
+ 
  import android.content.Context;
 +import android.os.SystemProperties;
 +import android.os.UserHandle;
  import android.provider.Settings;
 +import android.util.Log;
-
+ 
  import androidx.preference.Preference;
  import androidx.preference.TwoStatePreference;
-
+ 
 +import com.android.settings.R;
  import com.android.settings.core.PreferenceControllerMixin;
 +import com.android.settings.tb132fu.Tb132fuUtils;
  import com.android.settingslib.core.AbstractPreferenceController;
-
+ 
  public class TapToWakePreferenceController extends AbstractPreferenceController implements
          PreferenceControllerMixin, Preference.OnPreferenceChangeListener {
-
+ 
 +    private static final String TAG = "TapToWakePrefCtrl";
      private static final String KEY_TAP_TO_WAKE = "tap_to_wake";
 +    private static final String PROP_TB132FU_DT2W = "persist.sys.tb132fu.dt2w";
-
+ 
      public TapToWakePreferenceController(Context context) {
          super(context);
 @@ -38,22 +45,51 @@ public class TapToWakePreferenceController extends AbstractPreferenceController
-
+ 
      @Override
      public boolean isAvailable() {
 -        return mContext.getResources().getBoolean(
@@ -1114,7 +1114,7 @@ index b074d21..773a783 100644
 +    static boolean isAvailable(boolean configSupported, boolean isTb132fu) {
 +        return configSupported || isTb132fu;
      }
-
+ 
      @Override
      public void updateState(Preference preference) {
 -        int value = Settings.Secure.getInt(
@@ -1131,7 +1131,7 @@ index b074d21..773a783 100644
 +        }
 +        ((TwoStatePreference) preference).setChecked(enabled);
      }
-
+ 
      @Override
      public boolean onPreferenceChange(Preference preference, Object newValue) {
 -        boolean value = (Boolean) newValue;
@@ -1511,7 +1511,7 @@ index ab50178..c39a627 100644
 @@ -26,6 +26,7 @@ import static com.android.settings.regionalpreferences.RegionDialogFragment.ARG_
  import static com.android.settings.regionalpreferences.RegionDialogFragment.ARG_TARGET_LOCALE;
  import static com.android.settings.regionalpreferences.RegionDialogFragment.ARG_REPLACED_TARGET_LOCALE;
-
+ 
 +import android.app.ActionBar;
  import android.app.FragmentTransaction;
  import android.content.Intent;
@@ -1528,7 +1528,7 @@ index ab50178..c39a627 100644
 @@ -102,6 +103,13 @@ public class LocalePickerWithRegionActivity extends SettingsBaseActivity
          }
      }
-
+ 
 +    void configureActionBar() {
 +        final ActionBar actionBar = getActionBar();
 +        if (actionBar != null) {
@@ -1592,232 +1592,6 @@ index 0000000..dbaf8cc
 +        LocalePicker.updateLocale(locale);
 +    }
 +}
-diff --git a/src/com/android/settings/password/ChooseLockGeneric.java b/src/com/android/settings/password/ChooseLockGeneric.java
-index d349015..4a1494c 100644
---- a/src/com/android/settings/password/ChooseLockGeneric.java
-+++ b/src/com/android/settings/password/ChooseLockGeneric.java
-@@ -956,7 +956,8 @@ public class ChooseLockGeneric extends SettingsActivity {
-                 // since requesting a Gatekeeper Password Handle should not imply it came from
-                 // biometric setup/settings.
-                 startActivityForResult(intent,
--                        mIsSetNewPassword && mRequestGatekeeperPasswordHandle
-+                        shouldLaunchBiometricEnrollmentAfterLock()
-+                                && mRequestGatekeeperPasswordHandle
-                                 ? CHOOSE_LOCK_BEFORE_BIOMETRIC_REQUEST
-                                 : CHOOSE_LOCK_REQUEST);
-                 return;
-@@ -990,6 +991,11 @@ public class ChooseLockGeneric extends SettingsActivity {
-             return intent;
-         }
-
-+        /** Returns whether a successfully chosen credential should continue to biometrics. */
-+        protected boolean shouldLaunchBiometricEnrollmentAfterLock() {
-+            return mIsSetNewPassword;
-+        }
-+
-         @Override
-         public void onStop() {
-             super.onStop();
-diff --git a/src/com/android/settings/password/SetupChooseLockGeneric.java b/src/com/android/settings/password/SetupChooseLockGeneric.java
-index fd4be8f..5771903 100644
---- a/src/com/android/settings/password/SetupChooseLockGeneric.java
-+++ b/src/com/android/settings/password/SetupChooseLockGeneric.java
-@@ -18,23 +18,35 @@ package com.android.settings.password;
-
- import static android.Manifest.permission.REQUEST_PASSWORD_COMPLEXITY;
- import static android.app.admin.DevicePolicyManager.EXTRA_PASSWORD_COMPLEXITY;
-+import static android.app.admin.DevicePolicyManager.KEYGUARD_DISABLE_FACE;
-+import static android.provider.Settings.EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED;
-
- import static com.android.internal.widget.LockPatternUtils.CREDENTIAL_TYPE_NONE;
-+import static com.android.settings.password.ChooseLockSettingsHelper.EXTRA_KEY_FOR_BIOMETRICS;
-+import static com.android.settings.password.ChooseLockSettingsHelper.EXTRA_KEY_FOR_FACE;
-+import static com.android.settings.password.ChooseLockSettingsHelper.EXTRA_KEY_FOR_FINGERPRINT;
-+import static com.android.settings.password.ChooseLockSettingsHelper.EXTRA_KEY_GK_PW_HANDLE;
- import static com.android.settings.password.ChooseLockSettingsHelper.EXTRA_KEY_REQUESTED_MIN_COMPLEXITY;
-+import static com.android.settings.password.ChooseLockSettingsHelper.EXTRA_KEY_REQUEST_GK_PW_HANDLE;
- import static com.android.settings.password.ChooseLockSettingsHelper.EXTRA_KEY_USE_EXPRESSIVE_STYLE;
-
- import android.app.RemoteServiceException.MissingRequestPasswordComplexityPermissionException;
-+import android.app.admin.DevicePolicyManager;
- import android.content.Context;
- import android.content.Intent;
- import android.graphics.Color;
- import android.graphics.drawable.ColorDrawable;
-+import android.hardware.biometrics.BiometricManager.Authenticators;
-+import android.hardware.face.FaceManager;
- import android.os.Bundle;
- import android.os.IBinder;
- import android.os.UserHandle;
-+import android.util.Log;
- import android.view.LayoutInflater;
- import android.view.View;
- import android.view.ViewGroup;
-
-+import androidx.annotation.VisibleForTesting;
- import androidx.fragment.app.Fragment;
- import androidx.preference.Preference;
- import androidx.preference.PreferenceFragmentCompat;
-@@ -45,6 +57,9 @@ import com.android.internal.widget.LockPatternUtils;
- import com.android.settings.R;
- import com.android.settings.SetupWizardUtils;
- import com.android.settings.accessibility.PreferenceAdapterInSuw;
-+import com.android.settings.biometrics.BiometricEnrollActivity;
-+import com.android.settings.biometrics.BiometricEnrollBase;
-+import com.android.settings.tb132fu.Tb132fuUtils;
- import com.android.settings.utils.SettingsDividerItemDecoration;
-
- import com.google.android.setupcompat.util.WizardManagerHelper;
-@@ -64,6 +79,14 @@ import org.jetbrains.annotations.NotNull;
- // TODO(b/123225425): Restrict SetupChooseLockGeneric to be accessible by SUW only
- public class SetupChooseLockGeneric extends ChooseLockGeneric {
-
-+    private static final String TAG = "SetupChooseLockGeneric";
-+    private static final String ACTION_SETUP_LOCK_SCREEN =
-+            "com.android.settings.SETUP_LOCK_SCREEN";
-+    private static final String GOOGLE_SETUP_WIZARD_PACKAGE =
-+            "com.google.android.setupwizard";
-+    @VisibleForTesting
-+    static final String EXTRA_TB132FU_SETUP_FACE =
-+            "com.android.settings.extra.TB132FU_SETUP_FACE";
-     private static final String KEY_UNLOCK_SET_DO_LATER = "unlock_set_do_later";
-
-     @Override
-@@ -87,6 +110,7 @@ public class SetupChooseLockGeneric extends ChooseLockGeneric {
-             setTheme(SetupWizardUtils.getTheme(this, getIntent()));
-             ThemeHelper.trySetDynamicColor(this);
-         }
-+        maybeEnableTb132fuFaceEnrollment(savedInstance);
-         super.onCreate(savedInstance);
-
-         if(getIntent().hasExtra(EXTRA_KEY_REQUESTED_MIN_COMPLEXITY)) {
-@@ -103,7 +127,84 @@ public class SetupChooseLockGeneric extends ChooseLockGeneric {
-             }
-         }
-
--        findViewById(R.id.content_parent).setFitsSystemWindows(false);
-+        final View contentParent = findViewById(R.id.content_parent);
-+        if (contentParent != null) {
-+            contentParent.setFitsSystemWindows(false);
-+        }
-+    }
-+
-+    /**
-+     * Keeps the Sense face sensor at its truthful convenience strength while allowing the
-+     * TB132FU setup lock flow to offer its optional face-enrollment page after a new credential.
-+     */
-+    private void maybeEnableTb132fuFaceEnrollment(Bundle savedInstance) {
-+        final Intent intent = getIntent();
-+        if (savedInstance != null
-+                && intent.getBooleanExtra(EXTRA_TB132FU_SETUP_FACE, false)) {
-+            // Keep the already-qualified handoff across a configuration-driven recreation.
-+            normalizeTb132fuSetupFaceIntent(intent);
-+            return;
-+        }
-+        // This is a private decision marker, not a caller-controlled entry point.
-+        intent.removeExtra(EXTRA_TB132FU_SETUP_FACE);
-+        if (!isTb132fuSetupFaceCandidate(
-+                intent, Tb132fuUtils.isTb132fu(), getCallingPackage(),
-+                getLaunchedFromPackage())) {
-+            return;
-+        }
-+
-+        final int userId = intent.getIntExtra(Intent.EXTRA_USER_ID, UserHandle.myUserId());
-+        final FaceManager faceManager = getSystemService(FaceManager.class);
-+        final DevicePolicyManager devicePolicyManager =
-+                getSystemService(DevicePolicyManager.class);
-+        try {
-+            final boolean hasEnrolledFace = faceManager != null
-+                    && faceManager.hasEnrolledTemplates(userId);
-+            final boolean faceDisabledByAdmin = devicePolicyManager != null
-+                    && (devicePolicyManager.getKeyguardDisabledFeatures(null, userId)
-+                    & KEYGUARD_DISABLE_FACE) != 0;
-+            if (hasEnrolledFace || faceDisabledByAdmin) {
-+                Log.i(TAG, "Skipping optional TB132FU setup Face enrollment: enrolled="
-+                        + hasEnrolledFace + ", disabledByAdmin=" + faceDisabledByAdmin);
-+                return;
-+            }
-+        } catch (RuntimeException exception) {
-+            Log.w(TAG, "Unable to qualify optional TB132FU face enrollment", exception);
-+            return;
-+        }
-+
-+        // Google's lock-screen wrapper omits isSetupFlow and Android 17's activity-result launcher
-+        // may expose its identity as either the result caller or the launch source. The exact
-+        // preinstalled Google Setup package plus action is sufficient to scope this exported
-+        // entry point; do not depend on replay-sensitive provisioning flags. The wrapper also runs
-+        // before the vendor Face service is guaranteed to report its sensor, so do not make this
-+        // known-device handoff depend on a timing-sensitive hardware probe. Normalize the trusted
-+        // request so BiometricEnrollActivity consumes the Gatekeeper handle instead of asking for
-+        // the new credential a second time.
-+        normalizeTb132fuSetupFaceIntent(intent);
-+        Log.i(TAG, "TB132FU setup will continue from screen lock to optional Face enrollment");
-+    }
-+
-+    @VisibleForTesting
-+    static void normalizeTb132fuSetupFaceIntent(Intent intent) {
-+        intent.putExtra(WizardManagerHelper.EXTRA_IS_SETUP_FLOW, true);
-+        intent.putExtra(EXTRA_KEY_REQUEST_GK_PW_HANDLE, true);
-+        intent.putExtra(EXTRA_KEY_FOR_FINGERPRINT, false);
-+        intent.putExtra(EXTRA_KEY_FOR_BIOMETRICS, false);
-+        intent.putExtra(EXTRA_KEY_FOR_FACE, true);
-+        intent.putExtra(EXTRA_TB132FU_SETUP_FACE, true);
-+    }
-+
-+    @VisibleForTesting
-+    static boolean isTb132fuSetupFaceCandidate(Intent intent, boolean isTb132fu,
-+            String callingPackage, String launchedFromPackage) {
-+        return isTb132fu
-+                && ACTION_SETUP_LOCK_SCREEN.equals(intent.getAction())
-+                && (GOOGLE_SETUP_WIZARD_PACKAGE.equals(callingPackage)
-+                        || GOOGLE_SETUP_WIZARD_PACKAGE.equals(launchedFromPackage))
-+                && !intent.getBooleanExtra(EXTRA_KEY_FOR_FACE, false)
-+                && !intent.getBooleanExtra(EXTRA_KEY_FOR_FINGERPRINT, false)
-+                && !intent.getBooleanExtra(EXTRA_KEY_FOR_BIOMETRICS, false);
-     }
-
-     @Override
-@@ -167,9 +268,25 @@ public class SetupChooseLockGeneric extends ChooseLockGeneric {
-             data.putExtra(EXTRA_PASSWORD_QUALITY,
-                     lockPatternUtils.getKeyguardStoredPasswordQuality(UserHandle.myUserId()));
-
-+            // ChooseLockGeneric launches biometric enrollment as a separate activity and then
-+            // finishes. Preserve the successful setup-lock result for Google Setup, but never
-+            // return the temporary Gatekeeper handle outside Settings.
-+            if (requestCode == CHOOSE_LOCK_BEFORE_BIOMETRIC_REQUEST
-+                    && resultCode == BiometricEnrollBase.RESULT_FINISHED) {
-+                final Intent setupResult = new Intent(data);
-+                setupResult.removeExtra(EXTRA_KEY_GK_PW_HANDLE);
-+                requireActivity().setResult(resultCode, setupResult);
-+            }
-+
-             super.onActivityResult(requestCode, resultCode, data);
-         }
-
-+        @Override
-+        protected boolean shouldLaunchBiometricEnrollmentAfterLock() {
-+            return requireActivity().getIntent()
-+                    .getBooleanExtra(EXTRA_TB132FU_SETUP_FACE, false);
-+        }
-+
-         @Override
-         public RecyclerView onCreateRecyclerView(LayoutInflater inflater, ViewGroup parent,
-                 Bundle savedInstanceState) {
-@@ -256,6 +373,14 @@ public class SetupChooseLockGeneric extends ChooseLockGeneric {
-         @Override
-         protected Intent getBiometricEnrollIntent(Context context) {
-             final Intent intent = super.getBiometricEnrollIntent(context);
-+            // The non-internal activity owns and removes the temporary Gatekeeper handle after
-+            // enrollment. The setup-lock activity has already retained its sanitized result.
-+            intent.setClass(context, BiometricEnrollActivity.class);
-+            intent.putExtra(
-+                    EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED,
-+                    Authenticators.BIOMETRIC_CONVENIENCE);
-+            intent.putExtra(BiometricEnrollActivity.EXTRA_LAUNCH_FACE_ENROLL_FIRST, true);
-+            Log.i(TAG, "Continuing TB132FU setup with optional Face enrollment");
-             SetupWizardUtils.copySetupExtras(getActivity().getIntent(), intent);
-             return intent;
-         }
 diff --git a/src/com/android/settings/tb132fu/Tb132fuPenPreferenceController.java b/src/com/android/settings/tb132fu/Tb132fuPenPreferenceController.java
 new file mode 100644
 index 0000000..f365ad9
@@ -2212,7 +1986,7 @@ index 2947ee3..f6741b4 100644
 +++ b/tests/robotests/src/com/android/settings/DisplaySettingsTest.java
 @@ -44,6 +44,7 @@ public class DisplaySettingsTest {
          }
-
+ 
          assertThat(preferenceScreenKeys).containsAtLeastElementsIn(preferenceKeys);
 +        assertThat(preferenceScreenKeys).contains("tb132fu_refresh_rate");
      }
@@ -2229,7 +2003,7 @@ index d3c2536..85ec2d9 100644
 +import android.platform.test.annotations.EnableFlags;
  import android.platform.test.flag.junit.SetFlagsRule;
  import android.provider.SearchIndexableResource;
-
+ 
 +import androidx.preference.Preference;
 +import androidx.preference.PreferenceManager;
 +import androidx.preference.PreferenceScreen;
@@ -2240,7 +2014,7 @@ index d3c2536..85ec2d9 100644
 +import com.android.settingslib.core.AbstractPreferenceController;
  import com.android.settingslib.drawer.CategoryKey;
  import com.android.settingslib.search.SearchIndexableRaw;
-
+ 
 @@ -128,4 +136,26 @@ public class AccountDashboardFragmentTest {
      public void shouldSkipForInitialSUW_returnTrue() {
          assertThat(mFragment.shouldSkipForInitialSUW()).isTrue();
@@ -2274,7 +2048,7 @@ index bedfc59..3f46942 100644
 +++ b/tests/robotests/src/com/android/settings/dashboard/DashboardFragmentTest.java
 @@ -241,8 +241,9 @@ public class DashboardFragmentTest {
      }
-
+ 
      @Test
 -    @Config(qualifiers = "mcc999")
      public void displayTilesAsPreference_shouldNotAddSuppressedTiles() {
@@ -2286,7 +2060,7 @@ index bedfc59..3f46942 100644
 @@ -257,6 +258,19 @@ public class DashboardFragmentTest {
          verify(mTestFragment.mScreen, never()).addPreference(nullable(Preference.class));
      }
-
+ 
 +    @Test
 +    public void displayTile_componentSuppressedWithoutMetadataKey_returnsFalse() {
 +        ReflectionHelpers.setField(mTestFragment, "mSuppressInjectedTileKeys",
@@ -2344,7 +2118,7 @@ index 13eb866..4bf816e 100644
 @@ -97,6 +97,16 @@ class ColorModeApiScreenTest {
          assertThrows(FailedPreconditionException::class.java) { tester.getLaunchIntent() }
      }
-
+ 
 +    @Test
 +    fun getLaunchIntent_onlyOneColorMode_disallowed() {
 +        SettingsShadowResources.overrideResource(
@@ -2376,14 +2150,14 @@ index 6602d42..9339480 100644
  import org.mockito.kotlin.doReturn
  import org.mockito.kotlin.mock
  import org.mockito.kotlin.stub
-
+ 
  @RunWith(AndroidJUnit4::class)
 +@Config(shadows = [SettingsShadowResources::class])
  class ColorModeScreenTest {
      private val preferenceScreenCreator = ColorModeScreen()
      private val mockColorDisplayManager = mock<ColorDisplayManager>()
 @@ -45,6 +48,13 @@ class ColorModeScreenTest {
-
+ 
      @Before
      fun setUp() {
 +        SettingsShadowResources.overrideResource(
@@ -2555,16 +2329,16 @@ index 4371bae..a7f378c 100644
 --- a/tests/robotests/src/com/android/settings/display/colors/ColorModePreferenceControllerTest.kt
 +++ b/tests/robotests/src/com/android/settings/display/colors/ColorModePreferenceControllerTest.kt
 @@ -28,6 +28,7 @@ import androidx.test.core.app.ApplicationProvider
-
+ 
  import com.android.settingslib.testutils.shadow.ShadowColorDisplayManager
  import com.android.settings.R
 +import com.android.settings.testutils.shadow.SettingsShadowResources
  import com.google.common.truth.Truth.assertThat
-
+ 
  import org.junit.Before
 @@ -39,7 +40,13 @@ import org.robolectric.shadow.api.Shadow
  import org.robolectric.shadows.ShadowContentResolver
-
+ 
  @RunWith(RobolectricTestRunner::class)
 -@Config(shadows = [ShadowColorDisplayManager::class, ShadowContentResolver::class])
 +@Config(
@@ -2588,13 +2362,13 @@ index 4371bae..a7f378c 100644
 +                ColorDisplayManager.COLOR_MODE_AUTOMATIC,
 +            ),
 +        )
-
+ 
          controller = ColorModePreferenceController(context, "test")
          preference = Preference(context)
 @@ -115,6 +129,16 @@ class ColorModePreferenceControllerTest {
              .isEmpty()
      }
-
+ 
 +    @Test
 +    fun isAvailable_onlyOneColorMode_returnsFalse() {
 +        SettingsShadowResources.overrideResource(
@@ -2928,203 +2702,12 @@ index 0000000..54ea8dc
 +                LocaleListEditor.INTENT_LOCALE_KEY));
 +    }
 +}
-diff --git a/tests/robotests/src/com/android/settings/password/SetupChooseLockGenericTest.java b/tests/robotests/src/com/android/settings/password/SetupChooseLockGenericTest.java
-index cd78446..762e529 100644
---- a/tests/robotests/src/com/android/settings/password/SetupChooseLockGenericTest.java
-+++ b/tests/robotests/src/com/android/settings/password/SetupChooseLockGenericTest.java
-@@ -18,6 +18,7 @@ package com.android.settings.password;
-
- import static android.Manifest.permission.REQUEST_PASSWORD_COMPLEXITY;
- import static android.app.admin.DevicePolicyManager.PASSWORD_COMPLEXITY_HIGH;
-+import static android.provider.Settings.EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED;
-
- import static com.android.settings.password.ChooseLockSettingsHelper.EXTRA_KEY_REQUESTED_MIN_COMPLEXITY;
-
-@@ -27,9 +28,11 @@ import static com.google.common.truth.Truth.assertThat;
- import static org.mockito.ArgumentMatchers.any;
- import static org.mockito.Mockito.when;
- import static org.robolectric.RuntimeEnvironment.application;
-+import static org.robolectric.Shadows.shadowOf;
-
- import android.content.Context;
- import android.content.Intent;
-+import android.hardware.biometrics.BiometricManager.Authenticators;
- import android.hardware.face.FaceManager;
- import android.hardware.fingerprint.FingerprintManager;
- import android.provider.Settings;
-@@ -40,6 +43,8 @@ import androidx.annotation.NonNull;
- import androidx.fragment.app.Fragment;
-
- import com.android.settings.R;
-+import com.android.settings.biometrics.BiometricEnrollActivity;
-+import com.android.settings.biometrics.BiometricEnrollBase;
- import com.android.settings.password.SetupChooseLockGeneric.SetupChooseLockGenericFragment;
- import com.android.settings.testutils.FakeFeatureFactory;
- import com.android.settings.testutils.shadow.ShadowLockPatternUtils;
-@@ -64,6 +69,7 @@ import org.robolectric.android.controller.ActivityController;
- import org.robolectric.annotation.Config;
- import org.robolectric.annotation.Implementation;
- import org.robolectric.annotation.Implements;
-+import org.robolectric.shadows.ShadowActivity;
-
- import java.util.List;
-
-@@ -76,6 +82,9 @@ import java.util.List;
- })
- public class SetupChooseLockGenericTest {
-
-+    private static final String GOOGLE_SETUP_WIZARD_PACKAGE =
-+            "com.google.android.setupwizard";
-+
-     @Rule
-     public final MockitoRule mMockitoRule = MockitoJUnit.rule();
-     @Mock
-@@ -115,6 +124,139 @@ public class SetupChooseLockGenericTest {
-         assertThat(activity.isFinishing()).isTrue();
-     }
-
-+    @Test
-+    public void isTb132fuSetupFaceCandidate_plainSetupLock_returnsTrue() {
-+        final Intent intent = new Intent("com.android.settings.SETUP_LOCK_SCREEN");
-+        intent.putExtra(EXTRA_IS_SETUP_FLOW, true);
-+
-+        assertThat(SetupChooseLockGeneric.isTb132fuSetupFaceCandidate(
-+                intent, true, GOOGLE_SETUP_WIZARD_PACKAGE, null)).isTrue();
-+    }
-+
-+    @Test
-+    public void isTb132fuSetupFaceCandidate_launchSourceFallback_returnsTrue() {
-+        final Intent intent = new Intent("com.android.settings.SETUP_LOCK_SCREEN");
-+
-+        assertThat(SetupChooseLockGeneric.isTb132fuSetupFaceCandidate(
-+                intent, true, null, GOOGLE_SETUP_WIZARD_PACKAGE)).isTrue();
-+    }
-+
-+    @Test
-+    public void isTb132fuSetupFaceCandidate_trustedExactActionDoesNotDependOnSetupFlag() {
-+        final Intent intent = new Intent("com.android.settings.SETUP_LOCK_SCREEN");
-+
-+        assertThat(SetupChooseLockGeneric.isTb132fuSetupFaceCandidate(
-+                intent, true, GOOGLE_SETUP_WIZARD_PACKAGE, null)).isTrue();
-+    }
-+
-+    @Test
-+    public void isTb132fuSetupFaceCandidate_existingBiometricRequest_returnsFalse() {
-+        final Intent intent = new Intent("com.android.settings.SETUP_LOCK_SCREEN");
-+        intent.putExtra(EXTRA_IS_SETUP_FLOW, true);
-+        intent.putExtra(ChooseLockSettingsHelper.EXTRA_KEY_FOR_FINGERPRINT, true);
-+
-+        assertThat(SetupChooseLockGeneric.isTb132fuSetupFaceCandidate(
-+                intent, true, GOOGLE_SETUP_WIZARD_PACKAGE, null)).isFalse();
-+    }
-+
-+    @Test
-+    public void isTb132fuSetupFaceCandidate_otherDevice_returnsFalse() {
-+        final Intent intent = new Intent("com.android.settings.SETUP_LOCK_SCREEN");
-+        intent.putExtra(EXTRA_IS_SETUP_FLOW, true);
-+
-+        assertThat(SetupChooseLockGeneric.isTb132fuSetupFaceCandidate(
-+                intent, false, GOOGLE_SETUP_WIZARD_PACKAGE, null)).isFalse();
-+    }
-+
-+    @Test
-+    public void isTb132fuSetupFaceCandidate_otherAction_returnsFalse() {
-+        final Intent intent = new Intent(Intent.ACTION_MAIN);
-+
-+        assertThat(SetupChooseLockGeneric.isTb132fuSetupFaceCandidate(
-+                intent, true, GOOGLE_SETUP_WIZARD_PACKAGE, null)).isFalse();
-+    }
-+
-+    @Test
-+    public void isTb132fuSetupFaceCandidate_nonGoogleCaller_returnsFalse() {
-+        final Intent intent = new Intent("com.android.settings.SETUP_LOCK_SCREEN");
-+        intent.putExtra(EXTRA_IS_SETUP_FLOW, true);
-+
-+        assertThat(SetupChooseLockGeneric.isTb132fuSetupFaceCandidate(
-+                intent, true, "com.example.untrusted", "com.example.untrusted")).isFalse();
-+        assertThat(SetupChooseLockGeneric.isTb132fuSetupFaceCandidate(
-+                intent, true, null, null)).isFalse();
-+    }
-+
-+    @Test
-+    public void normalizeTb132fuSetupFaceIntent_requestsFaceOnlySetupHandoff() {
-+        final Intent intent = new Intent("com.android.settings.SETUP_LOCK_SCREEN");
-+        intent.putExtra(ChooseLockSettingsHelper.EXTRA_KEY_FOR_FINGERPRINT, true);
-+        intent.putExtra(ChooseLockSettingsHelper.EXTRA_KEY_FOR_BIOMETRICS, true);
-+
-+        SetupChooseLockGeneric.normalizeTb132fuSetupFaceIntent(intent);
-+
-+        assertThat(intent.getBooleanExtra(EXTRA_IS_SETUP_FLOW, false)).isTrue();
-+        assertThat(intent.getBooleanExtra(
-+                ChooseLockSettingsHelper.EXTRA_KEY_REQUEST_GK_PW_HANDLE, false)).isTrue();
-+        assertThat(intent.getBooleanExtra(
-+                ChooseLockSettingsHelper.EXTRA_KEY_FOR_FACE, false)).isTrue();
-+        assertThat(intent.getBooleanExtra(
-+                ChooseLockSettingsHelper.EXTRA_KEY_FOR_FINGERPRINT, true)).isFalse();
-+        assertThat(intent.getBooleanExtra(
-+                ChooseLockSettingsHelper.EXTRA_KEY_FOR_BIOMETRICS, true)).isFalse();
-+        assertThat(intent.getBooleanExtra(
-+                SetupChooseLockGeneric.EXTRA_TB132FU_SETUP_FACE, false)).isTrue();
-+    }
-+
-+    @Test
-+    public void setupFaceWithoutTb132fuMarker_doesNotChangeGenericSetupFlow() {
-+        final SetupChooseLockGenericFragment fragment =
-+                getFragmentOfSetupChooseLockGeneric(false, true, false);
-+
-+        assertThat(fragment.shouldLaunchBiometricEnrollmentAfterLock()).isFalse();
-+    }
-+
-+    @Test
-+    public void setupFaceCredentialResult_launchesFaceAndPreservesSanitizedSetupResult() {
-+        final SetupChooseLockGenericFragment fragment =
-+                getFragmentOfSetupChooseLockGeneric(false, true, false);
-+        final Intent activityIntent = new Intent(fragment.requireActivity().getIntent());
-+        activityIntent.putExtra(
-+                SetupChooseLockGeneric.EXTRA_TB132FU_SETUP_FACE, true);
-+        fragment.requireActivity().setIntent(activityIntent);
-+        final Intent credentialResult = new Intent();
-+        credentialResult.putExtra(ChooseLockSettingsHelper.EXTRA_KEY_GK_PW_HANDLE, 1234L);
-+
-+        assertThat(fragment.shouldLaunchBiometricEnrollmentAfterLock()).isTrue();
-+
-+        fragment.onActivityResult(
-+                ChooseLockGeneric.ChooseLockGenericFragment.CHOOSE_LOCK_BEFORE_BIOMETRIC_REQUEST,
-+                BiometricEnrollBase.RESULT_FINISHED,
-+                credentialResult);
-+
-+        final ShadowActivity shadowActivity = shadowOf(fragment.requireActivity());
-+        final Intent faceIntent = shadowActivity.getNextStartedActivity();
-+        assertThat(faceIntent.getComponent().getClassName())
-+                .isEqualTo(BiometricEnrollActivity.class.getName());
-+        assertThat(faceIntent.getLongExtra(
-+                ChooseLockSettingsHelper.EXTRA_KEY_GK_PW_HANDLE, 0L)).isEqualTo(1234L);
-+        assertThat(faceIntent.getIntExtra(EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED, 0))
-+                .isEqualTo(Authenticators.BIOMETRIC_CONVENIENCE);
-+        assertThat(faceIntent.getBooleanExtra(
-+                BiometricEnrollActivity.EXTRA_LAUNCH_FACE_ENROLL_FIRST, false)).isTrue();
-+        assertThat(shadowActivity.getResultCode()).isEqualTo(BiometricEnrollBase.RESULT_FINISHED);
-+        assertThat(
-+                        shadowActivity
-+                                .getResultIntent()
-+                                .hasExtra(ChooseLockSettingsHelper.EXTRA_KEY_GK_PW_HANDLE))
-+                .isFalse();
-+        assertThat(
-+                        shadowActivity
-+                                .getResultIntent()
-+                                .hasExtra(SetupChooseLockGenericFragment.EXTRA_PASSWORD_QUALITY))
-+                .isTrue();
-+    }
-+
-     @Test
-     public void setupChooseLockGenericPasswordComplexityExtraWithoutPermissionExpressive() {
-         ShadowSettingsThemeHelper.setExpressiveTheme(true);
 diff --git a/tests/robotests/src/com/android/settings/system/SystemDashboardFragmentTest.java b/tests/robotests/src/com/android/settings/system/SystemDashboardFragmentTest.java
 index 494b130..3da8952 100644
 --- a/tests/robotests/src/com/android/settings/system/SystemDashboardFragmentTest.java
 +++ b/tests/robotests/src/com/android/settings/system/SystemDashboardFragmentTest.java
 @@ -173,4 +173,17 @@ public class SystemDashboardFragmentTest {
-
+ 
          assertThat(keys).doesNotContain("touchpad_settings");
      }
 +
@@ -3220,7 +2803,7 @@ index b3a2770..e2d75b5 100644
 +++ b/tests/unit/src/com/android/settings/display/ColorModePreferenceFragmentTest.java
 @@ -18,7 +18,6 @@ package com.android.settings.display;
  import static com.google.common.truth.Truth.assertThat;
-
+ 
  import static org.mockito.ArgumentMatchers.anyInt;
 -import static org.mockito.Mockito.doNothing;
  import static org.mockito.Mockito.doReturn;
@@ -3233,5 +2816,5 @@ index b3a2770..e2d75b5 100644
 -        doNothing().when(mFragment).setColorMode(anyInt());
 +        doReturn(true).when(mFragment).setColorMode(anyInt());
      }
-
+ 
      @Test

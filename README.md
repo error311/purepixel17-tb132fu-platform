@@ -37,12 +37,11 @@ The patch set covers:
 - pen attach, detach and battery-status polish
 - the factory-reset-qualified Pixel Setup language/region selector and its
   no-action-bar crash guard
-- optional TB132FU-only convenience Face enrollment after creating a screen
-  lock in Pixel Setup, with the temporary Gatekeeper handle kept inside
-  Settings
-- a userdebug-only Pixel Tablet Play Store catalog identity for qualifying
-  official dynamic wallpaper delivery; production user builds are hard-disabled
-  from that path
+- normal optional camera-based convenience Face enrollment through Settings;
+  the unqualified Pixel Setup post-PIN handoff is deliberately absent
+- a userdebug-only, exact-process Pixel Tablet identity probe for Play Integrity;
+  production user builds, Play Store, global properties, and other apps are
+  hard-disabled from that path
 - native Settings placement for refresh rate, double-tap wake, AOD daytime
   scheduling, Precision Pen, and pogo keyboard/touchpad controls
 - the standard Android Multiple users page below System's Interaction section
