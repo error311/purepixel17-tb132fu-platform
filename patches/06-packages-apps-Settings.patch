@@ -93,7 +93,7 @@ index f836ad1..8291d8a 100644
      <bool name="config_force_showing_icon_on_locale_picker_screen">false</bool>
  </resources>
 diff --git a/res/values/strings.xml b/res/values/strings.xml
-index 8246f5b..0456a60 100644
+index 8246f5b..7ae8e79 100644
 --- a/res/values/strings.xml
 +++ b/res/values/strings.xml
 @@ -3184,6 +3184,10 @@
@@ -107,21 +107,43 @@ index 8246f5b..0456a60 100644
      <!-- Display settings screen, Color mode option for "Boosted(sRGB + 10%) color"  [CHAR LIMIT=45] -->
      <string name="color_mode_option_boosted">Boosted</string>
      <!-- Display settings screen, Color mode option for "Saturated color"  [CHAR LIMIT=45] -->
-@@ -3658,6 +3662,13 @@
+@@ -3658,6 +3662,35 @@
      <string name="kernel_version">Kernel version</string>
      <!-- About phone screen,  setting option name  [CHAR LIMIT=40] -->
      <string name="build_number">Build number</string>
 +    <!-- Pure Pixel ROM identity shown on the Android version screen. -->
-+    <string name="pure_pixel_rom_title">ROM</string>
-+    <string name="pure_pixel_rom_summary" translatable="false">Pure Pixel</string>
 +    <string name="pure_pixel_build_title">Pure Pixel build</string>
 +    <string name="pure_pixel_maintainer_title">Maintainer</string>
 +    <string name="pure_pixel_maintainer_summary" translatable="false">error311</string>
 +    <string name="pure_pixel_identity_purpose">ROM identity information</string>
++    <!-- Read-only live security state shown on the Android version screen. -->
++    <string name="pure_pixel_bootloader_state_title">Bootloader</string>
++    <string name="pure_pixel_verified_boot_state_title">Verified boot</string>
++    <string name="pure_pixel_verity_mode_title">dm-verity</string>
++    <string name="pure_pixel_selinux_state_title">SELinux</string>
++    <string name="pure_pixel_encryption_state_title">Encryption</string>
++    <string name="pure_pixel_widevine_security_level_title">Widevine security level</string>
++    <string name="pure_pixel_security_state_purpose">Read-only system security status</string>
++    <string name="pure_pixel_security_state_locked">Locked</string>
++    <string name="pure_pixel_security_state_unlocked">Unlocked</string>
++    <string name="pure_pixel_security_state_inconsistent">Inconsistent</string>
++    <string name="pure_pixel_security_state_green" translatable="false">GREEN</string>
++    <string name="pure_pixel_security_state_yellow" translatable="false">YELLOW</string>
++    <string name="pure_pixel_security_state_orange" translatable="false">ORANGE</string>
++    <string name="pure_pixel_security_state_red" translatable="false">RED</string>
++    <string name="pure_pixel_security_state_enforcing">Enforcing</string>
++    <string name="pure_pixel_security_state_permissive">Permissive</string>
++    <string name="pure_pixel_security_state_disabled">Disabled</string>
++    <string name="pure_pixel_security_state_logging">Logging</string>
++    <string name="pure_pixel_security_state_eio" translatable="false">EIO</string>
++    <string name="pure_pixel_security_state_file_encryption">File-based encryption (FBE)</string>
++    <string name="pure_pixel_security_state_full_disk_encryption">Full-disk encryption (FDE)</string>
++    <string name="pure_pixel_security_state_encrypted">Encrypted</string>
++    <string name="pure_pixel_security_state_not_encrypted">Not encrypted</string>
      <!-- About phone screen, tapping this button will take user to a seperate UI to check Google Play system update [CHAR LIMIT=60] -->
      <string name="module_version">Google Play system update</string>
      <!-- About phone screen, show a list of battery information  [CHAR LIMIT=60] -->
-@@ -3743,6 +3754,29 @@
+@@ -3743,6 +3776,29 @@
      <!-- About phone, status item title. The status summary for cycle count that's not available. [CHAR LIMIT=40] -->
      <string name="battery_cycle_count_not_available">Unavailable</string>
  
@@ -151,7 +173,7 @@ index 8246f5b..0456a60 100644
      <!-- SD card & phone storage settings summary. Displayed when the total memory usage is being calculated. Will be replaced with a number like "12.3 GB" when finished calucating. [CHAR LIMIT=30] -->
      <string name="memory_calculating_size">Calculating\u2026</string>
  
-@@ -15590,4 +15624,22 @@
+@@ -15590,4 +15646,22 @@
      <!-- Search keywords for Human interface device access setting -->
      <string name="keywords_access_hid">hid, human, access, device</string>
      <!-- Access HID end -->
@@ -289,22 +311,14 @@ index 0029ab1..fab9351 100644
              android:key="show_operator_name"
              android:title="@string/show_operator_name_title"
 diff --git a/res/xml/firmware_version.xml b/res/xml/firmware_version.xml
-index 41f7733..c575c00 100644
+index 41f7733..45747be 100644
 --- a/res/xml/firmware_version.xml
 +++ b/res/xml/firmware_version.xml
-@@ -21,6 +21,32 @@
+@@ -21,6 +21,79 @@
      android:title="@string/firmware_version"
      settings:keywords="@string/keywords_android_version">
  
 +    <!-- Pure Pixel identity -->
-+    <Preference
-+        android:key="pure_pixel_rom"
-+        android:title="@string/pure_pixel_rom_title"
-+        android:summary="@string/pure_pixel_rom_summary"
-+        android:selectable="false"
-+        settings:enableCopying="true"
-+        settings:searchable="false"/>
-+
 +    <Preference
 +        android:key="pure_pixel_build"
 +        android:title="@string/pure_pixel_build_title"
@@ -321,6 +335,61 @@ index 41f7733..c575c00 100644
 +        android:selectable="false"
 +        settings:enableCopying="true"
 +        settings:searchable="false"/>
++
++    <!-- Live boot and security state -->
++    <Preference
++        android:key="pure_pixel_bootloader_state"
++        android:title="@string/pure_pixel_bootloader_state_title"
++        android:summary="@string/summary_placeholder"
++        android:selectable="false"
++        settings:enableCopying="true"
++        settings:searchable="false"
++        settings:controller="com.android.settings.deviceinfo.firmwareversion.PurePixelSecurityStatePreferenceController"/>
++
++    <Preference
++        android:key="pure_pixel_verified_boot_state"
++        android:title="@string/pure_pixel_verified_boot_state_title"
++        android:summary="@string/summary_placeholder"
++        android:selectable="false"
++        settings:enableCopying="true"
++        settings:searchable="false"
++        settings:controller="com.android.settings.deviceinfo.firmwareversion.PurePixelSecurityStatePreferenceController"/>
++
++    <Preference
++        android:key="pure_pixel_verity_mode"
++        android:title="@string/pure_pixel_verity_mode_title"
++        android:summary="@string/summary_placeholder"
++        android:selectable="false"
++        settings:enableCopying="true"
++        settings:searchable="false"
++        settings:controller="com.android.settings.deviceinfo.firmwareversion.PurePixelSecurityStatePreferenceController"/>
++
++    <Preference
++        android:key="pure_pixel_selinux_state"
++        android:title="@string/pure_pixel_selinux_state_title"
++        android:summary="@string/summary_placeholder"
++        android:selectable="false"
++        settings:enableCopying="true"
++        settings:searchable="false"
++        settings:controller="com.android.settings.deviceinfo.firmwareversion.PurePixelSecurityStatePreferenceController"/>
++
++    <Preference
++        android:key="pure_pixel_encryption_state"
++        android:title="@string/pure_pixel_encryption_state_title"
++        android:summary="@string/summary_placeholder"
++        android:selectable="false"
++        settings:enableCopying="true"
++        settings:searchable="false"
++        settings:controller="com.android.settings.deviceinfo.firmwareversion.PurePixelSecurityStatePreferenceController"/>
++
++    <Preference
++        android:key="pure_pixel_widevine_security_level"
++        android:title="@string/pure_pixel_widevine_security_level_title"
++        android:summary="@string/summary_placeholder"
++        android:selectable="false"
++        settings:enableCopying="true"
++        settings:searchable="false"
++        settings:controller="com.android.settings.deviceinfo.firmwareversion.PurePixelSecurityStatePreferenceController"/>
 +
      <!-- Android version -->
      <Preference
@@ -493,16 +562,61 @@ index b55de4b..4435cc9 100644
          return true;
      }
 diff --git a/src/com/android/settings/deviceinfo/firmwareversion/FirmwareVersionScreen.kt b/src/com/android/settings/deviceinfo/firmwareversion/FirmwareVersionScreen.kt
-index 8948b33..8720a2c 100644
+index 8948b33..d62c600 100644
 --- a/src/com/android/settings/deviceinfo/firmwareversion/FirmwareVersionScreen.kt
 +++ b/src/com/android/settings/deviceinfo/firmwareversion/FirmwareVersionScreen.kt
-@@ -70,6 +70,9 @@ open class FirmwareVersionScreen : PreferenceScreenMixin, PreferenceSummaryProvi
+@@ -29,17 +29,18 @@ import com.android.settingslib.metadata.PreferenceMetadata
+ import com.android.settingslib.metadata.PreferenceSummaryProvider
+ import com.android.settingslib.metadata.ProvidePreferenceScreen
+ import com.android.settingslib.metadata.preferenceHierarchy
+-import kotlinx.coroutines.CoroutineScope
+ import com.android.settingslib.metadata.preferencesapi.PreferencesApiScreen.Companion.APP_FUNCTION_UNCATEGORIZED
++import kotlinx.coroutines.CoroutineScope
+ 
+ @ProvidePreferenceScreen(FirmwareVersionScreen.KEY)
+ open class FirmwareVersionScreen : PreferenceScreenMixin, PreferenceSummaryProvider {
+-    override fun tags(context: Context) = arrayOf(APP_FUNCTION_UNCATEGORIZED, TAG_DEVICE_STATE_SCREEN)
++    override fun tags(context: Context) =
++        arrayOf(APP_FUNCTION_UNCATEGORIZED, TAG_DEVICE_STATE_SCREEN)
+ 
+     override val key: String
+         get() = KEY
+ 
+-    //TODO(b/462618020) Catalyst-purpose: replace default purpose with 2 line description
++    // TODO(b/462618020) Catalyst-purpose: replace default purpose with 2 line description
+     override val purpose: Int
+         get() = R.string.firmware_version_purpose
+ 
+@@ -70,6 +71,32 @@ open class FirmwareVersionScreen : PreferenceScreenMixin, PreferenceSummaryProvi
  
      override fun getPreferenceHierarchy(context: Context, coroutineScope: CoroutineScope) =
          preferenceHierarchy(context) {
-+            +PurePixelRomPreference()
 +            +PurePixelBuildPreference()
 +            +PurePixelMaintainerPreference()
++            +PurePixelSecurityStatePreference(
++                PurePixelSecurityState.KEY_BOOTLOADER,
++                R.string.pure_pixel_bootloader_state_title,
++            )
++            +PurePixelSecurityStatePreference(
++                PurePixelSecurityState.KEY_VERIFIED_BOOT,
++                R.string.pure_pixel_verified_boot_state_title,
++            )
++            +PurePixelSecurityStatePreference(
++                PurePixelSecurityState.KEY_VERITY_MODE,
++                R.string.pure_pixel_verity_mode_title,
++            )
++            +PurePixelSecurityStatePreference(
++                PurePixelSecurityState.KEY_SELINUX,
++                R.string.pure_pixel_selinux_state_title,
++            )
++            +PurePixelSecurityStatePreference(
++                PurePixelSecurityState.KEY_ENCRYPTION,
++                R.string.pure_pixel_encryption_state_title,
++            )
++            +PurePixelSecurityStatePreference(
++                PurePixelSecurityState.KEY_WIDEVINE,
++                R.string.pure_pixel_widevine_security_level_title,
++            )
              +FirmwareVersionDetailPreference()
              +SecurityPatchLevelPreference()
              +MainlineModuleVersionPreference()
@@ -542,10 +656,10 @@ index 0000000..1a7599e
 +}
 diff --git a/src/com/android/settings/deviceinfo/firmwareversion/PurePixelIdentityPreference.kt b/src/com/android/settings/deviceinfo/firmwareversion/PurePixelIdentityPreference.kt
 new file mode 100644
-index 0000000..259720a
+index 0000000..3cc3371
 --- /dev/null
 +++ b/src/com/android/settings/deviceinfo/firmwareversion/PurePixelIdentityPreference.kt
-@@ -0,0 +1,85 @@
+@@ -0,0 +1,79 @@
 +/*
 + * Copyright (C) 2026 The Pure Pixel Project
 + *
@@ -609,12 +723,6 @@ index 0000000..259720a
 +        get() = SensitivityLevel.NO_SENSITIVITY
 +}
 +
-+class PurePixelRomPreference :
-+    PurePixelIdentityPreference(key = "pure_pixel_rom", title = R.string.pure_pixel_rom_title) {
-+    override fun getSummary(context: Context): CharSequence =
-+        context.getText(R.string.pure_pixel_rom_summary)
-+}
-+
 +class PurePixelBuildPreference :
 +    PurePixelIdentityPreference(key = "pure_pixel_build", title = R.string.pure_pixel_build_title) {
 +    override fun getSummary(context: Context): CharSequence {
@@ -630,6 +738,329 @@ index 0000000..259720a
 +    ) {
 +    override fun getSummary(context: Context): CharSequence =
 +        context.getText(R.string.pure_pixel_maintainer_summary)
++}
+diff --git a/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityState.java b/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityState.java
+new file mode 100644
+index 0000000..a1fe8e7
+--- /dev/null
++++ b/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityState.java
+@@ -0,0 +1,228 @@
++/*
++ * Copyright (C) 2026 The Pure Pixel Project
++ * SPDX-License-Identifier: Apache-2.0
++ */
++package com.android.settings.deviceinfo.firmwareversion;
++
++import android.content.Context;
++import android.media.MediaDrm;
++import android.media.UnsupportedSchemeException;
++import android.os.SELinux;
++import android.os.SystemProperties;
++import android.os.storage.StorageManager;
++import android.util.Log;
++
++import androidx.annotation.VisibleForTesting;
++
++import com.android.settings.R;
++
++import java.util.Locale;
++import java.util.UUID;
++
++/** Produces truthful, read-only summaries for the Android-version security rows. */
++public final class PurePixelSecurityState {
++    public static final String KEY_BOOTLOADER = "pure_pixel_bootloader_state";
++    public static final String KEY_VERIFIED_BOOT = "pure_pixel_verified_boot_state";
++    public static final String KEY_VERITY_MODE = "pure_pixel_verity_mode";
++    public static final String KEY_SELINUX = "pure_pixel_selinux_state";
++    public static final String KEY_ENCRYPTION = "pure_pixel_encryption_state";
++    public static final String KEY_WIDEVINE = "pure_pixel_widevine_security_level";
++
++    private static final String TAG = "PurePixelSecurity";
++    private static final String PROPERTY_FLASH_LOCKED = "ro.boot.flash.locked";
++    private static final String PROPERTY_VBMETA_DEVICE_STATE = "ro.boot.vbmeta.device_state";
++    private static final String PROPERTY_VERIFIED_BOOT_STATE = "ro.boot.verifiedbootstate";
++    private static final String PROPERTY_VERITY_MODE = "ro.boot.veritymode";
++    private static final String PROPERTY_CRYPTO_TYPE = "ro.crypto.type";
++    private static final String WIDEVINE_SECURITY_LEVEL_PROPERTY = "securityLevel";
++    private static final UUID WIDEVINE_UUID =
++            UUID.fromString("edef8ba9-79d6-4ace-a3c8-27dcd51d21ed");
++
++    private PurePixelSecurityState() {}
++
++    public static CharSequence getSummary(Context context, String key) {
++        return getSummary(context, key, Snapshot.read(key));
++    }
++
++    @VisibleForTesting
++    static CharSequence getSummary(Context context, String key, Snapshot snapshot) {
++        final int summary;
++        switch (key) {
++            case KEY_BOOTLOADER:
++                summary = getBootloaderSummary(snapshot);
++                break;
++            case KEY_VERIFIED_BOOT:
++                summary = getVerifiedBootSummary(snapshot.verifiedBootState);
++                break;
++            case KEY_VERITY_MODE:
++                summary = getVerityModeSummary(snapshot.verityMode);
++                break;
++            case KEY_SELINUX:
++                summary = getSelinuxSummary(snapshot);
++                break;
++            case KEY_ENCRYPTION:
++                summary = getEncryptionSummary(snapshot);
++                break;
++            case KEY_WIDEVINE:
++                final String widevineLevel =
++                        normalize(snapshot.widevineSecurityLevel).toUpperCase(Locale.ROOT);
++                if (widevineLevel.equals("L1")
++                        || widevineLevel.equals("L2")
++                        || widevineLevel.equals("L3")) {
++                    return widevineLevel;
++                }
++                summary = R.string.device_info_not_available;
++                break;
++            default:
++                summary = R.string.device_info_not_available;
++                break;
++        }
++        return context.getText(summary);
++    }
++
++    private static int getBootloaderSummary(Snapshot snapshot) {
++        final Boolean flashLocked = parseLocked(snapshot.flashLocked);
++        final Boolean vbmetaLocked = parseLocked(snapshot.vbmetaDeviceState);
++        if (flashLocked != null && vbmetaLocked != null && !flashLocked.equals(vbmetaLocked)) {
++            return R.string.pure_pixel_security_state_inconsistent;
++        }
++        final Boolean locked = flashLocked != null ? flashLocked : vbmetaLocked;
++        if (locked == null) {
++            return R.string.device_info_not_available;
++        }
++        return locked
++                ? R.string.pure_pixel_security_state_locked
++                : R.string.pure_pixel_security_state_unlocked;
++    }
++
++    private static int getVerifiedBootSummary(String value) {
++        switch (normalize(value)) {
++            case "green":
++                return R.string.pure_pixel_security_state_green;
++            case "yellow":
++                return R.string.pure_pixel_security_state_yellow;
++            case "orange":
++                return R.string.pure_pixel_security_state_orange;
++            case "red":
++                return R.string.pure_pixel_security_state_red;
++            default:
++                return R.string.device_info_not_available;
++        }
++    }
++
++    private static int getVerityModeSummary(String value) {
++        switch (normalize(value)) {
++            case "enforcing":
++                return R.string.pure_pixel_security_state_enforcing;
++            case "logging":
++                return R.string.pure_pixel_security_state_logging;
++            case "eio":
++                return R.string.pure_pixel_security_state_eio;
++            case "disabled":
++                return R.string.pure_pixel_security_state_disabled;
++            default:
++                return R.string.device_info_not_available;
++        }
++    }
++
++    private static int getSelinuxSummary(Snapshot snapshot) {
++        if (!snapshot.selinuxEnabled) {
++            return R.string.pure_pixel_security_state_disabled;
++        }
++        return snapshot.selinuxEnforced
++                ? R.string.pure_pixel_security_state_enforcing
++                : R.string.pure_pixel_security_state_permissive;
++    }
++
++    private static int getEncryptionSummary(Snapshot snapshot) {
++        if (!snapshot.encrypted) {
++            return R.string.pure_pixel_security_state_not_encrypted;
++        }
++        if (snapshot.fileEncrypted || normalize(snapshot.cryptoType).equals("file")) {
++            return R.string.pure_pixel_security_state_file_encryption;
++        }
++        if (normalize(snapshot.cryptoType).equals("block")) {
++            return R.string.pure_pixel_security_state_full_disk_encryption;
++        }
++        return R.string.pure_pixel_security_state_encrypted;
++    }
++
++    private static Boolean parseLocked(String value) {
++        switch (normalize(value)) {
++            case "1":
++            case "true":
++            case "locked":
++                return true;
++            case "0":
++            case "false":
++            case "unlocked":
++                return false;
++            default:
++                return null;
++        }
++    }
++
++    private static String normalize(String value) {
++        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
++    }
++
++    private static String readWidevineSecurityLevel() {
++        try (MediaDrm mediaDrm = new MediaDrm(WIDEVINE_UUID)) {
++            return mediaDrm.getPropertyString(WIDEVINE_SECURITY_LEVEL_PROPERTY);
++        } catch (UnsupportedSchemeException | RuntimeException e) {
++            Log.w(TAG, "Widevine security level is unavailable", e);
++            return "";
++        }
++    }
++
++    @VisibleForTesting
++    static final class Snapshot {
++        final String flashLocked;
++        final String vbmetaDeviceState;
++        final String verifiedBootState;
++        final String verityMode;
++        final boolean selinuxEnabled;
++        final boolean selinuxEnforced;
++        final boolean encrypted;
++        final boolean fileEncrypted;
++        final String cryptoType;
++        final String widevineSecurityLevel;
++
++        Snapshot(
++                String flashLocked,
++                String vbmetaDeviceState,
++                String verifiedBootState,
++                String verityMode,
++                boolean selinuxEnabled,
++                boolean selinuxEnforced,
++                boolean encrypted,
++                boolean fileEncrypted,
++                String cryptoType,
++                String widevineSecurityLevel) {
++            this.flashLocked = flashLocked;
++            this.vbmetaDeviceState = vbmetaDeviceState;
++            this.verifiedBootState = verifiedBootState;
++            this.verityMode = verityMode;
++            this.selinuxEnabled = selinuxEnabled;
++            this.selinuxEnforced = selinuxEnforced;
++            this.encrypted = encrypted;
++            this.fileEncrypted = fileEncrypted;
++            this.cryptoType = cryptoType;
++            this.widevineSecurityLevel = widevineSecurityLevel;
++        }
++
++        static Snapshot read(String key) {
++            return new Snapshot(
++                    SystemProperties.get(PROPERTY_FLASH_LOCKED),
++                    SystemProperties.get(PROPERTY_VBMETA_DEVICE_STATE),
++                    SystemProperties.get(PROPERTY_VERIFIED_BOOT_STATE),
++                    SystemProperties.get(PROPERTY_VERITY_MODE),
++                    SELinux.isSELinuxEnabled(),
++                    SELinux.isSELinuxEnforced(),
++                    StorageManager.isEncrypted(),
++                    StorageManager.isFileEncrypted(),
++                    SystemProperties.get(PROPERTY_CRYPTO_TYPE),
++                    KEY_WIDEVINE.equals(key) ? readWidevineSecurityLevel() : "");
++        }
++    }
++}
+diff --git a/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityStatePreference.kt b/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityStatePreference.kt
+new file mode 100644
+index 0000000..b59ae36
+--- /dev/null
++++ b/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityStatePreference.kt
+@@ -0,0 +1,51 @@
++/*
++ * Copyright (C) 2026 The Pure Pixel Project
++ * SPDX-License-Identifier: Apache-2.0
++ */
++
++package com.android.settings.deviceinfo.firmwareversion
++
++import android.content.Context
++import androidx.annotation.StringRes
++import androidx.preference.Preference
++import com.android.settings.R
++import com.android.settings.contract.TAG_DEVICE_STATE_PREFERENCE
++import com.android.settingslib.datastore.KeyValueStore
++import com.android.settingslib.metadata.PersistentPreference
++import com.android.settingslib.metadata.PreferenceMetadata
++import com.android.settingslib.metadata.PreferenceSummaryProvider
++import com.android.settingslib.metadata.SensitivityLevel
++import com.android.settingslib.preference.PreferenceBinding
++
++/** One read-only live security-state row in the Catalyst Android-version hierarchy. */
++class PurePixelSecurityStatePreference(
++    final override val key: String,
++    @StringRes final override val title: Int,
++) : PersistentPreference<String>, PreferenceMetadata, PreferenceSummaryProvider, PreferenceBinding {
++
++    override val purpose: Int
++        get() = R.string.pure_pixel_security_state_purpose
++
++    override val indexable
++        get() = false
++
++    override fun tags(context: Context) = arrayOf(TAG_DEVICE_STATE_PREFERENCE)
++
++    override val supportsWrite = false
++
++    override val valueType = String::class.javaObjectType
++
++    override fun storage(context: Context): KeyValueStore = createSummaryStorage(context, key)
++
++    override fun getSummary(context: Context): CharSequence =
++        PurePixelSecurityState.getSummary(context, key)
++
++    override fun bind(preference: Preference, metadata: PreferenceMetadata) {
++        super.bind(preference, metadata)
++        preference.isSelectable = false
++        preference.isCopyingEnabled = true
++    }
++
++    override val sensitivityLevel
++        get() = SensitivityLevel.NO_SENSITIVITY
++}
+diff --git a/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityStatePreferenceController.java b/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityStatePreferenceController.java
+new file mode 100644
+index 0000000..ab2e576
+--- /dev/null
++++ b/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityStatePreferenceController.java
+@@ -0,0 +1,26 @@
++/*
++ * Copyright (C) 2026 The Pure Pixel Project
++ * SPDX-License-Identifier: Apache-2.0
++ */
++package com.android.settings.deviceinfo.firmwareversion;
++
++import android.content.Context;
++
++import com.android.settings.core.BasePreferenceController;
++
++/** Displays one live Pure Pixel security-state value on the Android version screen. */
++public final class PurePixelSecurityStatePreferenceController extends BasePreferenceController {
++    public PurePixelSecurityStatePreferenceController(Context context, String key) {
++        super(context, key);
++    }
++
++    @Override
++    public int getAvailabilityStatus() {
++        return AVAILABLE_UNSEARCHABLE;
++    }
++
++    @Override
++    public CharSequence getSummary() {
++        return PurePixelSecurityState.getSummary(mContext, getPreferenceKey());
++    }
 +}
 diff --git a/src/com/android/settings/display/AmbientDisplayAlwaysOnPreferenceScreen.kt b/src/com/android/settings/display/AmbientDisplayAlwaysOnPreferenceScreen.kt
 index 5f554b9..2693c88 100644
@@ -2109,6 +2540,147 @@ index 0000000..f8d6c85
 +                new PurePixelBuildPreferenceController(context, "pure_pixel_build");
 +
 +        assertThat(controller.getSummary().toString()).isEqualTo(Build.VERSION.INCREMENTAL);
++    }
++}
+diff --git a/tests/robotests/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityStateTest.java b/tests/robotests/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityStateTest.java
+new file mode 100644
+index 0000000..1c50f4c
+--- /dev/null
++++ b/tests/robotests/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityStateTest.java
+@@ -0,0 +1,135 @@
++/*
++ * Copyright (C) 2026 The Pure Pixel Project
++ * SPDX-License-Identifier: Apache-2.0
++ */
++package com.android.settings.deviceinfo.firmwareversion;
++
++import static com.google.common.truth.Truth.assertThat;
++
++import android.content.Context;
++
++import androidx.test.core.app.ApplicationProvider;
++
++import org.junit.Test;
++import org.junit.runner.RunWith;
++import org.robolectric.RobolectricTestRunner;
++
++@RunWith(RobolectricTestRunner.class)
++public final class PurePixelSecurityStateTest {
++    private final Context mContext = ApplicationProvider.getApplicationContext();
++
++    @Test
++    public void bootloader_agreeingLockedSignals_reportsLocked() {
++        assertSummary(
++                PurePixelSecurityState.KEY_BOOTLOADER,
++                snapshot("1", "locked", "", "", true, true, true, true, "file", "L3"),
++                "Locked");
++    }
++
++    @Test
++    public void bootloader_conflictingSignals_reportsInconsistent() {
++        assertSummary(
++                PurePixelSecurityState.KEY_BOOTLOADER,
++                snapshot("0", "locked", "", "", true, true, true, true, "file", "L3"),
++                "Inconsistent");
++    }
++
++    @Test
++    public void bootloader_singleSignal_reportsItsState() {
++        assertSummary(
++                PurePixelSecurityState.KEY_BOOTLOADER,
++                snapshot("", "unlocked", "", "", true, true, true, true, "file", "L3"),
++                "Unlocked");
++    }
++
++    @Test
++    public void verifiedBoot_reportsExactKnownColor() {
++        assertSummary(
++                PurePixelSecurityState.KEY_VERIFIED_BOOT,
++                snapshot("", "", "green", "", true, true, true, true, "file", "L3"),
++                "GREEN");
++    }
++
++    @Test
++    public void verityMode_reportsEnforcing() {
++        assertSummary(
++                PurePixelSecurityState.KEY_VERITY_MODE,
++                snapshot("", "", "", "enforcing", true, true, true, true, "file", "L3"),
++                "Enforcing");
++    }
++
++    @Test
++    public void selinux_reportsPermissiveOnlyWhenEnabledButNotEnforced() {
++        assertSummary(
++                PurePixelSecurityState.KEY_SELINUX,
++                snapshot("", "", "", "", true, false, true, true, "file", "L3"),
++                "Permissive");
++    }
++
++    @Test
++    public void encryption_reportsFileBasedEncryption() {
++        assertSummary(
++                PurePixelSecurityState.KEY_ENCRYPTION,
++                snapshot("", "", "", "", true, true, true, true, "file", "L3"),
++                "File-based encryption (FBE)");
++    }
++
++    @Test
++    public void widevine_reportsNormalizedPluginLevel() {
++        assertSummary(
++                PurePixelSecurityState.KEY_WIDEVINE,
++                snapshot("", "", "", "", true, true, true, true, "file", " l3 "),
++                "L3");
++    }
++
++    @Test
++    public void unknownValues_failClosedToNotAvailable() {
++        final PurePixelSecurityState.Snapshot snapshot =
++                snapshot(
++                        "",
++                        "",
++                        "purple",
++                        "surprise",
++                        true,
++                        true,
++                        true,
++                        true,
++                        "file",
++                        "software-ish");
++
++        assertSummary(PurePixelSecurityState.KEY_BOOTLOADER, snapshot, "Not available");
++        assertSummary(PurePixelSecurityState.KEY_VERIFIED_BOOT, snapshot, "Not available");
++        assertSummary(PurePixelSecurityState.KEY_VERITY_MODE, snapshot, "Not available");
++        assertSummary(PurePixelSecurityState.KEY_WIDEVINE, snapshot, "Not available");
++    }
++
++    private void assertSummary(
++            String key, PurePixelSecurityState.Snapshot snapshot, String expected) {
++        assertThat(PurePixelSecurityState.getSummary(mContext, key, snapshot).toString())
++                .isEqualTo(expected);
++    }
++
++    private static PurePixelSecurityState.Snapshot snapshot(
++            String flashLocked,
++            String vbmetaDeviceState,
++            String verifiedBootState,
++            String verityMode,
++            boolean selinuxEnabled,
++            boolean selinuxEnforced,
++            boolean encrypted,
++            boolean fileEncrypted,
++            String cryptoType,
++            String widevineSecurityLevel) {
++        return new PurePixelSecurityState.Snapshot(
++                flashLocked,
++                vbmetaDeviceState,
++                verifiedBootState,
++                verityMode,
++                selinuxEnabled,
++                selinuxEnforced,
++                encrypted,
++                fileEncrypted,
++                cryptoType,
++                widevineSecurityLevel);
 +    }
 +}
 diff --git a/tests/robotests/src/com/android/settings/display/ColorModeApiScreenTest.kt b/tests/robotests/src/com/android/settings/display/ColorModeApiScreenTest.kt
