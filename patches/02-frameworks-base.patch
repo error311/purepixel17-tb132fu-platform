@@ -1,30 +1,27 @@
 diff --git a/core/java/android/app/Instrumentation.java b/core/java/android/app/Instrumentation.java
-index 7402ca5cf..7f2b14685 100644
+index 7402ca5cf..7579c59bc 100644
 --- a/core/java/android/app/Instrumentation.java
 +++ b/core/java/android/app/Instrumentation.java
-@@ -70,6 +70,8 @@ import android.view.Window;
+@@ -70,6 +70,7 @@ import android.view.Window;
  import android.view.WindowManagerGlobal;
  
  import com.android.internal.content.ReferrerIntent;
 +import com.android.internal.util.PixelTabletAppProps;
-+import com.android.internal.util.Tb132fuIntegrityTestProps;
  
  import java.io.File;
  import java.lang.annotation.Retention;
-@@ -1361,6 +1363,8 @@ public class Instrumentation {
+@@ -1361,6 +1362,7 @@ public class Instrumentation {
          Application app = getFactory(context.getPackageName())
                  .instantiateApplication(cl, className);
          app.attach(context);
-+        Tb132fuIntegrityTestProps.apply(context);
 +        PixelTabletAppProps.apply(context);
          return app;
      }
      
-@@ -1379,6 +1383,8 @@ public class Instrumentation {
+@@ -1379,6 +1381,7 @@ public class Instrumentation {
              ClassNotFoundException {
          Application app = (Application)clazz.newInstance();
          app.attach(context);
-+        Tb132fuIntegrityTestProps.apply(context);
 +        PixelTabletAppProps.apply(context);
          return app;
      }
@@ -501,187 +498,6 @@ index 000000000..e2535d82f
 +        }
 +    }
 +}
-diff --git a/core/java/com/android/internal/util/Tb132fuIntegrityTestProps.java b/core/java/com/android/internal/util/Tb132fuIntegrityTestProps.java
-new file mode 100644
-index 000000000..5719d5351
---- /dev/null
-+++ b/core/java/com/android/internal/util/Tb132fuIntegrityTestProps.java
-@@ -0,0 +1,175 @@
-+/*
-+ * Copyright (C) 2026 The Pure Pixel Project
-+ *
-+ * Licensed under the Apache License, Version 2.0 (the "License");
-+ * you may not use this file except in compliance with the License.
-+ * You may obtain a copy of the License at
-+ *
-+ *      http://www.apache.org/licenses/LICENSE-2.0
-+ *
-+ * Unless required by applicable law or agreed to in writing, software
-+ * distributed under the License is distributed on an "AS IS" BASIS,
-+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-+ * See the License for the specific language governing permissions and
-+ * limitations under the License.
-+ */
-+
-+package com.android.internal.util;
-+
-+import android.app.Application;
-+import android.content.Context;
-+import android.os.Build;
-+import android.os.Process;
-+import android.os.SystemProperties;
-+import android.text.TextUtils;
-+import android.util.Log;
-+
-+import java.lang.reflect.Field;
-+import java.lang.reflect.Method;
-+import java.util.Map;
-+
-+/**
-+ * Runs one deliberately narrow Pixel Tablet identity experiment for Play Integrity.
-+ *
-+ * <p>The test is hard-disabled in production user builds and applies only inside the exact
-+ * {@code com.google.android.gms.unstable} process on a TB132FU tablet. It never changes global
-+ * properties, the boot identity, AVB state, the Play Store process, or any other application.
-+ * The profile is Google's July 2026 Android 17 Pixel Tablet release.</p>
-+ *
-+ * @hide
-+ */
-+public final class Tb132fuIntegrityTestProps {
-+    private static final String TAG = "Tb132fuIntegrityTest";
-+    private static final String DEVICE_TB132FU = "tb132fu";
-+    private static final String PACKAGE_GMS = "com.google.android.gms";
-+    private static final String PROCESS_GMS_UNSTABLE = PACKAGE_GMS + ".unstable";
-+
-+    private static final Map<String, String> TANGORPRO_TEST_PROPS = Map.of(
-+            "BRAND", "google",
-+            "MANUFACTURER", "Google",
-+            "DEVICE", "tangorpro",
-+            "PRODUCT", "tangorpro",
-+            "MODEL", "Pixel Tablet",
-+            "FINGERPRINT",
-+                    "google/tangorpro/tangorpro:17/CP2A.260705.006/15641320:user/release-keys",
-+            "ID", "CP2A.260705.006",
-+            "TYPE", "user",
-+            "TAGS", "release-keys");
-+
-+    private static boolean sApplied;
-+
-+    private Tb132fuIntegrityTestProps() {}
-+
-+    /** Applies the test identity before the target application's onCreate callback. */
-+    public static void apply(Context context) {
-+        if (!Build.IS_DEBUGGABLE
-+                || !DEVICE_TB132FU.equals(SystemProperties.get("ro.product.device"))
-+                || !SystemProperties.get("ro.build.characteristics", "").contains("tablet")) {
-+            return;
-+        }
-+
-+        final String packageName = context.getPackageName();
-+        final String processName = Application.getProcessName();
-+        if (TextUtils.isEmpty(packageName) || TextUtils.isEmpty(processName)
-+                || !shouldApply(packageName, processName, Process.isIsolated(),
-+                        Build.IS_DEBUGGABLE)) {
-+            return;
-+        }
-+
-+        if (sApplied) {
-+            return;
-+        }
-+
-+        try {
-+            final UnsafeAccess unsafe = UnsafeAccess.create();
-+            boolean applied = true;
-+            for (Map.Entry<String, String> property : TANGORPRO_TEST_PROPS.entrySet()) {
-+                applied &= setBuildField(unsafe, property.getKey(), property.getValue());
-+            }
-+            if (applied) {
-+                sApplied = true;
-+                Log.i(TAG, "Applied userdebug-only TangorPro identity to " + processName);
-+            }
-+        } catch (ReflectiveOperationException | SecurityException e) {
-+            Log.e(TAG, "Unable to obtain framework Unsafe access", e);
-+        }
-+    }
-+
-+    static boolean shouldApply(String packageName, String processName, boolean isolated,
-+            boolean debuggable) {
-+        return debuggable
-+                && !isolated
-+                && PACKAGE_GMS.equals(packageName)
-+                && PROCESS_GMS_UNSTABLE.equals(processName);
-+    }
-+
-+    private static boolean setBuildField(UnsafeAccess unsafe, String name, String value) {
-+        try {
-+            final Field field = Build.class.getDeclaredField(name);
-+            final Object fieldBase = unsafe.staticFieldBase(field);
-+            final long fieldOffset = unsafe.staticFieldOffset(field);
-+            unsafe.putReferenceVolatile(fieldBase, fieldOffset, value);
-+            if (!value.equals(unsafe.getReferenceVolatile(fieldBase, fieldOffset))) {
-+                Log.e(TAG, "Build." + name + " did not retain the requested value");
-+                return false;
-+            }
-+            return true;
-+        } catch (ReflectiveOperationException | IllegalArgumentException | SecurityException e) {
-+            Log.e(TAG, "Unable to set Build." + name, e);
-+            return false;
-+        }
-+    }
-+
-+    /** Reflection bridge to the libcore implementation absent from framework compile stubs. */
-+    private static final class UnsafeAccess {
-+        private static final String CLASS_NAME = "jdk.internal.misc.Unsafe";
-+
-+        private final Object mUnsafe;
-+        private final Method mStaticFieldBase;
-+        private final Method mStaticFieldOffset;
-+        private final Method mPutReferenceVolatile;
-+        private final Method mGetReferenceVolatile;
-+
-+        private UnsafeAccess(Object unsafe, Method staticFieldBase, Method staticFieldOffset,
-+                Method putReferenceVolatile, Method getReferenceVolatile) {
-+            mUnsafe = unsafe;
-+            mStaticFieldBase = staticFieldBase;
-+            mStaticFieldOffset = staticFieldOffset;
-+            mPutReferenceVolatile = putReferenceVolatile;
-+            mGetReferenceVolatile = getReferenceVolatile;
-+        }
-+
-+        static UnsafeAccess create() throws ReflectiveOperationException {
-+            final Class<?> unsafeClass = Class.forName(CLASS_NAME);
-+            final Field singleton = unsafeClass.getDeclaredField("theUnsafe");
-+            singleton.setAccessible(true);
-+            final Object unsafe = singleton.get(null);
-+            singleton.setAccessible(false);
-+            return new UnsafeAccess(
-+                    unsafe,
-+                    unsafeClass.getMethod("staticFieldBase", Field.class),
-+                    unsafeClass.getMethod("staticFieldOffset", Field.class),
-+                    unsafeClass.getMethod("putReferenceVolatile", Object.class, long.class,
-+                            Object.class),
-+                    unsafeClass.getMethod("getReferenceVolatile", Object.class, long.class));
-+        }
-+
-+        Object staticFieldBase(Field field) throws ReflectiveOperationException {
-+            return mStaticFieldBase.invoke(mUnsafe, field);
-+        }
-+
-+        long staticFieldOffset(Field field) throws ReflectiveOperationException {
-+            return (long) mStaticFieldOffset.invoke(mUnsafe, field);
-+        }
-+
-+        void putReferenceVolatile(Object base, long offset, Object value)
-+                throws ReflectiveOperationException {
-+            mPutReferenceVolatile.invoke(mUnsafe, base, offset, value);
-+        }
-+
-+        Object getReferenceVolatile(Object base, long offset)
-+                throws ReflectiveOperationException {
-+            return mGetReferenceVolatile.invoke(mUnsafe, base, offset);
-+        }
-+    }
-+}
 diff --git a/core/java/com/zui/input/handwriting/IIMEClient.java b/core/java/com/zui/input/handwriting/IIMEClient.java
 new file mode 100644
 index 000000000..d7b2b33db
@@ -834,71 +650,6 @@ index 000000000..707383b7d
 +                "com.google.android.apps.nexuslauncher", false)).isFalse();
 +        assertThat(PixelTabletAppProps.shouldApply(
 +                "com.android.settings", "com.android.settings", false)).isFalse();
-+    }
-+}
-diff --git a/core/tests/coretests/src/com/android/internal/util/Tb132fuIntegrityTestPropsTest.java b/core/tests/coretests/src/com/android/internal/util/Tb132fuIntegrityTestPropsTest.java
-new file mode 100644
-index 000000000..c281ff741
---- /dev/null
-+++ b/core/tests/coretests/src/com/android/internal/util/Tb132fuIntegrityTestPropsTest.java
-@@ -0,0 +1,59 @@
-+/*
-+ * Copyright (C) 2026 The Pure Pixel Project
-+ *
-+ * Licensed under the Apache License, Version 2.0 (the "License");
-+ * you may not use this file except in compliance with the License.
-+ * You may obtain a copy of the License at
-+ *
-+ *      http://www.apache.org/licenses/LICENSE-2.0
-+ *
-+ * Unless required by applicable law or agreed to in writing, software
-+ * distributed under the License is distributed on an "AS IS" BASIS,
-+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-+ * See the License for the specific language governing permissions and
-+ * limitations under the License.
-+ */
-+
-+package com.android.internal.util;
-+
-+import static com.google.common.truth.Truth.assertThat;
-+
-+import androidx.test.ext.junit.runners.AndroidJUnit4;
-+
-+import org.junit.Test;
-+import org.junit.runner.RunWith;
-+
-+@RunWith(AndroidJUnit4.class)
-+public class Tb132fuIntegrityTestPropsTest {
-+    private static final String GMS = "com.google.android.gms";
-+    private static final String GMS_UNSTABLE = GMS + ".unstable";
-+
-+    @Test
-+    public void shouldApply_exactGmsUnstableOnDebuggableBuild() {
-+        assertThat(Tb132fuIntegrityTestProps.shouldApply(
-+                GMS, GMS_UNSTABLE, false, true)).isTrue();
-+    }
-+
-+    @Test
-+    public void shouldApply_hardDisabledOnProductionUserBuild() {
-+        assertThat(Tb132fuIntegrityTestProps.shouldApply(
-+                GMS, GMS_UNSTABLE, false, false)).isFalse();
-+    }
-+
-+    @Test
-+    public void shouldApply_rejectsOtherGmsProcesses() {
-+        assertThat(Tb132fuIntegrityTestProps.shouldApply(GMS, GMS, false, true)).isFalse();
-+        assertThat(Tb132fuIntegrityTestProps.shouldApply(
-+                GMS, GMS + ".persistent", false, true)).isFalse();
-+        assertThat(Tb132fuIntegrityTestProps.shouldApply(
-+                GMS, GMS_UNSTABLE + ":child", false, true)).isFalse();
-+    }
-+
-+    @Test
-+    public void shouldApply_rejectsOtherPackagesAndIsolation() {
-+        assertThat(Tb132fuIntegrityTestProps.shouldApply(
-+                "com.android.vending", GMS_UNSTABLE, false, true)).isFalse();
-+        assertThat(Tb132fuIntegrityTestProps.shouldApply(
-+                GMS, GMS_UNSTABLE, true, true)).isFalse();
 +    }
 +}
 diff --git a/libs/WindowManager/Shell/src/com/android/wm/shell/recents/RecentsTransitionHandler.java b/libs/WindowManager/Shell/src/com/android/wm/shell/recents/RecentsTransitionHandler.java

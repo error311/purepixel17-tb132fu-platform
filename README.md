@@ -39,9 +39,8 @@ The patch set covers:
   no-action-bar crash guard
 - normal optional camera-based convenience Face enrollment through Settings;
   the unqualified Pixel Setup post-PIN handoff is deliberately absent
-- a userdebug-only, exact-process Pixel Tablet identity probe for Play Integrity;
-  production user builds, Play Store, global properties, and other apps are
-  hard-disabled from that path
+- removal of the physically rejected userdebug Play Integrity identity probe;
+  Pure Pixel does not manipulate attestation identity
 - native Settings placement for refresh rate, double-tap wake, AOD daytime
   scheduling, Precision Pen, and pogo keyboard/touchpad controls
 - the standard Android Multiple users page below System's Interaction section
