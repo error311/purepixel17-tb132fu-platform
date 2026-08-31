@@ -46,7 +46,8 @@ The patch set covers:
 - the standard Android Multiple users page below System's Interaction section
 - the exact Pure Pixel incremental build identity on Android version
 - Pure Pixel updater branding in locale-visible labels
-- cacheless, signed A-only recovery updates on the active slot
+- cacheless, signed A-only recovery updates on the active slot, with accurate
+  system-update reboot labeling
 - the small platform hooks used to synchronize the Pixel Launcher landscape
   QSB return animation and its live dock owner
 

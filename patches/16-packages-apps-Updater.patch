@@ -91,7 +91,7 @@ index b012b2d..4708111 100644
  
      private void installationDone(boolean needsReboot) {
 diff --git a/app/src/main/java/org/lineageos/updater/controller/UpdateInstaller.java b/app/src/main/java/org/lineageos/updater/controller/UpdateInstaller.java
-index de87350..b25f5ad 100644
+index de87350..f51a0cd 100644
 --- a/app/src/main/java/org/lineageos/updater/controller/UpdateInstaller.java
 +++ b/app/src/main/java/org/lineageos/updater/controller/UpdateInstaller.java
 @@ -6,6 +6,10 @@ package org.lineageos.updater.controller;
@@ -122,7 +122,7 @@ index de87350..b25f5ad 100644
  
      private static UpdateInstaller sInstance = null;
      private static String sInstallingUpdate = null;
-@@ -89,7 +98,49 @@ class UpdateInstaller {
+@@ -89,7 +98,52 @@ class UpdateInstaller {
  
      private void installPackage(File update, String downloadId) {
          try {
@@ -163,7 +163,10 @@ index de87350..b25f5ad 100644
 +                preferences.edit().remove(Constants.PREF_NEEDS_REBOOT_ID).apply();
 +                throw new IOException("Power manager unavailable");
 +            }
-+            power.reboot(PowerManager.REBOOT_RECOVERY);
++            // The recovery-update reason uses the same recovery boot target,
++            // but shows the accurate system-update shutdown UI instead of the
++            // factory-reset warning reserved for a generic recovery reboot.
++            power.reboot(PowerManager.REBOOT_RECOVERY_UPDATE);
 +            throw new IOException("Reboot failed");
 +        } catch (RemoteException e) {
 +            Log.e(TAG, "Could not prepare recovery update", e);
