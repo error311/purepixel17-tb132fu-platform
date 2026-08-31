@@ -752,6 +752,76 @@ index 770297905..d0b2c81be 100644
              });
          }
  
+diff --git a/libs/WindowManager/Shell/src/com/android/wm/shell/transition/HomeTransitionObserver.java b/libs/WindowManager/Shell/src/com/android/wm/shell/transition/HomeTransitionObserver.java
+index 06c16835f..a476d0b06 100644
+--- a/libs/WindowManager/Shell/src/com/android/wm/shell/transition/HomeTransitionObserver.java
++++ b/libs/WindowManager/Shell/src/com/android/wm/shell/transition/HomeTransitionObserver.java
+@@ -306,9 +306,15 @@ public class HomeTransitionObserver implements TransitionObserver,
+     public void setHomeTransitionListener(Transitions transitions, IHomeTransitionListener listener,
+             int userId) {
+         if (mListener == null) {
++            // Keep observing transitions even while the remote Launcher listener is absent. A
++            // Launcher process restart can otherwise create a gap between the old listener dying
++            // and the new listener registering. If Home becomes visible during that gap, the new
++            // listener receives the previously cached (invisible) state and can leave its hotseat
++            // hidden until another app-to-Home transition occurs.
++            transitions.registerObserver(this);
+             mListener = new SingleInstanceRemoteListener<>(this,
+-                    c -> transitions.registerObserver(this),
+-                    c -> transitions.unregisterObserver(this));
++                    c -> { },
++                    c -> { });
+         }
+ 
+         if (listener != null) {
+diff --git a/libs/WindowManager/Shell/tests/unittest/src/com/android/wm/shell/transition/HomeTransitionObserverTest.java b/libs/WindowManager/Shell/tests/unittest/src/com/android/wm/shell/transition/HomeTransitionObserverTest.java
+index 884f3fb40..acadbc7b5 100644
+--- a/libs/WindowManager/Shell/tests/unittest/src/com/android/wm/shell/transition/HomeTransitionObserverTest.java
++++ b/libs/WindowManager/Shell/tests/unittest/src/com/android/wm/shell/transition/HomeTransitionObserverTest.java
+@@ -38,8 +38,10 @@ import static com.android.wm.shell.transition.Transitions.TRANSIT_MINIMIZE;
+ import static org.mockito.ArgumentMatchers.any;
+ import static org.mockito.ArgumentMatchers.anyBoolean;
+ import static org.mockito.ArgumentMatchers.eq;
++import static org.mockito.Mockito.clearInvocations;
+ import static org.mockito.Mockito.mock;
+ import static org.mockito.Mockito.never;
++import static org.mockito.Mockito.spy;
+ import static org.mockito.Mockito.times;
+ import static org.mockito.Mockito.when;
+ 
+@@ -129,13 +131,30 @@ public class HomeTransitionObserverTest extends ShellTestCase {
+         mHomeTransitionObserver = new HomeTransitionObserver(mContext, mMainExecutor,
+                 mDisplayInsetsController, mShellController, mock(ShellInit.class),
+                 desktopState, Optional.of(mDesksOrganizer));
+-        mTransition = new Transitions(mContext, mock(ShellInit.class), mShellController,
++        mTransition = spy(new Transitions(mContext, mock(ShellInit.class), mShellController,
+                 mOrganizer, mTransactionPool, mDisplayController, mDisplayInsetsController,
+                 mMainExecutor, mMainHandler, mAnimExecutor, mock(TransitionLeashManager.class),
+-                mHomeTransitionObserver, mock(FocusTransitionObserver.class));
++                mHomeTransitionObserver, mock(FocusTransitionObserver.class)));
+         mHomeTransitionObserver.setHomeTransitionListener(mTransition, mListener, TEST_USER);
+     }
+ 
++    @Test
++    public void testListenerDisconnect_keepsTransitionObserverRegistered() {
++        clearInvocations(mTransition);
++
++        // Simulate Launcher disconnecting before its replacement listener is registered. The
++        // observer must remain active so it can cache a Home transition that occurs in this gap.
++        mHomeTransitionObserver.setHomeTransitionListener(mTransition, null, TEST_USER);
++
++        verify(mTransition, never()).unregisterObserver(mHomeTransitionObserver);
++
++        mHomeTransitionObserver.setHomeTransitionListener(mTransition, mListener2, TEST_USER);
++
++        // Reconnecting replaces only the remote listener; it must not double-register the Shell
++        // observer that remained active across the disconnect.
++        verify(mTransition, never()).registerObserver(mHomeTransitionObserver);
++    }
++
+     @Test
+     public void testHomeActivityWithOpenModeNotifiesHomeIsVisible() throws RemoteException {
+         ActivityManager.RunningTaskInfo taskInfo = createTaskInfo(1, ACTIVITY_TYPE_HOME);
 diff --git a/packages/SystemUI/multivalentTests/src/com/android/systemui/classifier/BrightLineFalsingManagerTest.java b/packages/SystemUI/multivalentTests/src/com/android/systemui/classifier/BrightLineFalsingManagerTest.java
 index 9decff6a7..6f3f55438 100644
 --- a/packages/SystemUI/multivalentTests/src/com/android/systemui/classifier/BrightLineFalsingManagerTest.java
