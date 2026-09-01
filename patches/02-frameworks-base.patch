@@ -156,7 +156,7 @@ index a250d4945bfed7f0f0ec81b83441ffcb589a786a..9eeaa8188e82ca90376811b470cf4023
              mPrivateFlags4 |= PFLAG4_HAS_MOVED;
              invalidateViewProperty(true, false);
 diff --git a/core/java/android/view/ViewGroup.java b/core/java/android/view/ViewGroup.java
-index 115ae5ca6ee5078d8ae55ba9b67f85553e48cae4..fc0f5b86f57a54cfcb56f2a5f05894e43a70e0f5 100644
+index 115ae5ca6ee5078d8ae55ba9b67f85553e48cae4..595935ff8b4963ba894a1c459e0bc8edd3f16496 100644
 --- a/core/java/android/view/ViewGroup.java
 +++ b/core/java/android/view/ViewGroup.java
 @@ -82,6 +82,8 @@ import android.window.OnBackInvokedDispatcher;
@@ -168,7 +168,7 @@ index 115ae5ca6ee5078d8ae55ba9b67f85553e48cae4..fc0f5b86f57a54cfcb56f2a5f05894e4
  import java.util.ArrayList;
  import java.util.Collection;
  import java.util.Collections;
-@@ -140,6 +142,100 @@ import java.util.function.Predicate;
+@@ -140,6 +142,119 @@ import java.util.function.Predicate;
   */
  @UiThread
  public abstract class ViewGroup extends View implements ViewParent, ViewManager {
@@ -189,9 +189,14 @@ index 115ae5ca6ee5078d8ae55ba9b67f85553e48cae4..fc0f5b86f57a54cfcb56f2a5f05894e4
 +    private static final String PIXEL_TASKBAR_VIEW_CLASS =
 +            "com.android.launcher3.taskbar.TaskbarView";
 +    private static final String PIXEL_FLOATING_WIDGET_HOST_FIELD = "mAppWidgetView";
++    // FloatingWidgetView fades its source host from 0 to 1 near the end of Gesture Home. Keep the
++    // already-visible taskbar copy as draw owner until the animated foreground is effectively
++    // opaque; hiding it merely because the floating container is attached leaves a blank QSB.
++    private static final float TB132FU_FIXED_QSB_FOREGROUND_HANDOFF_ALPHA = 0.95f;
 +    @Nullable private static Field sPixelFloatingWidgetHostField;
 +    private static boolean sPixelFloatingWidgetHostFieldUnavailable;
 +    @Nullable private static WeakReference<View> sPixelFixedQsbFloatingOwner;
++    @Nullable private static WeakReference<View> sPixelFixedQsbFloatingHost;
 +    @Nullable private static WeakReference<ViewGroup> sPixelDeferredTaskbarQsb;
 +
 +    private boolean shouldDeferTb132fuTaskbarQsbDraw() {
@@ -205,11 +210,22 @@ index 115ae5ca6ee5078d8ae55ba9b67f85553e48cae4..fc0f5b86f57a54cfcb56f2a5f05894e4
 +        }
 +        final View owner = sPixelFixedQsbFloatingOwner == null
 +                ? null : sPixelFixedQsbFloatingOwner.get();
-+        if (owner == null || !owner.isAttachedToWindow()) {
++        final View host = sPixelFixedQsbFloatingHost == null
++                ? null : sPixelFixedQsbFloatingHost.get();
++        if (owner == null || host == null || !owner.isAttachedToWindow()) {
 +            sPixelFixedQsbFloatingOwner = null;
++            sPixelFixedQsbFloatingHost = null;
 +            return false;
 +        }
 +        sPixelDeferredTaskbarQsb = new WeakReference<>(this);
++        if (!owner.isShown()
++                || owner.getAlpha() < TB132FU_FIXED_QSB_FOREGROUND_HANDOFF_ALPHA
++                || host.getAlpha() < TB132FU_FIXED_QSB_FOREGROUND_HANDOFF_ALPHA) {
++            // The taskbar and Launcher roots are independently invalidated. Keep polling while the
++            // return animation owns the host so the draw owner changes on the first ready frame.
++            postInvalidateOnAnimation();
++            return false;
++        }
 +        return true;
 +    }
 +
@@ -242,12 +258,14 @@ index 115ae5ca6ee5078d8ae55ba9b67f85553e48cae4..fc0f5b86f57a54cfcb56f2a5f05894e4
 +            if (host instanceof View
 +                    && PIXEL_FIXED_QSB_HOST_CLASS.equals(host.getClass().getName())) {
 +                sPixelFixedQsbFloatingOwner = new WeakReference<>(candidate);
++                sPixelFixedQsbFloatingHost = new WeakReference<>((View) host);
 +            }
 +        } catch (ReflectiveOperationException | SecurityException exception) {
 +            // Fail open. A future Launcher revision must never leave its taskbar QSB hidden.
 +            sPixelFloatingWidgetHostFieldUnavailable = true;
 +            sPixelFloatingWidgetHostField = null;
 +            sPixelFixedQsbFloatingOwner = null;
++            sPixelFixedQsbFloatingHost = null;
 +        }
 +    }
 +
@@ -258,6 +276,7 @@ index 115ae5ca6ee5078d8ae55ba9b67f85553e48cae4..fc0f5b86f57a54cfcb56f2a5f05894e4
 +            return;
 +        }
 +        sPixelFixedQsbFloatingOwner = null;
++        sPixelFixedQsbFloatingHost = null;
 +        final ViewGroup taskbarQsb = sPixelDeferredTaskbarQsb == null
 +                ? null : sPixelDeferredTaskbarQsb.get();
 +        sPixelDeferredTaskbarQsb = null;
@@ -269,7 +288,7 @@ index 115ae5ca6ee5078d8ae55ba9b67f85553e48cae4..fc0f5b86f57a54cfcb56f2a5f05894e4
      private static final String TAG = "ViewGroup";
  
      @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.R, trackingBug = 170729553)
-@@ -4388,6 +4484,11 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager
+@@ -4388,6 +4503,11 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager
  
      @Override
      protected void dispatchDraw(@NonNull Canvas canvas) {
@@ -281,7 +300,7 @@ index 115ae5ca6ee5078d8ae55ba9b67f85553e48cae4..fc0f5b86f57a54cfcb56f2a5f05894e4
          final int childrenCount = mChildrenCount;
          final View[] children = mChildren;
          int flags = mGroupFlags;
-@@ -5451,6 +5552,7 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager
+@@ -5451,6 +5571,7 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager
          } else {
              child.mParent = this;
          }
@@ -289,7 +308,7 @@ index 115ae5ca6ee5078d8ae55ba9b67f85553e48cae4..fc0f5b86f57a54cfcb56f2a5f05894e4
          if (child.hasUnhandledKeyListener()) {
              incrementChildUnhandledKeyListeners();
          }
-@@ -5730,6 +5832,7 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager
+@@ -5730,6 +5851,7 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager
      }
  
      private void removeViewInternal(int index, View view) {
