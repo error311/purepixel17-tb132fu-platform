@@ -1,5 +1,5 @@
 diff --git a/AndroidManifest.xml b/AndroidManifest.xml
-index c0cd774..7b024c5 100644
+index c0cd7748c8f2b3cf0f280600cb023aa18257f78c..7b024c5fe9218a6dc2713dcb4cc2ef2b7f89a185 100644
 --- a/AndroidManifest.xml
 +++ b/AndroidManifest.xml
 @@ -1140,6 +1140,18 @@
@@ -23,7 +23,7 @@ index c0cd774..7b024c5 100644
                    android:excludeFromRecents="true"
 diff --git a/res/drawable/ic_settings_tb132fu.xml b/res/drawable/ic_settings_tb132fu.xml
 new file mode 100644
-index 0000000..20c7fb1
+index 0000000000000000000000000000000000000000..20c7fb1fca0e63d07d9039cf5c16d9d0feb7859c
 --- /dev/null
 +++ b/res/drawable/ic_settings_tb132fu.xml
 @@ -0,0 +1,11 @@
@@ -39,7 +39,7 @@ index 0000000..20c7fb1
 +        android:pathData="M19,1L5,1C3.34,1 2,2.34 2,4v16c0,1.66 1.34,3 3,3h14c1.66,0 3,-1.34 3,-3L22,4c0,-1.66 -1.34,-3 -3,-3zM12,21c-0.83,0 -1.5,-0.67 -1.5,-1.5S11.17,18 12,18s1.5,0.67 1.5,1.5S12.83,21 12,21zM20,16L4,16L4,4h16v12z" />
 +</vector>
 diff --git a/res/values/arrays.xml b/res/values/arrays.xml
-index e8ce91a..8080a1c 100644
+index e8ce91ab5b570eea26fd2ac17c28d5a817a4c2b5..8080a1c190442f64e7eae992c4d0fa22440ab5dc 100644
 --- a/res/values/arrays.xml
 +++ b/res/values/arrays.xml
 @@ -1796,4 +1796,16 @@
@@ -60,7 +60,7 @@ index e8ce91a..8080a1c 100644
 +    </string-array>
  </resources>
 diff --git a/res/values/config.xml b/res/values/config.xml
-index f836ad1..8291d8a 100644
+index f836ad1be4a4c67bcbeda36388557b9e474b754a..8291d8a4c686a9bb3c3c2c40257a01f4e75ec02c 100644
 --- a/res/values/config.xml
 +++ b/res/values/config.xml
 @@ -564,7 +564,7 @@
@@ -93,7 +93,7 @@ index f836ad1..8291d8a 100644
      <bool name="config_force_showing_icon_on_locale_picker_screen">false</bool>
  </resources>
 diff --git a/res/values/strings.xml b/res/values/strings.xml
-index 8246f5b..7ae8e79 100644
+index 8246f5be5ae9a85b48e5ee7896bb912562d843fb..7ae8e79115301aadc1fc85601ecf2b0e2b237f58 100644
 --- a/res/values/strings.xml
 +++ b/res/values/strings.xml
 @@ -3184,6 +3184,10 @@
@@ -198,7 +198,7 @@ index 8246f5b..7ae8e79 100644
  </resources>
 diff --git a/res/xml/battery_health.xml b/res/xml/battery_health.xml
 new file mode 100644
-index 0000000..c6c8306
+index 0000000000000000000000000000000000000000..c6c8306e589231a02549c3bef9f2a2dcadb46247
 --- /dev/null
 +++ b/res/xml/battery_health.xml
 @@ -0,0 +1,65 @@
@@ -268,7 +268,7 @@ index 0000000..c6c8306
 +        settings:searchable="false" />
 +</PreferenceScreen>
 diff --git a/res/xml/credman_dashboard_settings.xml b/res/xml/credman_dashboard_settings.xml
-index 09a6059..592d37b 100644
+index 09a60595a978d5d0b67e4e15a35f2cf8fcfb0da1..592d37bf9b9fa0b899b07156585c5291759b2293 100644
 --- a/res/xml/credman_dashboard_settings.xml
 +++ b/res/xml/credman_dashboard_settings.xml
 @@ -46,4 +46,19 @@
@@ -292,7 +292,7 @@ index 09a6059..592d37b 100644
 +
  </PreferenceScreen>
 diff --git a/res/xml/display_settings.xml b/res/xml/display_settings.xml
-index 0029ab1..fab9351 100644
+index 0029ab135d978baba079b82853b6fd962b9b87c1..fab93518eac1b8822a30cafed1285b2e6caf63e8 100644
 --- a/res/xml/display_settings.xml
 +++ b/res/xml/display_settings.xml
 @@ -182,6 +182,14 @@
@@ -311,7 +311,7 @@ index 0029ab1..fab9351 100644
              android:key="show_operator_name"
              android:title="@string/show_operator_name_title"
 diff --git a/res/xml/firmware_version.xml b/res/xml/firmware_version.xml
-index 41f7733..45747be 100644
+index 41f7733cfb2bf33e2e3ac859789dca1ca63a26ae..45747be57bfc971f971d0fb5ad00041cd7837281 100644
 --- a/res/xml/firmware_version.xml
 +++ b/res/xml/firmware_version.xml
 @@ -21,6 +21,79 @@
@@ -395,7 +395,7 @@ index 41f7733..45747be 100644
      <Preference
          android:key="os_firmware_version"
 diff --git a/res/xml/power_usage_summary.xml b/res/xml/power_usage_summary.xml
-index 4890560..a0fc320 100644
+index 4890560e3f71abe9ee3488bee1a9389db7fe808d..a0fc3208df57aa1a287a71fa89ed19cc96b041ac 100644
 --- a/res/xml/power_usage_summary.xml
 +++ b/res/xml/power_usage_summary.xml
 @@ -66,6 +66,13 @@
@@ -413,7 +413,7 @@ index 4890560..a0fc320 100644
  
      <com.android.settingslib.widget.UntitledPreferenceCategory
 diff --git a/res/xml/system_dashboard_fragment.xml b/res/xml/system_dashboard_fragment.xml
-index 3dae93a..a3959e6 100644
+index 3dae93a4d867d32d3b54bc9c31158b86d480d648..a3959e6b77120d9ef32c50f8e39212f5d93e1982 100644
 --- a/res/xml/system_dashboard_fragment.xml
 +++ b/res/xml/system_dashboard_fragment.xml
 @@ -99,6 +99,18 @@
@@ -436,7 +436,7 @@ index 3dae93a..a3959e6 100644
              android:key="game_controller_settings"
              android:title="@string/game_controller_settings_title"
 diff --git a/res/xml/system_dashboard_fragment_desktop.xml b/res/xml/system_dashboard_fragment_desktop.xml
-index e0cb8cf..0400f37 100644
+index e0cb8cf38135608304d450d706ee5eac62e28043..0400f37593bb9479c8336a4f7366cfcb0f3cea9c 100644
 --- a/res/xml/system_dashboard_fragment_desktop.xml
 +++ b/res/xml/system_dashboard_fragment_desktop.xml
 @@ -66,6 +66,18 @@
@@ -459,7 +459,7 @@ index e0cb8cf..0400f37 100644
              android:key="game_controller_settings"
              android:title="@string/game_controller_settings_title"
 diff --git a/src/com/android/settings/accounts/AccountDashboardFragment.java b/src/com/android/settings/accounts/AccountDashboardFragment.java
-index 8f037ac..ef64920 100644
+index 8f037ac2a6c6b0bf379a5bb426635a4dd43520e5..ef64920ba4c037525d97c8ec266bcec4fb93aff8 100644
 --- a/src/com/android/settings/accounts/AccountDashboardFragment.java
 +++ b/src/com/android/settings/accounts/AccountDashboardFragment.java
 @@ -146,12 +146,18 @@ public class AccountDashboardFragment extends DashboardFragment {
@@ -485,7 +485,7 @@ index 8f037ac..ef64920 100644
              Context context,
              DashboardFragment parent,
 diff --git a/src/com/android/settings/applications/autofill/PasswordsPreferenceController.java b/src/com/android/settings/applications/autofill/PasswordsPreferenceController.java
-index 73fef1b..0c141b6 100644
+index 73fef1bcedc0b7c1993d0471f46499b197806443..0c141b6bbfe025691927fdeacd2f907d15984266 100644
 --- a/src/com/android/settings/applications/autofill/PasswordsPreferenceController.java
 +++ b/src/com/android/settings/applications/autofill/PasswordsPreferenceController.java
 @@ -117,7 +117,11 @@ public class PasswordsPreferenceController extends BasePreferenceController
@@ -502,7 +502,7 @@ index 73fef1b..0c141b6 100644
          replaceEnterpriseStringTitle(screen, "auto_sync_personal_account_data",
                  AUTO_SYNC_PERSONAL_DATA, R.string.account_settings_menu_auto_sync_personal);
 diff --git a/src/com/android/settings/biometrics/face/FaceSettings.java b/src/com/android/settings/biometrics/face/FaceSettings.java
-index 12f54f1..2cc13b0 100644
+index 12f54f11a5dd8893f4f8338dca265fca67c75fc0..2cc13b01b338bb539f4bcf1e17242e2b6a66bc12 100644
 --- a/src/com/android/settings/biometrics/face/FaceSettings.java
 +++ b/src/com/android/settings/biometrics/face/FaceSettings.java
 @@ -368,7 +368,7 @@ public class FaceSettings extends DashboardFragment {
@@ -515,7 +515,7 @@ index 12f54f1..2cc13b0 100644
              }
          } else {
 diff --git a/src/com/android/settings/core/gateway/SettingsGateway.java b/src/com/android/settings/core/gateway/SettingsGateway.java
-index 2a05a30..0f06914 100644
+index 2a05a30620ce5852437602d2bf2370f645463f55..0f069143e8bd3914eac23a5fce7eb299e3db7b6d 100644
 --- a/src/com/android/settings/core/gateway/SettingsGateway.java
 +++ b/src/com/android/settings/core/gateway/SettingsGateway.java
 @@ -115,6 +115,7 @@ import com.android.settings.display.darkmode.DarkModeSettingsFragment;
@@ -535,7 +535,7 @@ index 2a05a30..0f06914 100644
              ScreenTimeoutSettings.class.getName(),
              ResetNetwork.class.getName(),
 diff --git a/src/com/android/settings/dashboard/DashboardFragment.java b/src/com/android/settings/dashboard/DashboardFragment.java
-index b55de4b..4435cc9 100644
+index b55de4b74469b2d10c5dc97d92bddf9e3df604da..4435cc9722290598754f13739a118b3b382ec38c 100644
 --- a/src/com/android/settings/dashboard/DashboardFragment.java
 +++ b/src/com/android/settings/dashboard/DashboardFragment.java
 @@ -371,9 +371,19 @@ public abstract class DashboardFragment extends SettingsPreferenceFragment
@@ -562,7 +562,7 @@ index b55de4b..4435cc9 100644
          return true;
      }
 diff --git a/src/com/android/settings/deviceinfo/firmwareversion/FirmwareVersionScreen.kt b/src/com/android/settings/deviceinfo/firmwareversion/FirmwareVersionScreen.kt
-index 8948b33..d62c600 100644
+index 8948b33174ce6666460b072fc84f6f431efad3a7..d62c6002a14f2e34f15c38a8f4bef07b5569ed87 100644
 --- a/src/com/android/settings/deviceinfo/firmwareversion/FirmwareVersionScreen.kt
 +++ b/src/com/android/settings/deviceinfo/firmwareversion/FirmwareVersionScreen.kt
 @@ -29,17 +29,18 @@ import com.android.settingslib.metadata.PreferenceMetadata
@@ -622,7 +622,7 @@ index 8948b33..d62c600 100644
              +MainlineModuleVersionPreference()
 diff --git a/src/com/android/settings/deviceinfo/firmwareversion/PurePixelBuildPreferenceController.java b/src/com/android/settings/deviceinfo/firmwareversion/PurePixelBuildPreferenceController.java
 new file mode 100644
-index 0000000..1a7599e
+index 0000000000000000000000000000000000000000..1a7599e61e71f32753db526b0eec7c7e20910deb
 --- /dev/null
 +++ b/src/com/android/settings/deviceinfo/firmwareversion/PurePixelBuildPreferenceController.java
 @@ -0,0 +1,28 @@
@@ -656,7 +656,7 @@ index 0000000..1a7599e
 +}
 diff --git a/src/com/android/settings/deviceinfo/firmwareversion/PurePixelIdentityPreference.kt b/src/com/android/settings/deviceinfo/firmwareversion/PurePixelIdentityPreference.kt
 new file mode 100644
-index 0000000..3cc3371
+index 0000000000000000000000000000000000000000..3cc33710aea3fe9ee862d7ce2cef32c5a0a329d7
 --- /dev/null
 +++ b/src/com/android/settings/deviceinfo/firmwareversion/PurePixelIdentityPreference.kt
 @@ -0,0 +1,79 @@
@@ -741,10 +741,10 @@ index 0000000..3cc3371
 +}
 diff --git a/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityState.java b/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityState.java
 new file mode 100644
-index 0000000..a1fe8e7
+index 0000000000000000000000000000000000000000..1ddbaf30defdccff375a1b9b4f9f4e1c7010e007
 --- /dev/null
 +++ b/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityState.java
-@@ -0,0 +1,228 @@
+@@ -0,0 +1,298 @@
 +/*
 + * Copyright (C) 2026 The Pure Pixel Project
 + * SPDX-License-Identifier: Apache-2.0
@@ -757,12 +757,17 @@ index 0000000..a1fe8e7
 +import android.os.SELinux;
 +import android.os.SystemProperties;
 +import android.os.storage.StorageManager;
++import android.system.ErrnoException;
++import android.system.Os;
++import android.system.OsConstants;
 +import android.util.Log;
 +
 +import androidx.annotation.VisibleForTesting;
 +
 +import com.android.settings.R;
 +
++import java.io.FileDescriptor;
++import java.io.InterruptedIOException;
 +import java.util.Locale;
 +import java.util.UUID;
 +
@@ -781,6 +786,7 @@ index 0000000..a1fe8e7
 +    private static final String PROPERTY_VERIFIED_BOOT_STATE = "ro.boot.verifiedbootstate";
 +    private static final String PROPERTY_VERITY_MODE = "ro.boot.veritymode";
 +    private static final String PROPERTY_CRYPTO_TYPE = "ro.crypto.type";
++    private static final String SELINUX_ENFORCE_PATH = "/sys/fs/selinux/enforce";
 +    private static final String WIDEVINE_SECURITY_LEVEL_PROPERTY = "securityLevel";
 +    private static final UUID WIDEVINE_UUID =
 +            UUID.fromString("edef8ba9-79d6-4ace-a3c8-27dcd51d21ed");
@@ -873,12 +879,16 @@ index 0000000..a1fe8e7
 +    }
 +
 +    private static int getSelinuxSummary(Snapshot snapshot) {
-+        if (!snapshot.selinuxEnabled) {
-+            return R.string.pure_pixel_security_state_disabled;
++        switch (snapshot.selinuxState) {
++            case DISABLED:
++                return R.string.pure_pixel_security_state_disabled;
++            case ENFORCING:
++                return R.string.pure_pixel_security_state_enforcing;
++            case PERMISSIVE:
++                return R.string.pure_pixel_security_state_permissive;
++            default:
++                return R.string.device_info_not_available;
 +        }
-+        return snapshot.selinuxEnforced
-+                ? R.string.pure_pixel_security_state_enforcing
-+                : R.string.pure_pixel_security_state_permissive;
 +    }
 +
 +    private static int getEncryptionSummary(Snapshot snapshot) {
@@ -922,14 +932,77 @@ index 0000000..a1fe8e7
 +        }
 +    }
 +
++    private static SelinuxState readSelinuxState() {
++        if (!SELinux.isSELinuxEnabled()) {
++            return SelinuxState.DISABLED;
++        }
++
++        final int mode;
++        try {
++            mode = Os.stat(SELINUX_ENFORCE_PATH).st_mode;
++        } catch (ErrnoException | RuntimeException e) {
++            Log.w(TAG, "SELinux enforcement node is unavailable", e);
++            return SelinuxState.UNAVAILABLE;
++        }
++
++        FileDescriptor descriptor = null;
++        try {
++            descriptor =
++                    Os.open(SELINUX_ENFORCE_PATH, OsConstants.O_RDONLY | OsConstants.O_CLOEXEC, 0);
++            final byte[] value = new byte[1];
++            if (Os.read(descriptor, value, 0, value.length) != value.length) {
++                return SelinuxState.UNAVAILABLE;
++            }
++            if (value[0] == '1') {
++                return SelinuxState.ENFORCING;
++            }
++            if (value[0] == '0') {
++                return SelinuxState.PERMISSIVE;
++            }
++            return SelinuxState.UNAVAILABLE;
++        } catch (ErrnoException e) {
++            return classifySelinuxReadFailure(mode, e.errno);
++        } catch (InterruptedIOException | RuntimeException e) {
++            Log.w(TAG, "Could not read SELinux enforcement state", e);
++            return SelinuxState.UNAVAILABLE;
++        } finally {
++            if (descriptor != null) {
++                try {
++                    Os.close(descriptor);
++                } catch (ErrnoException e) {
++                    Log.w(TAG, "Could not close SELinux enforcement node", e);
++                }
++            }
++        }
++    }
++
++    @VisibleForTesting
++    static SelinuxState classifySelinuxReadFailure(int mode, int errno) {
++        // The kernel exposes this fixed SELinux node as world-readable. If a
++        // process can stat it but an EACCES/EPERM policy check blocks the read,
++        // the denial itself is direct evidence that SELinux is enforcing.
++        if ((mode & OsConstants.S_IROTH) != 0
++                && (errno == OsConstants.EACCES || errno == OsConstants.EPERM)) {
++            return SelinuxState.ENFORCING;
++        }
++        return SelinuxState.UNAVAILABLE;
++    }
++
++    @VisibleForTesting
++    enum SelinuxState {
++        DISABLED,
++        ENFORCING,
++        PERMISSIVE,
++        UNAVAILABLE
++    }
++
 +    @VisibleForTesting
 +    static final class Snapshot {
 +        final String flashLocked;
 +        final String vbmetaDeviceState;
 +        final String verifiedBootState;
 +        final String verityMode;
-+        final boolean selinuxEnabled;
-+        final boolean selinuxEnforced;
++        final SelinuxState selinuxState;
 +        final boolean encrypted;
 +        final boolean fileEncrypted;
 +        final String cryptoType;
@@ -940,8 +1013,7 @@ index 0000000..a1fe8e7
 +                String vbmetaDeviceState,
 +                String verifiedBootState,
 +                String verityMode,
-+                boolean selinuxEnabled,
-+                boolean selinuxEnforced,
++                SelinuxState selinuxState,
 +                boolean encrypted,
 +                boolean fileEncrypted,
 +                String cryptoType,
@@ -950,8 +1022,7 @@ index 0000000..a1fe8e7
 +            this.vbmetaDeviceState = vbmetaDeviceState;
 +            this.verifiedBootState = verifiedBootState;
 +            this.verityMode = verityMode;
-+            this.selinuxEnabled = selinuxEnabled;
-+            this.selinuxEnforced = selinuxEnforced;
++            this.selinuxState = selinuxState;
 +            this.encrypted = encrypted;
 +            this.fileEncrypted = fileEncrypted;
 +            this.cryptoType = cryptoType;
@@ -964,8 +1035,7 @@ index 0000000..a1fe8e7
 +                    SystemProperties.get(PROPERTY_VBMETA_DEVICE_STATE),
 +                    SystemProperties.get(PROPERTY_VERIFIED_BOOT_STATE),
 +                    SystemProperties.get(PROPERTY_VERITY_MODE),
-+                    SELinux.isSELinuxEnabled(),
-+                    SELinux.isSELinuxEnforced(),
++                    KEY_SELINUX.equals(key) ? readSelinuxState() : SelinuxState.UNAVAILABLE,
 +                    StorageManager.isEncrypted(),
 +                    StorageManager.isFileEncrypted(),
 +                    SystemProperties.get(PROPERTY_CRYPTO_TYPE),
@@ -975,7 +1045,7 @@ index 0000000..a1fe8e7
 +}
 diff --git a/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityStatePreference.kt b/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityStatePreference.kt
 new file mode 100644
-index 0000000..b59ae36
+index 0000000000000000000000000000000000000000..b59ae36e3777f4377c7cf58a03eea1164faf8253
 --- /dev/null
 +++ b/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityStatePreference.kt
 @@ -0,0 +1,51 @@
@@ -1032,7 +1102,7 @@ index 0000000..b59ae36
 +}
 diff --git a/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityStatePreferenceController.java b/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityStatePreferenceController.java
 new file mode 100644
-index 0000000..ab2e576
+index 0000000000000000000000000000000000000000..ab2e5763ac5111d0c504a3021de25b00f146eea5
 --- /dev/null
 +++ b/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityStatePreferenceController.java
 @@ -0,0 +1,26 @@
@@ -1063,7 +1133,7 @@ index 0000000..ab2e576
 +    }
 +}
 diff --git a/src/com/android/settings/display/AmbientDisplayAlwaysOnPreferenceScreen.kt b/src/com/android/settings/display/AmbientDisplayAlwaysOnPreferenceScreen.kt
-index 5f554b9..2693c88 100644
+index 5f554b998fb74550eca08421a18a928a549ba8a5..2693c8855f963bddbe35972c078dc4e57f0520a0 100644
 --- a/src/com/android/settings/display/AmbientDisplayAlwaysOnPreferenceScreen.kt
 +++ b/src/com/android/settings/display/AmbientDisplayAlwaysOnPreferenceScreen.kt
 @@ -37,8 +37,10 @@ import com.android.settings.display.ambient.AmbientDisplayStorage
@@ -1088,7 +1158,7 @@ index 5f554b9..2693c88 100644
                  +AmbientInactivityDetectionPreference(context)
              }
 diff --git a/src/com/android/settings/display/ColorModeApiScreen.kt b/src/com/android/settings/display/ColorModeApiScreen.kt
-index a15b02d..88b93fb 100644
+index a15b02d6357a37b040dbac95e661c6997a75539b..88b93fb2fb1dbed15f71fbb72c758a202e34024e 100644
 --- a/src/com/android/settings/display/ColorModeApiScreen.kt
 +++ b/src/com/android/settings/display/ColorModeApiScreen.kt
 @@ -53,7 +53,9 @@ class ColorModeApiScreen :
@@ -1118,7 +1188,7 @@ index a15b02d..88b93fb 100644
      }
  
 diff --git a/src/com/android/settings/display/ColorModePreferenceController.java b/src/com/android/settings/display/ColorModePreferenceController.java
-index 5d74948..bba7f87 100644
+index 5d74948e8a91d88fdc3e83a57edb167b0c38e3dc..bba7f872b6a1b53d34ba3173b35f17fccba294e0 100644
 --- a/src/com/android/settings/display/ColorModePreferenceController.java
 +++ b/src/com/android/settings/display/ColorModePreferenceController.java
 @@ -53,10 +53,15 @@ public class ColorModePreferenceController extends BasePreferenceController
@@ -1155,7 +1225,7 @@ index 5d74948..bba7f87 100644
  
      @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
 diff --git a/src/com/android/settings/display/ColorModePreferenceFragment.java b/src/com/android/settings/display/ColorModePreferenceFragment.java
-index 3469a48..95c2f56 100644
+index 3469a48ac06f6106083a835d7c7fa0962f80f3d6..95c2f569758a8f111b006b824d67cd503255f52c 100644
 --- a/src/com/android/settings/display/ColorModePreferenceFragment.java
 +++ b/src/com/android/settings/display/ColorModePreferenceFragment.java
 @@ -13,12 +13,7 @@
@@ -1238,7 +1308,7 @@ index 3469a48..95c2f56 100644
  
      @VisibleForTesting
 diff --git a/src/com/android/settings/display/ColorModeScreen.kt b/src/com/android/settings/display/ColorModeScreen.kt
-index a430df8..ae9f7a3 100644
+index a430df86e16b4b23e5a037e87aba8e9c289c2af5..ae9f7a3a2ab60593e2ae586d17a1cd7bb6c53e8d 100644
 --- a/src/com/android/settings/display/ColorModeScreen.kt
 +++ b/src/com/android/settings/display/ColorModeScreen.kt
 @@ -30,6 +30,7 @@ import com.android.settingslib.datastore.HandlerExecutor
@@ -1290,7 +1360,7 @@ index a430df8..ae9f7a3 100644
              }
          }
 diff --git a/src/com/android/settings/display/ColorModeUtils.kt b/src/com/android/settings/display/ColorModeUtils.kt
-index 01a6a50..594259a 100644
+index 01a6a50c0fe1a0fe76ca31ecfabb6b9b3664df22..594259a8b3646e64671633c809d0c2d58782ed1d 100644
 --- a/src/com/android/settings/display/ColorModeUtils.kt
 +++ b/src/com/android/settings/display/ColorModeUtils.kt
 @@ -19,8 +19,6 @@ import android.content.Context
@@ -1372,7 +1442,7 @@ index 01a6a50..594259a 100644
 +}
 diff --git a/src/com/android/settings/display/MtkPqColorModeManager.java b/src/com/android/settings/display/MtkPqColorModeManager.java
 new file mode 100644
-index 0000000..493ebf3
+index 0000000000000000000000000000000000000000..493ebf3cca5383c17c5d8b59f623c66d7f9fc35d
 --- /dev/null
 +++ b/src/com/android/settings/display/MtkPqColorModeManager.java
 @@ -0,0 +1,124 @@
@@ -1501,7 +1571,7 @@ index 0000000..493ebf3
 +    }
 +}
 diff --git a/src/com/android/settings/display/TapToWakePreferenceController.java b/src/com/android/settings/display/TapToWakePreferenceController.java
-index b074d21..773a783 100644
+index b074d21fc3668479f1cb88d847376cb87344ff5f..773a783be7a5b5b656d938604b09274c681044f2 100644
 --- a/src/com/android/settings/display/TapToWakePreferenceController.java
 +++ b/src/com/android/settings/display/TapToWakePreferenceController.java
 @@ -14,18 +14,25 @@
@@ -1593,7 +1663,7 @@ index b074d21..773a783 100644
  }
 diff --git a/src/com/android/settings/display/ambient/Tb132fuAodDaytimePreference.kt b/src/com/android/settings/display/ambient/Tb132fuAodDaytimePreference.kt
 new file mode 100644
-index 0000000..ff10b15
+index 0000000000000000000000000000000000000000..ff10b15dcda4d433b13bec8b7cd873b9bcc2fe32
 --- /dev/null
 +++ b/src/com/android/settings/display/ambient/Tb132fuAodDaytimePreference.kt
 @@ -0,0 +1,41 @@
@@ -1640,7 +1710,7 @@ index 0000000..ff10b15
 +}
 diff --git a/src/com/android/settings/fuelgauge/BatteryHealthDetailPreferenceController.java b/src/com/android/settings/fuelgauge/BatteryHealthDetailPreferenceController.java
 new file mode 100644
-index 0000000..e496d0b
+index 0000000000000000000000000000000000000000..e496d0be8133260dcd15ceb2d35bb0847ebda3c9
 --- /dev/null
 +++ b/src/com/android/settings/fuelgauge/BatteryHealthDetailPreferenceController.java
 @@ -0,0 +1,103 @@
@@ -1749,7 +1819,7 @@ index 0000000..e496d0b
 +}
 diff --git a/src/com/android/settings/fuelgauge/BatteryHealthEntryPreferenceController.java b/src/com/android/settings/fuelgauge/BatteryHealthEntryPreferenceController.java
 new file mode 100644
-index 0000000..7e6a02f
+index 0000000000000000000000000000000000000000..7e6a02f076aa20cb0f4f828090389dd8e6664298
 --- /dev/null
 +++ b/src/com/android/settings/fuelgauge/BatteryHealthEntryPreferenceController.java
 @@ -0,0 +1,24 @@
@@ -1779,7 +1849,7 @@ index 0000000..7e6a02f
 +}
 diff --git a/src/com/android/settings/fuelgauge/BatteryHealthFragment.java b/src/com/android/settings/fuelgauge/BatteryHealthFragment.java
 new file mode 100644
-index 0000000..f7de916
+index 0000000000000000000000000000000000000000..f7de91693ee2e3e773d42fc8590adb77c7aedeca
 --- /dev/null
 +++ b/src/com/android/settings/fuelgauge/BatteryHealthFragment.java
 @@ -0,0 +1,43 @@
@@ -1828,7 +1898,7 @@ index 0000000..f7de916
 +}
 diff --git a/src/com/android/settings/fuelgauge/ChargeLimitPreferenceController.java b/src/com/android/settings/fuelgauge/ChargeLimitPreferenceController.java
 new file mode 100644
-index 0000000..4cfda8c
+index 0000000000000000000000000000000000000000..4cfda8ce6306fe46e35ed09bbf47eec47e2cfc3a
 --- /dev/null
 +++ b/src/com/android/settings/fuelgauge/ChargeLimitPreferenceController.java
 @@ -0,0 +1,49 @@
@@ -1883,7 +1953,7 @@ index 0000000..4cfda8c
 +}
 diff --git a/src/com/android/settings/fuelgauge/GoogleBatteryHealthPreferenceController.java b/src/com/android/settings/fuelgauge/GoogleBatteryHealthPreferenceController.java
 new file mode 100644
-index 0000000..2d549c3
+index 0000000000000000000000000000000000000000..2d549c3c09187aa15ee986eb626b791b031201ac
 --- /dev/null
 +++ b/src/com/android/settings/fuelgauge/GoogleBatteryHealthPreferenceController.java
 @@ -0,0 +1,48 @@
@@ -1936,7 +2006,7 @@ index 0000000..2d549c3
 +    }
 +}
 diff --git a/src/com/android/settings/localepicker/LocalePickerWithRegionActivity.java b/src/com/android/settings/localepicker/LocalePickerWithRegionActivity.java
-index ab50178..c39a627 100644
+index ab5017868a3c17d2cdf95620f8c497c18fef3a99..c39a627aa5fa9c3880ebdd8e3b5a5c4277358e7d 100644
 --- a/src/com/android/settings/localepicker/LocalePickerWithRegionActivity.java
 +++ b/src/com/android/settings/localepicker/LocalePickerWithRegionActivity.java
 @@ -26,6 +26,7 @@ import static com.android.settings.regionalpreferences.RegionDialogFragment.ARG_
@@ -1977,7 +2047,7 @@ index ab50178..c39a627 100644
 -
 diff --git a/src/com/android/settings/localepicker/SetupWizardLocalePickerActivity.java b/src/com/android/settings/localepicker/SetupWizardLocalePickerActivity.java
 new file mode 100644
-index 0000000..dbaf8cc
+index 0000000000000000000000000000000000000000..dbaf8cc0733524b0bfe998cb1d36f9ad52ace14a
 --- /dev/null
 +++ b/src/com/android/settings/localepicker/SetupWizardLocalePickerActivity.java
 @@ -0,0 +1,42 @@
@@ -2025,7 +2095,7 @@ index 0000000..dbaf8cc
 +}
 diff --git a/src/com/android/settings/tb132fu/Tb132fuPenPreferenceController.java b/src/com/android/settings/tb132fu/Tb132fuPenPreferenceController.java
 new file mode 100644
-index 0000000..f365ad9
+index 0000000000000000000000000000000000000000..f365ad9aa264705cb38e156b4759737956407c4f
 --- /dev/null
 +++ b/src/com/android/settings/tb132fu/Tb132fuPenPreferenceController.java
 @@ -0,0 +1,123 @@
@@ -2154,7 +2224,7 @@ index 0000000..f365ad9
 +}
 diff --git a/src/com/android/settings/tb132fu/Tb132fuPogoPreferenceController.java b/src/com/android/settings/tb132fu/Tb132fuPogoPreferenceController.java
 new file mode 100644
-index 0000000..bcf1875
+index 0000000000000000000000000000000000000000..bcf1875976180ddfb2f3579d63b924b80999c1b0
 --- /dev/null
 +++ b/src/com/android/settings/tb132fu/Tb132fuPogoPreferenceController.java
 @@ -0,0 +1,117 @@
@@ -2277,7 +2347,7 @@ index 0000000..bcf1875
 +}
 diff --git a/src/com/android/settings/tb132fu/Tb132fuRefreshRatePreferenceController.java b/src/com/android/settings/tb132fu/Tb132fuRefreshRatePreferenceController.java
 new file mode 100644
-index 0000000..cfab251
+index 0000000000000000000000000000000000000000..cfab2512b6271d4bb26d1ca758a16cd2ba45b332
 --- /dev/null
 +++ b/src/com/android/settings/tb132fu/Tb132fuRefreshRatePreferenceController.java
 @@ -0,0 +1,103 @@
@@ -2386,7 +2456,7 @@ index 0000000..cfab251
 +}
 diff --git a/src/com/android/settings/tb132fu/Tb132fuUtils.java b/src/com/android/settings/tb132fu/Tb132fuUtils.java
 new file mode 100644
-index 0000000..4468ad7
+index 0000000000000000000000000000000000000000..4468ad72aac901f998dee93178c8dee9eaea5da0
 --- /dev/null
 +++ b/src/com/android/settings/tb132fu/Tb132fuUtils.java
 @@ -0,0 +1,21 @@
@@ -2412,7 +2482,7 @@ index 0000000..4468ad7
 +    }
 +}
 diff --git a/tests/robotests/src/com/android/settings/DisplaySettingsTest.java b/tests/robotests/src/com/android/settings/DisplaySettingsTest.java
-index 2947ee3..f6741b4 100644
+index 2947ee3c7c0d26f63e8e6947f036255be403b02a..f6741b4d31cd2c764b52d06de28c3b3a079ea4ba 100644
 --- a/tests/robotests/src/com/android/settings/DisplaySettingsTest.java
 +++ b/tests/robotests/src/com/android/settings/DisplaySettingsTest.java
 @@ -44,6 +44,7 @@ public class DisplaySettingsTest {
@@ -2424,7 +2494,7 @@ index 2947ee3..f6741b4 100644
  }
  // LINT.ThenChange(com.android.settings.display.DisplayScreenTest.kt,
 diff --git a/tests/robotests/src/com/android/settings/accounts/AccountDashboardFragmentTest.java b/tests/robotests/src/com/android/settings/accounts/AccountDashboardFragmentTest.java
-index d3c2536..85ec2d9 100644
+index d3c2536a9e9aedc17949620bc50cf070a10314da..85ec2d919e923430cf86e076f0e0ffeb477f98f4 100644
 --- a/tests/robotests/src/com/android/settings/accounts/AccountDashboardFragmentTest.java
 +++ b/tests/robotests/src/com/android/settings/accounts/AccountDashboardFragmentTest.java
 @@ -28,10 +28,18 @@ import android.content.Context;
@@ -2474,7 +2544,7 @@ index d3c2536..85ec2d9 100644
 +    }
  }
 diff --git a/tests/robotests/src/com/android/settings/dashboard/DashboardFragmentTest.java b/tests/robotests/src/com/android/settings/dashboard/DashboardFragmentTest.java
-index bedfc59..3f46942 100644
+index bedfc59b0dbddbcaab553f8d7297b3c939d81939..3f469421f5a80bd28925b66d7a8a613eeb0cb1a3 100644
 --- a/tests/robotests/src/com/android/settings/dashboard/DashboardFragmentTest.java
 +++ b/tests/robotests/src/com/android/settings/dashboard/DashboardFragmentTest.java
 @@ -241,8 +241,9 @@ public class DashboardFragmentTest {
@@ -2510,7 +2580,7 @@ index bedfc59..3f46942 100644
          final AbstractPreferenceController controller = mTestFragment.use(
 diff --git a/tests/robotests/src/com/android/settings/deviceinfo/firmwareversion/PurePixelBuildPreferenceControllerTest.java b/tests/robotests/src/com/android/settings/deviceinfo/firmwareversion/PurePixelBuildPreferenceControllerTest.java
 new file mode 100644
-index 0000000..f8d6c85
+index 0000000000000000000000000000000000000000..f8d6c85781d0b10e3f48c5d6ff63ce2fadb6f33a
 --- /dev/null
 +++ b/tests/robotests/src/com/android/settings/deviceinfo/firmwareversion/PurePixelBuildPreferenceControllerTest.java
 @@ -0,0 +1,28 @@
@@ -2544,10 +2614,10 @@ index 0000000..f8d6c85
 +}
 diff --git a/tests/robotests/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityStateTest.java b/tests/robotests/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityStateTest.java
 new file mode 100644
-index 0000000..1c50f4c
+index 0000000000000000000000000000000000000000..469eef8648aef8a5651276466cdea406bacfe12c
 --- /dev/null
 +++ b/tests/robotests/src/com/android/settings/deviceinfo/firmwareversion/PurePixelSecurityStateTest.java
-@@ -0,0 +1,135 @@
+@@ -0,0 +1,261 @@
 +/*
 + * Copyright (C) 2026 The Pure Pixel Project
 + * SPDX-License-Identifier: Apache-2.0
@@ -2557,6 +2627,7 @@ index 0000000..1c50f4c
 +import static com.google.common.truth.Truth.assertThat;
 +
 +import android.content.Context;
++import android.system.OsConstants;
 +
 +import androidx.test.core.app.ApplicationProvider;
 +
@@ -2572,7 +2643,16 @@ index 0000000..1c50f4c
 +    public void bootloader_agreeingLockedSignals_reportsLocked() {
 +        assertSummary(
 +                PurePixelSecurityState.KEY_BOOTLOADER,
-+                snapshot("1", "locked", "", "", true, true, true, true, "file", "L3"),
++                snapshot(
++                        "1",
++                        "locked",
++                        "",
++                        "",
++                        PurePixelSecurityState.SelinuxState.ENFORCING,
++                        true,
++                        true,
++                        "file",
++                        "L3"),
 +                "Locked");
 +    }
 +
@@ -2580,7 +2660,16 @@ index 0000000..1c50f4c
 +    public void bootloader_conflictingSignals_reportsInconsistent() {
 +        assertSummary(
 +                PurePixelSecurityState.KEY_BOOTLOADER,
-+                snapshot("0", "locked", "", "", true, true, true, true, "file", "L3"),
++                snapshot(
++                        "0",
++                        "locked",
++                        "",
++                        "",
++                        PurePixelSecurityState.SelinuxState.ENFORCING,
++                        true,
++                        true,
++                        "file",
++                        "L3"),
 +                "Inconsistent");
 +    }
 +
@@ -2588,7 +2677,16 @@ index 0000000..1c50f4c
 +    public void bootloader_singleSignal_reportsItsState() {
 +        assertSummary(
 +                PurePixelSecurityState.KEY_BOOTLOADER,
-+                snapshot("", "unlocked", "", "", true, true, true, true, "file", "L3"),
++                snapshot(
++                        "",
++                        "unlocked",
++                        "",
++                        "",
++                        PurePixelSecurityState.SelinuxState.ENFORCING,
++                        true,
++                        true,
++                        "file",
++                        "L3"),
 +                "Unlocked");
 +    }
 +
@@ -2596,7 +2694,16 @@ index 0000000..1c50f4c
 +    public void verifiedBoot_reportsExactKnownColor() {
 +        assertSummary(
 +                PurePixelSecurityState.KEY_VERIFIED_BOOT,
-+                snapshot("", "", "green", "", true, true, true, true, "file", "L3"),
++                snapshot(
++                        "",
++                        "",
++                        "green",
++                        "",
++                        PurePixelSecurityState.SelinuxState.ENFORCING,
++                        true,
++                        true,
++                        "file",
++                        "L3"),
 +                "GREEN");
 +    }
 +
@@ -2604,7 +2711,16 @@ index 0000000..1c50f4c
 +    public void verityMode_reportsEnforcing() {
 +        assertSummary(
 +                PurePixelSecurityState.KEY_VERITY_MODE,
-+                snapshot("", "", "", "enforcing", true, true, true, true, "file", "L3"),
++                snapshot(
++                        "",
++                        "",
++                        "",
++                        "enforcing",
++                        PurePixelSecurityState.SelinuxState.ENFORCING,
++                        true,
++                        true,
++                        "file",
++                        "L3"),
 +                "Enforcing");
 +    }
 +
@@ -2612,15 +2728,89 @@ index 0000000..1c50f4c
 +    public void selinux_reportsPermissiveOnlyWhenEnabledButNotEnforced() {
 +        assertSummary(
 +                PurePixelSecurityState.KEY_SELINUX,
-+                snapshot("", "", "", "", true, false, true, true, "file", "L3"),
++                snapshot(
++                        "",
++                        "",
++                        "",
++                        "",
++                        PurePixelSecurityState.SelinuxState.PERMISSIVE,
++                        true,
++                        true,
++                        "file",
++                        "L3"),
 +                "Permissive");
++    }
++
++    @Test
++    public void selinux_reportsEnforcingFromLiveOrDeniedRead() {
++        assertSummary(
++                PurePixelSecurityState.KEY_SELINUX,
++                snapshot(
++                        "",
++                        "",
++                        "",
++                        "",
++                        PurePixelSecurityState.SelinuxState.ENFORCING,
++                        true,
++                        true,
++                        "file",
++                        "L3"),
++                "Enforcing");
++    }
++
++    @Test
++    public void selinux_unavailableDoesNotClaimPermissive() {
++        assertSummary(
++                PurePixelSecurityState.KEY_SELINUX,
++                snapshot(
++                        "",
++                        "",
++                        "",
++                        "",
++                        PurePixelSecurityState.SelinuxState.UNAVAILABLE,
++                        true,
++                        true,
++                        "file",
++                        "L3"),
++                "Not available");
++    }
++
++    @Test
++    public void selinux_worldReadableNodeDenied_reportsEnforcing() {
++        assertThat(
++                        PurePixelSecurityState.classifySelinuxReadFailure(
++                                OsConstants.S_IROTH, OsConstants.EACCES))
++                .isEqualTo(PurePixelSecurityState.SelinuxState.ENFORCING);
++        assertThat(
++                        PurePixelSecurityState.classifySelinuxReadFailure(
++                                OsConstants.S_IROTH, OsConstants.EPERM))
++                .isEqualTo(PurePixelSecurityState.SelinuxState.ENFORCING);
++    }
++
++    @Test
++    public void selinux_unrelatedReadFailure_reportsUnavailable() {
++        assertThat(
++                        PurePixelSecurityState.classifySelinuxReadFailure(
++                                OsConstants.S_IROTH, OsConstants.ENOENT))
++                .isEqualTo(PurePixelSecurityState.SelinuxState.UNAVAILABLE);
++        assertThat(PurePixelSecurityState.classifySelinuxReadFailure(0, OsConstants.EACCES))
++                .isEqualTo(PurePixelSecurityState.SelinuxState.UNAVAILABLE);
 +    }
 +
 +    @Test
 +    public void encryption_reportsFileBasedEncryption() {
 +        assertSummary(
 +                PurePixelSecurityState.KEY_ENCRYPTION,
-+                snapshot("", "", "", "", true, true, true, true, "file", "L3"),
++                snapshot(
++                        "",
++                        "",
++                        "",
++                        "",
++                        PurePixelSecurityState.SelinuxState.ENFORCING,
++                        true,
++                        true,
++                        "file",
++                        "L3"),
 +                "File-based encryption (FBE)");
 +    }
 +
@@ -2628,7 +2818,16 @@ index 0000000..1c50f4c
 +    public void widevine_reportsNormalizedPluginLevel() {
 +        assertSummary(
 +                PurePixelSecurityState.KEY_WIDEVINE,
-+                snapshot("", "", "", "", true, true, true, true, "file", " l3 "),
++                snapshot(
++                        "",
++                        "",
++                        "",
++                        "",
++                        PurePixelSecurityState.SelinuxState.ENFORCING,
++                        true,
++                        true,
++                        "file",
++                        " l3 "),
 +                "L3");
 +    }
 +
@@ -2640,8 +2839,7 @@ index 0000000..1c50f4c
 +                        "",
 +                        "purple",
 +                        "surprise",
-+                        true,
-+                        true,
++                        PurePixelSecurityState.SelinuxState.ENFORCING,
 +                        true,
 +                        true,
 +                        "file",
@@ -2664,8 +2862,7 @@ index 0000000..1c50f4c
 +            String vbmetaDeviceState,
 +            String verifiedBootState,
 +            String verityMode,
-+            boolean selinuxEnabled,
-+            boolean selinuxEnforced,
++            PurePixelSecurityState.SelinuxState selinuxState,
 +            boolean encrypted,
 +            boolean fileEncrypted,
 +            String cryptoType,
@@ -2675,8 +2872,7 @@ index 0000000..1c50f4c
 +                vbmetaDeviceState,
 +                verifiedBootState,
 +                verityMode,
-+                selinuxEnabled,
-+                selinuxEnforced,
++                selinuxState,
 +                encrypted,
 +                fileEncrypted,
 +                cryptoType,
@@ -2684,7 +2880,7 @@ index 0000000..1c50f4c
 +    }
 +}
 diff --git a/tests/robotests/src/com/android/settings/display/ColorModeApiScreenTest.kt b/tests/robotests/src/com/android/settings/display/ColorModeApiScreenTest.kt
-index 13eb866..4bf816e 100644
+index 13eb866025748a58064ef3cab35ee9fd43a92ed7..4bf816ed1f7604be151127614214ea73b47993a5 100644
 --- a/tests/robotests/src/com/android/settings/display/ColorModeApiScreenTest.kt
 +++ b/tests/robotests/src/com/android/settings/display/ColorModeApiScreenTest.kt
 @@ -97,6 +97,16 @@ class ColorModeApiScreenTest {
@@ -2705,7 +2901,7 @@ index 13eb866..4bf816e 100644
      @EnableFlags(FLAG_CATALYST_MIGRATION_26Q2, FLAG_DISPLAY_SETTINGS_API_SCREEN_SUPPORT)
      fun getScreen_isNotNull() {
 diff --git a/tests/robotests/src/com/android/settings/display/ColorModeScreenTest.kt b/tests/robotests/src/com/android/settings/display/ColorModeScreenTest.kt
-index 6602d42..9339480 100644
+index 6602d4225e508e09c8a2267df8806b2c02c0be5e..933948073d6e06bb014171dfeee23ef5bc959478 100644
 --- a/tests/robotests/src/com/android/settings/display/ColorModeScreenTest.kt
 +++ b/tests/robotests/src/com/android/settings/display/ColorModeScreenTest.kt
 @@ -23,16 +23,19 @@ import android.provider.Settings.Secure
@@ -2760,7 +2956,7 @@ index 6602d42..9339480 100644
  }
 diff --git a/tests/robotests/src/com/android/settings/display/MtkPqColorModeManagerTest.java b/tests/robotests/src/com/android/settings/display/MtkPqColorModeManagerTest.java
 new file mode 100644
-index 0000000..620b34e
+index 0000000000000000000000000000000000000000..620b34e18b1ab0bc3097c0c677ce3982612eb836
 --- /dev/null
 +++ b/tests/robotests/src/com/android/settings/display/MtkPqColorModeManagerTest.java
 @@ -0,0 +1,97 @@
@@ -2863,7 +3059,7 @@ index 0000000..620b34e
 +}
 diff --git a/tests/robotests/src/com/android/settings/display/TapToWakePreferenceControllerTest.java b/tests/robotests/src/com/android/settings/display/TapToWakePreferenceControllerTest.java
 new file mode 100644
-index 0000000..c8f6c7e
+index 0000000000000000000000000000000000000000..c8f6c7efc3fb90565facca60bab03d092a2f57af
 --- /dev/null
 +++ b/tests/robotests/src/com/android/settings/display/TapToWakePreferenceControllerTest.java
 @@ -0,0 +1,29 @@
@@ -2897,7 +3093,7 @@ index 0000000..c8f6c7e
 +    }
 +}
 diff --git a/tests/robotests/src/com/android/settings/display/colors/ColorModePreferenceControllerTest.kt b/tests/robotests/src/com/android/settings/display/colors/ColorModePreferenceControllerTest.kt
-index 4371bae..a7f378c 100644
+index 4371bae49105da08e791125d0841c356a8671cdc..a7f378c9a453aba71b3e1813613ba5882469d5c6 100644
 --- a/tests/robotests/src/com/android/settings/display/colors/ColorModePreferenceControllerTest.kt
 +++ b/tests/robotests/src/com/android/settings/display/colors/ColorModePreferenceControllerTest.kt
 @@ -28,6 +28,7 @@ import androidx.test.core.app.ApplicationProvider
@@ -2963,7 +3159,7 @@ index 4371bae..a7f378c 100644
 +}
 diff --git a/tests/robotests/src/com/android/settings/fuelgauge/BatteryHealthDetailPreferenceControllerTest.java b/tests/robotests/src/com/android/settings/fuelgauge/BatteryHealthDetailPreferenceControllerTest.java
 new file mode 100644
-index 0000000..3b3a277
+index 0000000000000000000000000000000000000000..3b3a2778d16ee98c3eee04a998846c29958c7147
 --- /dev/null
 +++ b/tests/robotests/src/com/android/settings/fuelgauge/BatteryHealthDetailPreferenceControllerTest.java
 @@ -0,0 +1,80 @@
@@ -3049,7 +3245,7 @@ index 0000000..3b3a277
 +}
 diff --git a/tests/robotests/src/com/android/settings/fuelgauge/ChargeLimitPreferenceControllerTest.java b/tests/robotests/src/com/android/settings/fuelgauge/ChargeLimitPreferenceControllerTest.java
 new file mode 100644
-index 0000000..eed7c76
+index 0000000000000000000000000000000000000000..eed7c768372fab6301a4198e1dea302efd00e256
 --- /dev/null
 +++ b/tests/robotests/src/com/android/settings/fuelgauge/ChargeLimitPreferenceControllerTest.java
 @@ -0,0 +1,48 @@
@@ -3103,7 +3299,7 @@ index 0000000..eed7c76
 +}
 diff --git a/tests/robotests/src/com/android/settings/fuelgauge/GoogleBatteryHealthPreferenceControllerTest.java b/tests/robotests/src/com/android/settings/fuelgauge/GoogleBatteryHealthPreferenceControllerTest.java
 new file mode 100644
-index 0000000..32570da
+index 0000000000000000000000000000000000000000..32570dad04ce5ed7102b47d2cdb8a49cd19bc471
 --- /dev/null
 +++ b/tests/robotests/src/com/android/settings/fuelgauge/GoogleBatteryHealthPreferenceControllerTest.java
 @@ -0,0 +1,95 @@
@@ -3204,7 +3400,7 @@ index 0000000..32570da
 +}
 diff --git a/tests/robotests/src/com/android/settings/localepicker/SetupWizardLocalePickerActivityTest.java b/tests/robotests/src/com/android/settings/localepicker/SetupWizardLocalePickerActivityTest.java
 new file mode 100644
-index 0000000..54ea8dc
+index 0000000000000000000000000000000000000000..54ea8dcd55e38f66bbebe2892d39332647594f6d
 --- /dev/null
 +++ b/tests/robotests/src/com/android/settings/localepicker/SetupWizardLocalePickerActivityTest.java
 @@ -0,0 +1,66 @@
@@ -3275,7 +3471,7 @@ index 0000000..54ea8dc
 +    }
 +}
 diff --git a/tests/robotests/src/com/android/settings/system/SystemDashboardFragmentTest.java b/tests/robotests/src/com/android/settings/system/SystemDashboardFragmentTest.java
-index 494b130..3da8952 100644
+index 494b1305b8105f35d17256eda08a27c5d5a3c445..3da8952f9b086728cf5c592e13f3f756ba7b1d52 100644
 --- a/tests/robotests/src/com/android/settings/system/SystemDashboardFragmentTest.java
 +++ b/tests/robotests/src/com/android/settings/system/SystemDashboardFragmentTest.java
 @@ -173,4 +173,17 @@ public class SystemDashboardFragmentTest {
@@ -3298,7 +3494,7 @@ index 494b130..3da8952 100644
  }
 diff --git a/tests/robotests/src/com/android/settings/tb132fu/Tb132fuRefreshRatePreferenceControllerTest.java b/tests/robotests/src/com/android/settings/tb132fu/Tb132fuRefreshRatePreferenceControllerTest.java
 new file mode 100644
-index 0000000..31d81af
+index 0000000000000000000000000000000000000000..31d81af7e831754058951ff2ca3a25e16e6e54d3
 --- /dev/null
 +++ b/tests/robotests/src/com/android/settings/tb132fu/Tb132fuRefreshRatePreferenceControllerTest.java
 @@ -0,0 +1,32 @@
@@ -3336,7 +3532,7 @@ index 0000000..31d81af
 +}
 diff --git a/tests/robotests/src/com/android/settings/tb132fu/Tb132fuUtilsTest.java b/tests/robotests/src/com/android/settings/tb132fu/Tb132fuUtilsTest.java
 new file mode 100644
-index 0000000..4128ede
+index 0000000000000000000000000000000000000000..4128ede829ca60d4ff74d0785037825932e3d3a4
 --- /dev/null
 +++ b/tests/robotests/src/com/android/settings/tb132fu/Tb132fuUtilsTest.java
 @@ -0,0 +1,29 @@
@@ -3370,7 +3566,7 @@ index 0000000..4128ede
 +    }
 +}
 diff --git a/tests/unit/src/com/android/settings/display/ColorModePreferenceFragmentTest.java b/tests/unit/src/com/android/settings/display/ColorModePreferenceFragmentTest.java
-index b3a2770..e2d75b5 100644
+index b3a2770baf8e04d4f7d563731976dded65249396..e2d75b5434d27b071dd08790cc25466e72618c3c 100644
 --- a/tests/unit/src/com/android/settings/display/ColorModePreferenceFragmentTest.java
 +++ b/tests/unit/src/com/android/settings/display/ColorModePreferenceFragmentTest.java
 @@ -18,7 +18,6 @@ package com.android.settings.display;
