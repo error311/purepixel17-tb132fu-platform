@@ -51,7 +51,8 @@ The patch set covers:
 - cacheless, signed A-only recovery updates on the active slot, with accurate
   system-update reboot labeling
 - the small platform hooks used to synchronize the Pixel Launcher landscape
-  QSB return animation and retain a visible dock owner throughout its handoff
+  QSB return animation, distinguish its real GhostView foreground, and retain
+  a visible dock owner when no animated QSB is ready
 
 These are the accepted release-line diffs, not the full bring-up history. Temporary tests and
 reverted experiments were left out. `system/apex` is listed in `PROJECTS.tsv`

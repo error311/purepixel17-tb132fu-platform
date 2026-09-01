@@ -156,7 +156,7 @@ index a250d4945bfed7f0f0ec81b83441ffcb589a786a..9eeaa8188e82ca90376811b470cf4023
              mPrivateFlags4 |= PFLAG4_HAS_MOVED;
              invalidateViewProperty(true, false);
 diff --git a/core/java/android/view/ViewGroup.java b/core/java/android/view/ViewGroup.java
-index 115ae5ca6ee5078d8ae55ba9b67f85553e48cae4..595935ff8b4963ba894a1c459e0bc8edd3f16496 100644
+index 115ae5ca6ee5078d8ae55ba9b67f85553e48cae4..edd27e839aa5ed6a7d863f6bc25edc65646438a0 100644
 --- a/core/java/android/view/ViewGroup.java
 +++ b/core/java/android/view/ViewGroup.java
 @@ -82,6 +82,8 @@ import android.window.OnBackInvokedDispatcher;
@@ -168,16 +168,17 @@ index 115ae5ca6ee5078d8ae55ba9b67f85553e48cae4..595935ff8b4963ba894a1c459e0bc8ed
  import java.util.ArrayList;
  import java.util.Collection;
  import java.util.Collections;
-@@ -140,6 +142,119 @@ import java.util.function.Predicate;
+@@ -140,6 +142,132 @@ import java.util.function.Predicate;
   */
  @UiThread
  public abstract class ViewGroup extends View implements ViewParent, ViewManager {
 +    // Pixel Launcher creates two OSE QSB hosts on tablets: the Launcher hotseat host used as the
 +    // source for FloatingWidgetView, and an inline taskbar host. During the TB132FU landscape Home
 +    // return, the inline taskbar host remains visible behind the floating QSB until the taskbar
-+    // alignment finishes. Defer only that second host while an exact fixed-QSB floating owner is
-+    // attached. The original hotseat host must keep drawing because GhostView uses its display
-+    // list as the animated foreground.
++    // alignment finishes. Defer only that second host while an exact fixed-QSB floating owner has
++    // a real, attached GhostView foreground. Translucent/uninitialized containers do not own the
++    // QSB draw. The original hotseat host must keep drawing because GhostView uses its display list
++    // as the animated foreground.
 +    private static final boolean TB132FU_FIXED_QSB_TASKBAR_HANDOFF =
 +            "tb132fu".equals(Build.DEVICE);
 +    private static final String PIXEL_LAUNCHER_PACKAGE =
@@ -189,14 +190,13 @@ index 115ae5ca6ee5078d8ae55ba9b67f85553e48cae4..595935ff8b4963ba894a1c459e0bc8ed
 +    private static final String PIXEL_TASKBAR_VIEW_CLASS =
 +            "com.android.launcher3.taskbar.TaskbarView";
 +    private static final String PIXEL_FLOATING_WIDGET_HOST_FIELD = "mAppWidgetView";
-+    // FloatingWidgetView fades its source host from 0 to 1 near the end of Gesture Home. Keep the
-+    // already-visible taskbar copy as draw owner until the animated foreground is effectively
-+    // opaque; hiding it merely because the floating container is attached leaves a blank QSB.
-+    private static final float TB132FU_FIXED_QSB_FOREGROUND_HANDOFF_ALPHA = 0.95f;
++    private static final String PIXEL_FLOATING_WIDGET_FOREGROUND_FIELD =
++            "mForegroundOverlayView";
 +    @Nullable private static Field sPixelFloatingWidgetHostField;
-+    private static boolean sPixelFloatingWidgetHostFieldUnavailable;
++    @Nullable private static Field sPixelFloatingWidgetForegroundField;
++    private static boolean sPixelFloatingWidgetFieldsUnavailable;
 +    @Nullable private static WeakReference<View> sPixelFixedQsbFloatingOwner;
-+    @Nullable private static WeakReference<View> sPixelFixedQsbFloatingHost;
++    @Nullable private static WeakReference<View> sPixelFixedQsbFloatingForeground;
 +    @Nullable private static WeakReference<ViewGroup> sPixelDeferredTaskbarQsb;
 +
 +    private boolean shouldDeferTb132fuTaskbarQsbDraw() {
@@ -210,19 +210,22 @@ index 115ae5ca6ee5078d8ae55ba9b67f85553e48cae4..595935ff8b4963ba894a1c459e0bc8ed
 +        }
 +        final View owner = sPixelFixedQsbFloatingOwner == null
 +                ? null : sPixelFixedQsbFloatingOwner.get();
-+        final View host = sPixelFixedQsbFloatingHost == null
-+                ? null : sPixelFixedQsbFloatingHost.get();
-+        if (owner == null || host == null || !owner.isAttachedToWindow()) {
++        final View foreground = sPixelFixedQsbFloatingForeground == null
++                ? null : sPixelFixedQsbFloatingForeground.get();
++        if (owner == null || !owner.isAttachedToWindow()) {
 +            sPixelFixedQsbFloatingOwner = null;
-+            sPixelFixedQsbFloatingHost = null;
++            sPixelFixedQsbFloatingForeground = null;
 +            return false;
 +        }
 +        sPixelDeferredTaskbarQsb = new WeakReference<>(this);
-+        if (!owner.isShown()
-+                || owner.getAlpha() < TB132FU_FIXED_QSB_FOREGROUND_HANDOFF_ALPHA
-+                || host.getAlpha() < TB132FU_FIXED_QSB_FOREGROUND_HANDOFF_ALPHA) {
++        if (foreground == null
++                || !foreground.isAttachedToWindow()
++                || !owner.isShown()
++                || !foreground.isShown()) {
 +            // The taskbar and Launcher roots are independently invalidated. Keep polling while the
-+            // return animation owns the host so the draw owner changes on the first ready frame.
++            // return animation owns the host so the draw owner changes on the first GhostView
++            // frame. A translucent/uninitialized FloatingWidgetView has no GhostView, so the
++            // already-visible taskbar QSB remains the draw owner instead of leaving a blank gap.
 +            postInvalidateOnAnimation();
 +            return false;
 +        }
@@ -243,7 +246,7 @@ index 115ae5ca6ee5078d8ae55ba9b67f85553e48cae4..595935ff8b4963ba894a1c459e0bc8ed
 +    private static void registerTb132fuFixedQsbFloatingOwner(View candidate) {
 +        if (!TB132FU_FIXED_QSB_TASKBAR_HANDOFF
 +                || !PIXEL_FLOATING_WIDGET_CLASS.equals(candidate.getClass().getName())
-+                || sPixelFloatingWidgetHostFieldUnavailable) {
++                || sPixelFloatingWidgetFieldsUnavailable) {
 +            return;
 +        }
 +        try {
@@ -254,18 +257,28 @@ index 115ae5ca6ee5078d8ae55ba9b67f85553e48cae4..595935ff8b4963ba894a1c459e0bc8ed
 +                hostField.setAccessible(true);
 +                sPixelFloatingWidgetHostField = hostField;
 +            }
++            Field foregroundField = sPixelFloatingWidgetForegroundField;
++            if (foregroundField == null) {
++                foregroundField = candidate.getClass().getDeclaredField(
++                        PIXEL_FLOATING_WIDGET_FOREGROUND_FIELD);
++                foregroundField.setAccessible(true);
++                sPixelFloatingWidgetForegroundField = foregroundField;
++            }
 +            final Object host = hostField.get(candidate);
 +            if (host instanceof View
 +                    && PIXEL_FIXED_QSB_HOST_CLASS.equals(host.getClass().getName())) {
++                final Object foreground = foregroundField.get(candidate);
 +                sPixelFixedQsbFloatingOwner = new WeakReference<>(candidate);
-+                sPixelFixedQsbFloatingHost = new WeakReference<>((View) host);
++                sPixelFixedQsbFloatingForeground = foreground instanceof GhostView
++                        ? new WeakReference<>((View) foreground) : null;
 +            }
 +        } catch (ReflectiveOperationException | SecurityException exception) {
 +            // Fail open. A future Launcher revision must never leave its taskbar QSB hidden.
-+            sPixelFloatingWidgetHostFieldUnavailable = true;
++            sPixelFloatingWidgetFieldsUnavailable = true;
 +            sPixelFloatingWidgetHostField = null;
++            sPixelFloatingWidgetForegroundField = null;
 +            sPixelFixedQsbFloatingOwner = null;
-+            sPixelFixedQsbFloatingHost = null;
++            sPixelFixedQsbFloatingForeground = null;
 +        }
 +    }
 +
@@ -276,7 +289,7 @@ index 115ae5ca6ee5078d8ae55ba9b67f85553e48cae4..595935ff8b4963ba894a1c459e0bc8ed
 +            return;
 +        }
 +        sPixelFixedQsbFloatingOwner = null;
-+        sPixelFixedQsbFloatingHost = null;
++        sPixelFixedQsbFloatingForeground = null;
 +        final ViewGroup taskbarQsb = sPixelDeferredTaskbarQsb == null
 +                ? null : sPixelDeferredTaskbarQsb.get();
 +        sPixelDeferredTaskbarQsb = null;
@@ -288,7 +301,7 @@ index 115ae5ca6ee5078d8ae55ba9b67f85553e48cae4..595935ff8b4963ba894a1c459e0bc8ed
      private static final String TAG = "ViewGroup";
  
      @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.R, trackingBug = 170729553)
-@@ -4388,6 +4503,11 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager
+@@ -4388,6 +4516,11 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager
  
      @Override
      protected void dispatchDraw(@NonNull Canvas canvas) {
@@ -300,7 +313,7 @@ index 115ae5ca6ee5078d8ae55ba9b67f85553e48cae4..595935ff8b4963ba894a1c459e0bc8ed
          final int childrenCount = mChildrenCount;
          final View[] children = mChildren;
          int flags = mGroupFlags;
-@@ -5451,6 +5571,7 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager
+@@ -5451,6 +5584,7 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager
          } else {
              child.mParent = this;
          }
@@ -308,7 +321,7 @@ index 115ae5ca6ee5078d8ae55ba9b67f85553e48cae4..595935ff8b4963ba894a1c459e0bc8ed
          if (child.hasUnhandledKeyListener()) {
              incrementChildUnhandledKeyListeners();
          }
-@@ -5730,6 +5851,7 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager
+@@ -5730,6 +5864,7 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager
      }
  
      private void removeViewInternal(int index, View view) {
