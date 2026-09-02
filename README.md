@@ -4,10 +4,9 @@ This is the Android platform side of Pure Pixel 17 for the Lenovo Tab P11 Pro
 (2nd Gen), model TB132FU.
 
 The device needs more than a device tree and kernel to run Android 17 properly.
-These patches are the framework and system changes retained in the public R5
-release plus the current R6 development-line additions. They are kept here
-separately because they belong to existing AOSP projects rather than
-`device/lenovo/tb132fu`.
+These patches are the framework and system changes retained in the public R6
+release. They are kept here separately because they belong to existing AOSP
+projects rather than `device/lenovo/tb132fu`.
 
 The other two source repositories are:
 
@@ -60,12 +59,12 @@ reverted experiments were left out. `system/apex` is listed in `PROJECTS.tsv`
 because it was part of the bring-up, but its final tree matches clean AOSP and
 there is no patch to apply.
 
-## R5 base
+## R6 base
 
 - AOSP branch: `android17-release`
 - Android build: `CP2A.260605.016`
 - Android platform security patch: `2026-08-01`
-- Release line: `purepixel17-tb132fu-r5`
+- Release line: `purepixel17-tb132fu-r6`
 - Project revisions and expected trees: `PROJECTS.tsv`
 - Patch checksums: `PATCHES.sha256`
 
@@ -95,7 +94,7 @@ cd /path/to/purepixel17-tb132fu-platform
 ```
 
 The script intentionally refuses to patch a dirty or mismatched source tree.
-It checks the patch hashes and confirms that the result matches the exact R5
+It checks the patch hashes and confirms that the result matches the exact R6
 Git trees. It does not commit anything, erase source, start a build or touch a
 connected device.
 
